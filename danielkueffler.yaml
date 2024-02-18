@@ -23,6 +23,8 @@ metadata:
   name: ghost
   namespace: danielkueffler
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: ghost
@@ -33,7 +35,7 @@ spec:
     spec:
       containers:
       - name: ghost
-        image: ghost:5.20-alpine
+        image: ghost:5.8-alpine
         imagePullPolicy: Always
         env:
         - name: url
