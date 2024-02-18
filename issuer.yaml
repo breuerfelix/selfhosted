@@ -1,0 +1,30 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+ name: lets-encrypt
+spec:
+ acme:
+   email: fbreuer+cert-test@pm.me
+   server: https://acme-v02.api.letsencrypt.org/directory
+   privateKeySecretRef:
+     name: lets-encrypt
+   solvers:
+   - http01:
+       ingress:
+         class: public
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: lets-encrypt-test
+spec:
+  acme:
+    email: fbreuer+cert-test@pm.me
+    privateKeySecretRef:
+      name: lets-encrypt-test
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    solvers:
+    - http01:
+        ingress:
+          class: public

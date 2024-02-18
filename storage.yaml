@@ -1,0 +1,10 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ics-pv
+provisioner: microk8s.io/hostpath
+reclaimPolicy: Delete
+parameters:
+  pvDir: /mnt/ics
+volumeBindingMode: WaitForFirstConsumer

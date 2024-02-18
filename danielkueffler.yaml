@@ -1,0 +1,88 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: danielkueffler
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ghost-data
+  namespace: danielkueffler
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: ics-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost
+  namespace: danielkueffler
+spec:
+  selector:
+    matchLabels:
+      app: ghost
+  template:
+    metadata:
+      labels:
+        app: ghost
+    spec:
+      containers:
+      - name: ghost
+        image: ghost:5.8-alpine
+        env:
+        - name: url
+          value: https://danielkueffler.de
+        ports:
+        - name: http
+          containerPort: 2368
+        volumeMounts:
+        - mountPath: /var/lib/ghost/content
+          name: ghost-data
+      volumes:
+      - name: ghost-data
+        persistentVolumeClaim:
+          claimName: ghost-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost
+  namespace: danielkueffler
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: ghost
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ghost
+  namespace: danielkueffler
+  annotations:
+    cert-manager.io/cluster-issuer: lets-encrypt
+spec:
+  tls:
+  - secretName: ghost-tls
+    hosts:
+    - danielkueffler.de
+  rules:
+  - host: danielkueffler.de
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ghost
+            port:
+              name: http
+
