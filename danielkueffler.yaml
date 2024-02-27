@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
       - name: ghost
-        image: ghost:5.8-alpine
+        image: busybox
         imagePullPolicy: Always
         env:
         - name: url
