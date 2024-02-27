@@ -8,7 +8,7 @@ sudo usermod -a -G microk8s ubuntu
 mkdir .kube
 sudo chown -R ubuntu .kube
 # restart shell
-microk8s enable hostpath-storage dns ingress cert-manager
+microk8s enable hostpath-storage dns:1.1.1.1 ingress cert-manager
 ```
 
 ```

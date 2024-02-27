@@ -15,7 +15,6 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  storageClassName: ics-pv
 ---
 apiVersion: apps/v1
 kind: Deployment
