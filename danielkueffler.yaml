@@ -34,11 +34,15 @@ spec:
     spec:
       containers:
       - name: ghost
-        image: ghost:5.8-alpine
+        image: ghost:5.79-alpine
         imagePullPolicy: Always
         env:
         - name: url
           value: https://danielkueffler.de
+        - name: NODE_ENV
+          value: development # production wants mysql db
+        - name: database__connection__filename
+          value: /var/lib/ghost/content/data/ghost.db
         ports:
         - name: http
           containerPort: 2368
