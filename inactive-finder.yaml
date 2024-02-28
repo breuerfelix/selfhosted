@@ -50,9 +50,9 @@ metadata:
     cert-manager.io/cluster-issuer: lets-encrypt
 spec:
   tls:
-  - secretName: fathom-tls
+  - secretName: inactive-finder-tls
     hosts:
-    - stats.felixbreuer.me
+    - inactive-finder.felixbreuer.me
   rules:
   - host: inactive-finder.felixbreuer.me
     http:
