@@ -34,8 +34,7 @@ spec:
     spec:
       containers:
       - name: ghost
-        image: busybox
-        command: ["sleep", "1000000000"]
+        image: ghost:5.8-alpine
         imagePullPolicy: Always
         env:
         - name: url

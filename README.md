@@ -9,6 +9,9 @@ mkdir .kube
 sudo chown -R ubuntu .kube
 # restart shell
 microk8s enable hostpath-storage dns:1.1.1.1 ingress cert-manager
+microk8s config > config.yaml
+# change ip of the cluster
+# set clusters.insecure-skip-tls-verify: true
 ```
 
 ```
