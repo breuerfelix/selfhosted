@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
       - name: ghost
-        image: ghost:5.79-alpine
+        image: ghost:5.8-alpine
         imagePullPolicy: Always
         env:
         - name: url
