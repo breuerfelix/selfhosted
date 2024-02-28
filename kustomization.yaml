@@ -4,5 +4,6 @@ kind: Kustomization
 resources:
 - issuer.yaml
 - danielkueffler.yaml
+- fathom.yaml
   #- storage.yaml
   #- movie-web.yaml
