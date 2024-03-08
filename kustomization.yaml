@@ -6,5 +6,6 @@ resources:
 - danielkueffler.yaml
 - fathom.yaml
 - inactive-finder.yaml
+- tabby.yaml
   #- storage.yaml
   #- movie-web.yaml

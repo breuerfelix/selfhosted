@@ -1,0 +1,88 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tabby
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tabby-data
+  namespace: tabby
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tabby
+  namespace: tabby
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: tabby
+  template:
+    metadata:
+      labels:
+        app: tabby
+    spec:
+      containers:
+      - name: tabby
+        image: tabbyml/tabby
+        command: ["/opt/tabby/bin/tabby-cpu"]
+        args: ["serve", "--model", "TabbyML/StarCoder-1B"]
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - mountPath: /data
+          name: tabby-data
+      volumes:
+      - name: tabby-data
+        persistentVolumeClaim:
+          claimName: tabby-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tabby
+  namespace: tabby
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: tabby
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tabby
+  namespace: tabby
+  annotations:
+    cert-manager.io/cluster-issuer: lets-encrypt
+spec:
+  tls:
+  - secretName: tabby-tls
+    hosts:
+    - tabby.felixbreuer.me
+  rules:
+  - host: tabby.felixbreuer.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tabby
+            port:
+              name: http
+
