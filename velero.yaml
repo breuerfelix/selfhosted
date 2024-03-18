@@ -1,0 +1,110 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: vmware
+  namespace: flux-system
+spec:
+  interval: 10m
+  url: https://vmware-tanzu.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: velero
+  namespace: flux-system
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: velero
+      version: 4.0.2
+      sourceRef:
+        kind: HelmRepository
+        name: vmware
+        namespace: flux-system
+  targetNamespace: velero
+  install:
+    createNamespace: true
+  values:
+    # does not work with juiceFS
+    snapshotsEnabled: false
+    # used for volume backups
+    deployNodeAgent: true
+    nodeAgent:
+      privileged: true
+    initContainers:
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.7.0
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+      - mountPath: /target
+        name: plugins
+    configuration:
+      # backups pvcs
+      defaultVolumesToFsBackup: true
+      defaultBackupStorageLocation: ics
+      backupStorageLocation:
+      - name: ics
+        provider: aws
+        bucket: velero
+        credential:
+          name: velero
+          key: ics
+        config:
+          region: fra
+          s3ForcePathStyle: true
+          s3Url: https://object-store.fra.cloud.inovex.io
+    credentials:
+      useSecret: true
+      name: "velero"
+      secretContents:
+        ics: |
+          [default]
+          aws_access_key_id = <id>
+          aws_secret_access_key = <key>
+    schedules:
+      redis:
+        disabled: false
+        schedule: "*/10 * * * *"
+        # deletes backups when deleting this schedule
+        useOwnerReferencesInBackup: true
+        template:
+          storageLocation: ics
+          includedNamespaces:
+          - redis
+      infra:
+        disabled: false
+        schedule: "0 0 * * *"
+        useOwnerReferencesInBackup: true
+        template:
+          storageLocation: ics
+          includedNamespaces:
+          - cert-manager
+          - flux-system
+          - juicefs
+          - longhorn
+      velero:
+        disabled: false
+        schedule: "0 0 * * *"
+        useOwnerReferencesInBackup: true
+        template:
+          storageLocation: ics
+          includedNamespaces:
+          - velero
+      system:
+        disabled: false
+        schedule: "0 0 * * *"
+        useOwnerReferencesInBackup: true
+        template:
+          storageLocation: ics
+          includedNamespaces:
+          - kube-system
+      daniel:
+        disabled: false
+        schedule: "0 * * * *"
+        useOwnerReferencesInBackup: true
+        template:
+          storageLocation: ics
+          includedNamespaces:
+          - danielkueffler

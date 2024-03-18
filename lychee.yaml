@@ -1,0 +1,61 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: lychee
+  namespace: flux-system
+spec:
+  interval: 10m
+  url: https://breuerfelix.github.io/lychee-helmchart
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: lychee
+  namespace: flux-system
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: lychee
+      version: v0.1.11
+      sourceRef:
+        kind: HelmRepository
+        name: lychee
+        namespace: flux-system
+  targetNamespace: lychee
+  values:
+    appName: felix-photos
+    host: photos.felixbreuer.me
+
+    ingress:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+
+    deployment:
+      nodeSelector:
+        cloud: contabo
+
+    uploads:
+      size: 1000Gi
+      storageClass: juicefs
+
+    conf:
+      size: 10Gi
+      storageClass: longhorn
+
+    admin:
+      username: felix
+      password: aufreisen
+
+    additionalEnvs:
+    - name: TRUSTED_PROXIES
+      value: "*"
+    - name: CACHE_DRIVER
+      value: redis
+    - name: REDIS_CACHE_DB
+      value: lychee
+    - name: REDIS_HOST
+      value: redis-redis-headless.redis
+    - name: REDIS_PORT
+      value: 6379
