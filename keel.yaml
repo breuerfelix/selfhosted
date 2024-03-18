@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keel
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: keel
+  namespace: kube-system
+spec:
+  chart: keel
+  targetNamespace: keel
+  repo: https://charts.keel.sh
+  valuesContent: |-
+    helmprovider:
+      enabled: false
+    image:
+      tag: latest
+    basicauth:
+      enabled: true
+      user: inovex
+      password: ino-cluster
+    persistence:
+      enabled: true
+      storageClass: juice
+      size: 1Gi
+    service:
+      enabled: true
+      type: ClusterIP
+      externalPort: 80
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: traefik
+        cert-manager.io/cluster-issuer: letsencrypt
+      hosts:
+        - host: keel.tecios.de
+          paths:
+            - /
+      tls:
+        - secretName: keel-tls
+          hosts:
+            - keel.tecios.de
+
