@@ -19,8 +19,9 @@ spec:
         namespace: flux-system
   values:
     paperless:
-      name: ghcr.io/paperless-ngx/paperless-ngx
-      tag: 2.6.3
+      image:
+        name: ghcr.io/paperless-ngx/paperless-ngx
+        tag: 2.6.3
 
       ingress:
         enabled: true
