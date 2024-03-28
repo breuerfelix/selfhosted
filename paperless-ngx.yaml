@@ -27,6 +27,14 @@ spec:
         enabled: true
         host: paperless.felixbreuer.me
 
+      env:
+        - name: PAPERLESS_REDIS
+          value: redis://redis:80
+        - name: PAPERLESS_TIME_ZONE
+          value: Europe/Berlin
+        - name: PAPERLESS_OCR_LANGUAGE
+          value: ger
+
       secretRefs:
         - key: PAPERLESS_SECRET_KEY
           name: paperless-ngx
