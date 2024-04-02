@@ -8,7 +8,7 @@ resources:
 - danielkueffler.yaml # daniels blog
 - fathom.yaml # website tracking
 - inactive-finder.yaml # for legacy travian bots
-- tabby.yaml # code completion
 - paperless-ngx.yaml # document management system
+  #- tabby.yaml # code completion
   #- storage.yaml
   #- movie-web.yaml
