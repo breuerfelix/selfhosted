@@ -9,6 +9,7 @@ resources:
 - fathom.yaml # website tracking
 - inactive-finder.yaml # for legacy travian bots
 - paperless-ngx.yaml # document management system
+- velero.yaml # backup tool
   #- tabby.yaml # code completion
   #- storage.yaml
   #- movie-web.yaml

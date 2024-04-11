@@ -57,54 +57,16 @@ spec:
           s3Url: https://object-store.fra.cloud.inovex.io
     credentials:
       useSecret: true
-      name: "velero"
-      secretContents:
-        ics: |
-          [default]
-          aws_access_key_id = <id>
-          aws_secret_access_key = <key>
+      existingSecret: velero
     schedules:
-      redis:
+      system:
         disabled: false
-        schedule: "*/10 * * * *"
+        schedule: "0 0 * * *"
         # deletes backups when deleting this schedule
         useOwnerReferencesInBackup: true
         template:
           storageLocation: ics
           includedNamespaces:
-          - redis
-      infra:
-        disabled: false
-        schedule: "0 0 * * *"
-        useOwnerReferencesInBackup: true
-        template:
-          storageLocation: ics
-          includedNamespaces:
-          - cert-manager
-          - flux-system
-          - juicefs
-          - longhorn
-      velero:
-        disabled: false
-        schedule: "0 0 * * *"
-        useOwnerReferencesInBackup: true
-        template:
-          storageLocation: ics
-          includedNamespaces:
-          - velero
-      system:
-        disabled: false
-        schedule: "0 0 * * *"
-        useOwnerReferencesInBackup: true
-        template:
-          storageLocation: ics
-          includedNamespaces:
-          - kube-system
-      daniel:
-        disabled: false
-        schedule: "0 * * * *"
-        useOwnerReferencesInBackup: true
-        template:
-          storageLocation: ics
-          includedNamespaces:
+          - paperless-ngx
           - danielkueffler
+          - fathom
