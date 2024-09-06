@@ -10,6 +10,7 @@ resources:
 - inactive-finder.yaml # for legacy travian bots
 - paperless-ngx.yaml # document management system
 - velero.yaml # backup tool
+- screeps.yaml # coding game
   #- tabby.yaml # code completion
-  #- storage.yaml
+  #- storage.yaml # not needed since we use local volumes
   #- movie-web.yaml
