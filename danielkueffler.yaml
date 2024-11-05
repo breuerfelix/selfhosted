@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
       - name: ghost
-        image: ghost:5.98-alpine
+        image: ghost:5.99-alpine
         env:
         - name: url
           value: https://danielkueffler.de
