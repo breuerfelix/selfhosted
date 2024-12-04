@@ -8,7 +8,7 @@ spec:
   interval: 10m
   url: https://breuerfelix.github.io/lychee-helmchart
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta2
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: lychee
