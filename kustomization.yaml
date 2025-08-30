@@ -11,6 +11,7 @@ resources:
 - paperless-ngx.yaml # document management system
 - velero.yaml # backup tool
 - screeps.yaml # coding game
+- idle-mmo.yaml # idle mmo proxy for extension
   #- tabby.yaml # code completion
   #- storage.yaml # not needed since we use local volumes
   #- movie-web.yaml
