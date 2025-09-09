@@ -2,16 +2,17 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- issuer.yaml # for certificates
-- ingress.yaml # configure nginx ingress
-- breuerfelix.yaml # my own helm chart
-- danielkueffler.yaml # daniels blog
-- fathom.yaml # website tracking
-- inactive-finder.yaml # for legacy travian bots
-- paperless-ngx.yaml # document management system
-- velero.yaml # backup tool
-- screeps.yaml # coding game
-- idle-mmo.yaml # idle mmo proxy for extension
-  #- tabby.yaml # code completion
-  #- storage.yaml # not needed since we use local volumes
-  #- movie-web.yaml
+  - issuer.yaml # for certificates
+  - ingress.yaml # configure nginx ingress
+  - breuerfelix.yaml # my own helm chart
+  - danielkueffler.yaml # daniels blog
+  - fathom.yaml # website tracking
+  - inactive-finder.yaml # for legacy travian bots
+  - paperless-ngx.yaml # document management system
+  - velero.yaml # backup tool
+  - screeps.yaml # coding game
+  - screeps2.yaml # coding game
+  - idle-mmo.yaml # idle mmo proxy for extension
+    #- tabby.yaml # code completion
+    #- storage.yaml # not needed since we use local volumes
+    #- movie-web.yaml
