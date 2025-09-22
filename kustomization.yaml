@@ -12,6 +12,7 @@ resources:
   - velero.yaml # backup tool
   - screeps.yaml # coding game
   - screeps2.yaml # coding game
+  - screeps3.yaml # coding game
   - idle-mmo.yaml # idle mmo proxy for extension
     #- tabby.yaml # code completion
     #- storage.yaml # not needed since we use local volumes
