@@ -38,6 +38,8 @@ spec:
         env:
         - name: url
           value: https://danielkueffler.de
+        - name: "security__staffDeviceVerification"
+          value: "false"
         - name: NODE_ENV
           value: development # production wants mysql db
         - name: database__connection__filename
