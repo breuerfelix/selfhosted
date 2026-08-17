@@ -13,3 +13,4 @@ Notes:
 - Secret values are intentionally redacted or moved to example env files before they are committed to git.
 - `metadata.json` keeps the Portainer stack id, endpoint id, status, timestamps, and Git metadata when present.
 - `room-planner` is already Git-backed in Portainer; its deployed stack entrypoint is mirrored here for GitOps inventory purposes.
+- The current migration/cutover plan for both Portainer and Coolify lives in `portainer/GITOPS-MIGRATION-PLAN.md`.
