@@ -8,7 +8,7 @@
   },
   "project": {
     "name": "default",
-    "application_count": 7
+    "application_count": 6
   },
   "applications": [
     "danielkueffler",
@@ -16,7 +16,6 @@
     "idle-proxy",
     "noobgallery",
     "redirect-breuer-dev",
-    "screeps",
     "travian-inactive-finder"
   ]
 }
