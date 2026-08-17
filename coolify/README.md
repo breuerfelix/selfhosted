@@ -8,6 +8,7 @@ Layout:
 - Legacy persistence hints were carried over where the earlier Kubernetes manifests made them explicit.
 - Coolify-generated runtime labels were not available in the committed export and therefore are not reproduced here.
 - These files are repository-only GitOps artifacts. No live deployment change is performed by this repo update.
+- The migration/cutover plan for moving these manifests into real GitOps operation lives in `portainer/GITOPS-MIGRATION-PLAN.md`.
 
 Applications:
 - danielkueffler
