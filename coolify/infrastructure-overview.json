@@ -1,0 +1,22 @@
+{
+  "coolify_version": "4.1.2",
+  "server": {
+    "name": "localhost",
+    "ip": "host.docker.internal",
+    "is_reachable": true,
+    "is_usable": true
+  },
+  "project": {
+    "name": "default",
+    "application_count": 7
+  },
+  "applications": [
+    "danielkueffler",
+    "fathom",
+    "idle-proxy",
+    "noobgallery",
+    "redirect-breuer-dev",
+    "screeps",
+    "travian-inactive-finder"
+  ]
+}
