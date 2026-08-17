@@ -1,0 +1,25 @@
+{
+  "stack_id": 17,
+  "name": "room-planner",
+  "endpoint_id": 3,
+  "entrypoint": "docker-compose.portainer.yml",
+  "project_path": "/data/compose/17",
+  "status": 1,
+  "created_by": "felix",
+  "created_at_unix": 1786023637,
+  "updated_by": "",
+  "updated_at_unix": 0,
+  "from_app_template": false,
+  "git_config": {
+    "url": "https://github.com/breuerfelix/screeps-room-planner.git",
+    "reference_name": "refs/heads/main",
+    "config_file_path": "docker-compose.portainer.yml",
+    "tls_skip_verify": false,
+    "config_hash": "ec7fbcb5e3fe90ad66cc1fdeb47c6b2adfc5d63c"
+  },
+  "redacted_env_keys": [
+    "ROOM_PLANNER_UI_PORT",
+    "ROOM_PLANNER_PROXY_PORT",
+    "SCREEPS_LOCAL_SERVER_URL"
+  ]
+}
