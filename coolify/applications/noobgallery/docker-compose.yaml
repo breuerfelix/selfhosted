@@ -1,0 +1,17 @@
+# Generated from the committed Coolify export for noobgallery.
+# Values intentionally remain redacted where the source export redacted them.
+x-coolify:
+  name: "noobgallery"
+  uuid: "tcwk0w00ssookk84w8880oog"
+  fqdn: "https://photos.felixbreuer.me"
+  redirect: "both"
+  source_image: "felixbreuer/noobgallery:latest"
+  compose_parsing_version: "5"
+  custom_labels_omitted: true
+  env_values_redacted: false
+services:
+  noobgallery:
+    image: "felixbreuer/noobgallery:latest"
+    restart: unless-stopped
+    expose:
+      - "80"

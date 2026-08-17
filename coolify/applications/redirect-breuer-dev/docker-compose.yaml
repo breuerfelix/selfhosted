@@ -1,0 +1,21 @@
+# Generated from the committed Coolify export for redirect-breuer-dev.
+# Values intentionally remain redacted where the source export redacted them.
+x-coolify:
+  name: "redirect-breuer-dev"
+  uuid: "hk800wo04cg40kskco04g8k4"
+  fqdn: "https://felixbreuer.me"
+  redirect: "both"
+  source_image: "grahamdigital/simple-redirect:latest"
+  compose_parsing_version: "5"
+  custom_labels_omitted: true
+  env_values_redacted: true
+services:
+  redirect-breuer-dev:
+    image: "grahamdigital/simple-redirect:latest"
+    restart: unless-stopped
+    expose:
+      - "80"
+    # Rehydrate remaining redacted values from the live Coolify app before deploy.
+    environment:
+      PROTOCOL: "[REDACTED]"
+      REDIRECT_TO: "[REDACTED]"
