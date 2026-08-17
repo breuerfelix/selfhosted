@@ -1,0 +1,27 @@
+# Generated from the committed Coolify export for danielkueffler.
+# Values intentionally remain redacted where the source export redacted them.
+x-coolify:
+  name: "danielkueffler"
+  uuid: "p4sk4wssgowckkkkk8cwo4k0"
+  fqdn: "https://danielkueffler.de"
+  redirect: "both"
+  source_image: "ghost:5-alpine"
+  compose_parsing_version: "5"
+  custom_labels_omitted: true
+  env_values_redacted: false
+services:
+  danielkueffler:
+    image: "ghost:5-alpine"
+    restart: unless-stopped
+    expose:
+      - "2368"
+    environment:
+      NODE_ENV: "development"
+      security__staffDeviceVerification: "false"
+      url: "https://danielkueffler.de"
+      database__connection__filename: "/var/lib/ghost/content/data/ghost.db"
+    volumes:
+      - ghost-data:/var/lib/ghost/content
+volumes:
+  # Legacy Kubernetes manifest used PVC ghost-data (5Gi) mounted at /var/lib/ghost/content.
+  ghost-data: {}

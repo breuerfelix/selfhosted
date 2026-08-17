@@ -1,9 +1,19 @@
-# Coolify export
+# Coolify compose GitOps export
 
-Snapshot of the current Coolify-managed applications.
+Docker Compose-compatible manifests for the current Coolify-managed applications.
 
-Notes:
-- This repository import does not change the live Coolify resources.
-- Application settings are exported from the Coolify API into `app.json`.
-- Environment variable keys and metadata are exported into `envs.redacted.json`, but values are intentionally replaced with `[REDACTED]` before commit.
-- Coolify-generated runtime labels are omitted from the committed export because they are derived control-plane data, not source-of-truth config.
+Layout:
+- Each application lives in `coolify/applications/<app>/docker-compose.yaml`.
+- Environment variable keys are preserved, but values remain `[REDACTED]` where the source Coolify export redacted them.
+- Legacy persistence hints were carried over where the earlier Kubernetes manifests made them explicit.
+- Coolify-generated runtime labels were not available in the committed export and therefore are not reproduced here.
+- These files are repository-only GitOps artifacts. No live deployment change is performed by this repo update.
+
+Applications:
+- danielkueffler
+- fathom
+- idle-proxy
+- noobgallery
+- redirect-breuer-dev
+- screeps
+- travian-inactive-finder
