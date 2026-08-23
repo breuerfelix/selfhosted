@@ -6,8 +6,6 @@
 services:
   hindsight:
     image: ghcr.io/vectorize-io/hindsight:0.9.1
-    # Temporary bootstrap override; remove after host bind ownership is fixed.
-    user: "0"
     container_name: hindsight
     restart: unless-stopped
     ports:
