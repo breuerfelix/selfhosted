@@ -20,7 +20,7 @@ services:
       # Dedicated, writable Codex OAuth home for optional manual setup.
       CODEX_HOME: "${CODEX_HOME:-/var/lib/hindsight/codex}"
     volumes:
-      - /data/hindsight:/app/data
+      - /data/hindsight:/home/hindsight/.pg0
       - /data/hindsight/codex:/var/lib/hindsight/codex
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
