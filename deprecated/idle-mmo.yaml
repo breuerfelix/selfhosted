@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: idle-proxy
-        image: ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy:latest
+        image: ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy@sha256:99c23d6ec2d92a4ea72ddfa6f9c3166f44d6615b4ec2aad18685f8e506f83d69
         imagePullPolicy: Always
         env:
         - name: PORT

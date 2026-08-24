@@ -4,7 +4,7 @@
 services:
   room-planner:
     container_name: room-planner
-    image: ghcr.io/breuerfelix/screeps-room-planner:main
+    image: ghcr.io/breuerfelix/screeps-room-planner:sha-6e80addde9eab3b90411be4d0865ded7a79500da
     init: true
     restart: unless-stopped
     environment:

@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: proxy
-        image: ghcr.io/movie-web/simple-proxy:latest
+        image: ghcr.io/movie-web/simple-proxy:2.1.4
         ports:
         - name: http
           containerPort: 3000

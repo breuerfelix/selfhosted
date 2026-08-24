@@ -1,6 +1,6 @@
 services:
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2.0
     container_name: grafana
     restart: unless-stopped
     user: "0"
@@ -16,7 +16,7 @@ services:
       - monitoring
 
   victoriametrics:
-    image: victoriametrics/victoria-metrics:latest
+    image: victoriametrics/victoria-metrics:v1.150.0
     container_name: victoriametrics
     restart: unless-stopped
     command:
@@ -48,7 +48,7 @@ services:
       - monitoring
 
   vmagent:
-    image: victoriametrics/vmagent:latest
+    image: victoriametrics/vmagent:v1.150.0
     container_name: vmagent
     restart: unless-stopped
     command:
@@ -67,7 +67,7 @@ services:
       - monitoring
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.7.6
     container_name: loki
     restart: unless-stopped
     command:

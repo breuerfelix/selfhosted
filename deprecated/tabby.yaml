@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
       - name: tabby
-        image: tabbyml/tabby
+        image: tabbyml/tabby:0.32.0
         command: ["/opt/tabby/bin/tabby-cpu"]
         args: ["serve", "--model", "TabbyML/StarCoder-1B"]
         ports:

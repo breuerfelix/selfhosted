@@ -5,13 +5,13 @@ x-coolify:
   uuid: "wwgk8sgck44gocwscc0gs4ck"
   fqdn: "https://idle-proxy.felixbreuer.me"
   redirect: "both"
-  source_image: "ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy:latest"
+  source_image: "ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy@sha256:99c23d6ec2d92a4ea72ddfa6f9c3166f44d6615b4ec2aad18685f8e506f83d69"
   compose_parsing_version: "5"
   custom_labels_omitted: true
   env_values_redacted: false
 services:
   idle-proxy:
-    image: "ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy:latest"
+    image: "ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy@sha256:99c23d6ec2d92a4ea72ddfa6f9c3166f44d6615b4ec2aad18685f8e506f83d69"
     restart: unless-stopped
     expose:
       - "8080"

@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
         - name: screeps
-          image: screepers/screeps-launcher
+          image: screepers/screeps-launcher@sha256:d366401870162dfe1fbb84e4368265ec059669db66801e6de878650784a9a526
           ports:
             - containerPort: 21025
               name: tcp
