@@ -15,10 +15,6 @@ services:
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:?HERMES_DASHBOARD_BASIC_AUTH_USERNAME must be set}"
       HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:?HERMES_DASHBOARD_BASIC_AUTH_PASSWORD must be set}"
       HERMES_DASHBOARD_BASIC_AUTH_SECRET: "${HERMES_DASHBOARD_BASIC_AUTH_SECRET:?HERMES_DASHBOARD_BASIC_AUTH_SECRET must be set}"
-      # The current Hermes data dir contains both default and coding profiles with
-      # the same Home Assistant credential. Multiplexing both causes gateway startup
-      # to abort, so default to single-profile mode until the profile config is cleaned up.
-      GATEWAY_MULTIPLEX_PROFILES: "${GATEWAY_MULTIPLEX_PROFILES:-0}"
     ports:
       - "8642:8642"
       - "9119:9119"
