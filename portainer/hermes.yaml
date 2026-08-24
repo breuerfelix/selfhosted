@@ -1,0 +1,42 @@
+# Hermes gateway plus colocated Hindsight service.
+#
+# Important: do not deploy this stack while the current standalone `hermes`
+# container is still running, or host ports/container names will conflict.
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+    restart: always
+    command:
+      - gateway
+      - run
+    ports:
+      - "8642:8642"
+      - "9119:9119"
+    volumes:
+      - /data/hermes:/opt/data
+
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:0.9.1
+    container_name: hindsight
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+      - "9999:9999"
+    environment:
+      HINDSIGHT_API_HOST: "0.0.0.0"
+      HINDSIGHT_API_PORT: "8888"
+      HINDSIGHT_API_LOG_LEVEL: "${HINDSIGHT_API_LOG_LEVEL:-info}"
+      HINDSIGHT_API_LLM_PROVIDER: "${HINDSIGHT_API_LLM_PROVIDER:-openai-codex}"
+      HINDSIGHT_API_LLM_MODEL: "${HINDSIGHT_API_LLM_MODEL:-gpt-5.6-luna}"
+      # Dedicated, writable Codex OAuth home for optional manual setup.
+      CODEX_HOME: "${CODEX_HOME:-/var/lib/hindsight/codex}"
+    volumes:
+      - /data/hindsight:/home/hindsight/.pg0
+      - /data/hindsight/codex:/var/lib/hindsight/codex
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
