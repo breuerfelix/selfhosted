@@ -11,7 +11,7 @@ x-coolify:
   env_values_redacted: false
 services:
   danielkueffler:
-    image: "ghost:5-alpine"
+    image: "ghost:6-alpine"
     restart: unless-stopped
     expose:
       - "2368"
