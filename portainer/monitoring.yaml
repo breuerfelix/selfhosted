@@ -31,7 +31,9 @@ services:
       - monitoring
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.55.1
+    # v0.52.1 preserves Docker name labels used by the direct Grafana dashboard
+    # on the Beelink Docker API; newer v0.55.x emitted raw cgroup-only series.
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
     container_name: cadvisor
     restart: unless-stopped
     command:
