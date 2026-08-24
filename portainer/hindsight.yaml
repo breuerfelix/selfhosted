@@ -15,8 +15,8 @@ services:
       HINDSIGHT_API_HOST: "0.0.0.0"
       HINDSIGHT_API_PORT: "8888"
       HINDSIGHT_API_LOG_LEVEL: "${HINDSIGHT_API_LOG_LEVEL:-info}"
-      HINDSIGHT_API_LLM_PROVIDER: "${HINDSIGHT_API_LLM_PROVIDER:-mock}"
-      HINDSIGHT_API_LLM_MODEL: "${HINDSIGHT_API_LLM_MODEL:-mock-model}"
+      HINDSIGHT_API_LLM_PROVIDER: "${HINDSIGHT_API_LLM_PROVIDER:-openai-codex}"
+      HINDSIGHT_API_LLM_MODEL: "${HINDSIGHT_API_LLM_MODEL:-gpt-5.6-luna}"
       # Dedicated, writable Codex OAuth home for optional manual setup.
       CODEX_HOME: "${CODEX_HOME:-/var/lib/hindsight/codex}"
     volumes:
