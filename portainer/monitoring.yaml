@@ -12,6 +12,11 @@ services:
       GF_INSTALL_PLUGINS: grafana-clock-panel
     volumes:
       - /data/grafana:/var/lib/grafana
+    configs:
+      - source: grafana-dashboard-provider
+        target: /etc/grafana/provisioning/dashboards/beelink.yml
+      - source: beelink-cadvisor-dashboard
+        target: /etc/grafana/provisioning/dashboards/beelink-cadvisor.json
     networks:
       - monitoring
 
@@ -80,6 +85,10 @@ services:
       - monitoring
 
 configs:
+  grafana-dashboard-provider:
+    file: ./grafana/provisioning/dashboards/beelink.yml
+  beelink-cadvisor-dashboard:
+    file: ./grafana/dashboards/beelink-cadvisor.json
   vmagent-scrape-config:
     file: ./vmagent/prometheus.yml
 
