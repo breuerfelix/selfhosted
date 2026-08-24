@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: inactive-finder
-        image: felixbreuer/travian-inactive-finder@sha256:6cc50786c593ff161edc83e73819780c048e7606bafe5927657f633132be6c45
+        image: felixbreuer/travian-inactive-finder:latest
         ports:
         - name: http
           containerPort: 80

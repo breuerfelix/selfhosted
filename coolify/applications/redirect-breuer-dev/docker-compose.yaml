@@ -5,13 +5,13 @@ x-coolify:
   uuid: "hk800wo04cg40kskco04g8k4"
   fqdn: "https://felixbreuer.me"
   redirect: "both"
-  source_image: "grahamdigital/simple-redirect@sha256:ae7c5ce98f631b2a07dca8636a1fad973d3a42fcd3a9a6219b1c80324ead964b"
+  source_image: "grahamdigital/simple-redirect:latest"
   compose_parsing_version: "5"
   custom_labels_omitted: true
   env_values_redacted: true
 services:
   redirect-breuer-dev:
-    image: "grahamdigital/simple-redirect@sha256:ae7c5ce98f631b2a07dca8636a1fad973d3a42fcd3a9a6219b1c80324ead964b"
+    image: "grahamdigital/simple-redirect:latest"
     restart: unless-stopped
     expose:
       - "80"

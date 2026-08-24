@@ -16,7 +16,7 @@ spec:
     helmprovider:
       enabled: false
     image:
-      tag: 0.20.0
+      tag: latest
     basicauth:
       enabled: true
       user: inovex

@@ -10,7 +10,7 @@
   },
   "kubernetes": {
     "managerFilePatterns": [
-      "/(^|\\/)deprecated/[^/]+\\.ya?ml$/"
+      "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
     ]
   }
 }
