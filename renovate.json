@@ -2,5 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "docker-compose": {
+    "managerFilePatterns": [
+      "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
+    ]
+  },
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/(^|\\/)deprecated/[^/]+\\.ya?ml$/"
+    ]
+  }
 }
