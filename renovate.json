@@ -3,6 +3,10 @@
   "extends": [
     "config:recommended"
   ],
+  "ignorePaths": [
+    "coolify/**",
+    "deprecated/**"
+  ],
   "docker-compose": {
     "managerFilePatterns": [
       "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
