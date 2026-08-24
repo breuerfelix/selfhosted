@@ -34,6 +34,7 @@ services:
       HINDSIGHT_API_LOG_LEVEL: "${HINDSIGHT_API_LOG_LEVEL:-info}"
       HINDSIGHT_API_LLM_PROVIDER: "${HINDSIGHT_API_LLM_PROVIDER:-openai-codex}"
       HINDSIGHT_API_LLM_MODEL: "${HINDSIGHT_API_LLM_MODEL:-gpt-5.6-luna}"
+      HINDSIGHT_API_LLM_OUTPUT_LANGUAGE: "${HINDSIGHT_API_LLM_OUTPUT_LANGUAGE:-English}"
       # Keep a stable worker identity across container recreates; the image warns
       # that hostname-based defaults strand in-flight tasks after redeploys.
       HINDSIGHT_API_WORKER_ID: "${HINDSIGHT_API_WORKER_ID:-hindsight}"
