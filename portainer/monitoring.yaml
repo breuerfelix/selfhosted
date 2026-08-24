@@ -81,7 +81,22 @@ services:
 
 configs:
   vmagent-scrape-config:
-    file: ./vmagent/prometheus.yml
+    # Portainer Git stacks do not materialize relative Compose config files.
+    # Keep this small scrape configuration inline so the stack is deployable
+    # directly from the repository's configured Compose path.
+    content: |
+      global:
+        scrape_interval: 15s
+        scrape_timeout: 10s
+
+      scrape_configs:
+        - job_name: beelink-cadvisor
+          static_configs:
+            - targets:
+                - cadvisor:8080
+              labels:
+                host: beelink
+                service: cadvisor
 
 networks:
   monitoring:
