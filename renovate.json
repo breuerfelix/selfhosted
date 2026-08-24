@@ -11,10 +11,5 @@
     "managerFilePatterns": [
       "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
     ]
-  },
-  "kubernetes": {
-    "managerFilePatterns": [
-      "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
-    ]
   }
 }
