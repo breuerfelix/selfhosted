@@ -10,6 +10,15 @@ services:
     command:
       - gateway
       - run
+    environment:
+      HERMES_DASHBOARD: "${HERMES_DASHBOARD:-1}"
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:?HERMES_DASHBOARD_BASIC_AUTH_USERNAME must be set}"
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:?HERMES_DASHBOARD_BASIC_AUTH_PASSWORD must be set}"
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: "${HERMES_DASHBOARD_BASIC_AUTH_SECRET:?HERMES_DASHBOARD_BASIC_AUTH_SECRET must be set}"
+      # The current Hermes data dir contains both default and coding profiles with
+      # the same Home Assistant credential. Multiplexing both causes gateway startup
+      # to abort, so default to single-profile mode until the profile config is cleaned up.
+      GATEWAY_MULTIPLEX_PROFILES: "${GATEWAY_MULTIPLEX_PROFILES:-0}"
     ports:
       - "8642:8642"
       - "9119:9119"
@@ -29,6 +38,9 @@ services:
       HINDSIGHT_API_LOG_LEVEL: "${HINDSIGHT_API_LOG_LEVEL:-info}"
       HINDSIGHT_API_LLM_PROVIDER: "${HINDSIGHT_API_LLM_PROVIDER:-openai-codex}"
       HINDSIGHT_API_LLM_MODEL: "${HINDSIGHT_API_LLM_MODEL:-gpt-5.6-luna}"
+      # Keep a stable worker identity across container recreates; the image warns
+      # that hostname-based defaults strand in-flight tasks after redeploys.
+      HINDSIGHT_API_WORKER_ID: "${HINDSIGHT_API_WORKER_ID:-hindsight}"
       # Dedicated, writable Codex OAuth home for optional manual setup.
       CODEX_HOME: "${CODEX_HOME:-/var/lib/hindsight/codex}"
     volumes:
