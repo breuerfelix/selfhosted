@@ -1,0 +1,39 @@
+# Nightly restic backup for the Portainer-managed host.
+#
+# Required Portainer stack environment variables:
+#   RESTIC_REPOSITORY      s3:s3.amazonaws.com/<bucket>/hosts/<host>/portainer
+#   RESTIC_PASSWORD        restic repository password
+#   AWS_ACCESS_KEY_ID      S3 access key
+#   AWS_SECRET_ACCESS_KEY  S3 secret key
+# Optional:
+#   AWS_SESSION_TOKEN      temporary-session token
+#   AWS_DEFAULT_REGION     defaults to eu-central-1
+#
+# The backup image deliberately mounts /data read-only, but the backup scripts
+# pass only /data/portainer, /data/hermes, and /data/hindsight to restic.
+services:
+  restic-backup:
+    build:
+      context: ./portainer/restic-backup
+      dockerfile: Dockerfile
+    image: selfhosted-restic-backup:0.19.1
+    container_name: restic-backup
+    hostname: portainer-host
+    restart: unless-stopped
+    init: true
+    environment:
+      TZ: Europe/Berlin
+      RESTIC_REPOSITORY: "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY must be set in Portainer}"
+      RESTIC_PASSWORD: "${RESTIC_PASSWORD:?RESTIC_PASSWORD must be set in Portainer}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID must be set in Portainer}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY must be set in Portainer}"
+      AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN:-}"
+      AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-eu-central-1}"
+      RESTIC_CACHE_DIR: /tmp/restic-cache
+    volumes:
+      - /data:/data:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp

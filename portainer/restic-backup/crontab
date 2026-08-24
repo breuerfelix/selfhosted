@@ -1,0 +1,7 @@
+# Europe/Berlin is configured in the image and compose environment.
+# Backup every night at 03:00 local time.
+0 3 * * * /usr/local/bin/backup.sh >>/proc/1/fd/1 2>>/proc/1/fd/2
+# Compact the repository weekly, after the Sunday backup has completed.
+30 3 * * 0 /usr/local/bin/prune.sh >>/proc/1/fd/1 2>>/proc/1/fd/2
+# Sample repository data weekly after pruning.
+0 4 * * 0 /usr/local/bin/check.sh >>/proc/1/fd/1 2>>/proc/1/fd/2
