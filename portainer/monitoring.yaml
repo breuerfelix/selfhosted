@@ -39,7 +39,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - /data/loki:/tmp/loki
+      - /data/loki:/loki
     networks:
       - monitoring
 
