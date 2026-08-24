@@ -58,5 +58,22 @@ After the stack is running, verify the collector path from the host or Portainer
 4. Query VictoriaMetrics for a non-empty host series, for example
    `machine_memory_bytes{host="beelink"}`, and a container series such as
    `container_cpu_usage_seconds_total{host="beelink"}`.
-5. Redeploy or restart the stack and repeat the checks; `/data/victoriametrics`
+5. For a concrete scrape-health check, query these PromQL expressions through the
+   configured VictoriaMetrics datasource:
+
+   ```promql
+   up{job="beelink-cadvisor",host="beelink",instance="cadvisor:8080",service="cadvisor"}
+   machine_scrape_error{host="beelink"}
+   container_scrape_error{host="beelink"}
+   machine_memory_bytes{host="beelink"}
+   machine_cpu_cores{host="beelink"}
+   count(container_cpu_usage_seconds_total{host="beelink"})
+   ```
+
+   Expected results are `up = 1`, both scrape-error gauges `= 0`, non-zero
+   machine memory and CPU-core values, and a positive container-series count.
+   A range query such as
+   `up{job="beelink-cadvisor"}[30m]` should contain repeated samples, all `1`;
+   this catches intermittent target failures that an instant query can miss.
+6. Redeploy or restart the stack and repeat the checks; `/data/victoriametrics`
    and `/data/vmagent` must remain intact.
