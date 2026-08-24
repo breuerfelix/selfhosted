@@ -14,7 +14,7 @@
 services:
   restic-backup:
     build:
-      context: ./portainer/restic-backup
+      context: ./restic-backup
       dockerfile: Dockerfile
     image: selfhosted-restic-backup:0.19.1
     container_name: restic-backup
