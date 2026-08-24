@@ -1,0 +1,28 @@
+# The GHCR package is private. Configure Portainer with a read-only
+# ghcr.io registry credential (for a GitHub PAT, grant read:packages) before
+# deploying this stack. Keep the credential in Portainer, not in Git.
+services:
+  room-planner:
+    container_name: room-planner
+    image: ghcr.io/breuerfelix/screeps-room-planner:main
+    init: true
+    restart: unless-stopped
+    environment:
+      PORT: ${ROOM_PLANNER_PROXY_PORT:-3001}
+      ROOM_PLANNER_PROXY_URL: http://127.0.0.1:${ROOM_PLANNER_PROXY_PORT:-3001}
+      SCREEPS_LOCAL_SERVER_URL: ${SCREEPS_LOCAL_SERVER_URL:-https://screeps.felixbreuer.me}
+    ports:
+      - "${ROOM_PLANNER_UI_PORT:-5173}:5173"
+    healthcheck:
+      test: >-
+        node -e "fetch('http://127.0.0.1:5173/').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - room-planner
+
+networks:
+  room-planner:
+    driver: bridge
