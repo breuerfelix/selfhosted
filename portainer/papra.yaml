@@ -15,6 +15,6 @@ services:
       - "1221:1221"
     environment:
       AUTH_SECRET: "${AUTH_SECRET:?AUTH_SECRET must be set in Portainer}"
-      APP_BASE_URL: "${APP_BASE_URL:-http://localhost:1221}"
+      APP_BASE_URL: "${APP_BASE_URL:-http://192.168.178.13:1221}"
     volumes:
       - /data/papra:/app/app-data
