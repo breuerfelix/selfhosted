@@ -60,8 +60,6 @@ services:
     configs:
       - source: vmagent-scrape-config
         target: /etc/vmagent/prometheus.yml
-    volumes:
-      - /data/vmagent:/vmagentdata
     depends_on:
       - victoriametrics
       - cadvisor
