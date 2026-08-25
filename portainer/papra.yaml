@@ -6,26 +6,11 @@
 # The application data is kept on the host at /data/papra so it is included in
 # the host's restic backup set.
 services:
-  papra-init:
-    image: alpine:3.22
-    container_name: papra-init
-    user: "0:0"
-    restart: "no"
-    command:
-      - /bin/sh
-      - -c
-      - mkdir -p /app/app-data && chown -R 1000:1000 /app/app-data
-    volumes:
-      - /data/papra:/app/app-data
-
   papra:
-    image: ghcr.io/papra-hq/papra:latest
+    image: ghcr.io/papra-hq/papra:26.6.1-rootless
     container_name: papra
     restart: unless-stopped
     user: "1000:1000"
-    depends_on:
-      papra-init:
-        condition: service_completed_successfully
     ports:
       - "1221:1221"
     environment:
