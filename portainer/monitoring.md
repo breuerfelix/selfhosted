@@ -28,20 +28,21 @@ The stack creates or uses these host directories for persistent data:
 - `/data/grafana`
 - `/data/victoriametrics`
 - `/data/loki`
-- `/data/vmagent`
 
 The Docker host running Portainer (the Beelink) must allow the cAdvisor mounts in
-`monitoring.yaml`. They are read-only except for vmagent's local retry buffer and
-the existing service data directories. The Docker socket is mounted read-only;
-cAdvisor and vmagent are not exposed on host ports.
+`monitoring.yaml`. The cAdvisor mounts are read-only. vmagent's retry buffer is
+ephemeral inside the container; the Grafana, VictoriaMetrics, and Loki data
+directories remain persistent. The Docker socket is mounted read-only; cAdvisor
+and vmagent are not exposed on host ports.
 
 ## Metrics
 
 The `beelink-cadvisor` scrape job targets `cadvisor:8080` on the private
 `monitoring_monitoring` network and adds the stable labels `host="beelink"` and
 `service="cadvisor"`. vmagent forwards the Prometheus-format metrics to
-`http://victoriametrics:8428/api/v1/write` and buffers unsent samples under
-`/data/vmagent` while VictoriaMetrics is unavailable.
+`http://victoriametrics:8428/api/v1/write` and may buffer unsent samples in its
+ephemeral container filesystem while VictoriaMetrics is unavailable. Queued
+samples are intentionally lost if vmagent is recreated.
 
 cAdvisor supplies both Docker container statistics and machine/filesystem
 metrics from the Beelink. A separate node-exporter is intentionally not included:
@@ -76,7 +77,7 @@ After the stack is running, verify the collector path from the host or Portainer
    `up{job="beelink-cadvisor"}[30m]` should contain repeated samples, all `1`;
    this catches intermittent target failures that an instant query can miss.
 6. Redeploy or restart the stack and repeat the checks; `/data/victoriametrics`
-   and `/data/vmagent` must remain intact.
+   must remain intact. vmagent's retry queue is ephemeral by design.
 
 ## Restart and persistence procedure
 
@@ -99,9 +100,10 @@ comments.
    restart stack `36` through Portainer and leave stack `26`'s collector
    service disabled until the inline-config revision is deployed.
 4. Wait at least 30 seconds (two 15-second scrape intervals) after the
-   containers report running before judging the result. Confirm the four
-   persistent bind paths `/data/grafana`, `/data/victoriametrics`,
-   `/data/loki`, and `/data/vmagent` are still attached.
+   containers report running before judging the result. Confirm the three
+   persistent bind paths `/data/grafana`, `/data/victoriametrics`, and
+   `/data/loki` are still attached. Do not expect a persistent `/data/vmagent`
+   mount; vmagent's retry queue is intentionally ephemeral.
 5. Repeat the health and PromQL checks above, including a range query over at
    least five minutes. In Grafana, open dashboard `beelink-cadvisor`
    (`Beelink Host & Containers`), select host `beelink`, and verify its seven
@@ -124,7 +126,9 @@ checks returned `up = 1`, `machine_scrape_error = 0`,
 Grafana panel queries returned non-empty current data and the host variable
 resolved to `beelink`.
 
-The Grafana datasource and dashboard are persistent runtime state, not
+vmagent's remote-write retry queue is intentionally ephemeral; losing queued
+samples during a vmagent recreation is acceptable. The Grafana datasource and
+dashboard are persistent runtime state, not
 provisioned from this repository. PNG snapshot rendering remains unavailable
 unless the Grafana Image Renderer service is installed; this does not prevent
 normal in-browser dashboard panels from executing their queries. The final
