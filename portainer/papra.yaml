@@ -1,0 +1,35 @@
+# Papra document archiving platform.
+#
+# Required Portainer stack environment variable:
+#   AUTH_SECRET  random secret of at least 32 characters
+#
+# The application data is kept on the host at /data/papra so it is included in
+# the host's restic backup set.
+services:
+  papra-init:
+    image: alpine:3.22
+    container_name: papra-init
+    user: "0:0"
+    restart: "no"
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /app/app-data && chown -R 1000:1000 /app/app-data
+    volumes:
+      - /data/papra:/app/app-data
+
+  papra:
+    image: ghcr.io/papra-hq/papra:latest
+    container_name: papra
+    restart: unless-stopped
+    user: "1000:1000"
+    depends_on:
+      papra-init:
+        condition: service_completed_successfully
+    ports:
+      - "1221:1221"
+    environment:
+      AUTH_SECRET: "${AUTH_SECRET:?AUTH_SECRET must be set in Portainer}"
+      APP_BASE_URL: "${APP_BASE_URL:-http://localhost:1221}"
+    volumes:
+      - /data/papra:/app/app-data
