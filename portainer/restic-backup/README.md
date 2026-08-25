@@ -6,18 +6,20 @@ Portainer GitOps from `portainer/restic-backup.yaml`.
 ## Scope
 
 The container mounts `/data` read-only, but restic is passed exactly these
-three paths:
+four paths:
 
 ```text
 /data/portainer
 /data/hermes
 /data/hindsight
+/data/papra
 ```
 
 The Docker socket is mounted so the backup job can stop and restart exactly
 these containers before and after the backup:
 
 ```text
+papra
 hindsight
 hermes
 portainer
@@ -87,4 +89,5 @@ docker exec restic-backup \
 
 The restic container mounts `/data` read-only and does not back up the Docker
 socket, credentials, images, host OS, Docker engine configuration, or
-monitoring data.
+monitoring data. Papra's `AUTH_SECRET` is a Portainer environment variable and
+is intentionally not stored in Git or in the restic Compose file.

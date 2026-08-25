@@ -6,8 +6,8 @@ acquire_lock
 
 # These are the only containers intentionally stopped. Monitoring is not
 # touched. The names match the current Portainer deployment.
-STOP_ORDER='hindsight hermes portainer'
-START_ORDER='portainer hindsight hermes'
+STOP_ORDER='papra hindsight hermes portainer'
+START_ORDER='portainer hermes hindsight papra'
 RUNNING_FILE=/run/restic-backup.running
 : > "$RUNNING_FILE"
 
@@ -63,4 +63,5 @@ restic backup \
   --tag nightly \
   /data/portainer \
   /data/hermes \
-  /data/hindsight
+  /data/hindsight \
+  /data/papra
