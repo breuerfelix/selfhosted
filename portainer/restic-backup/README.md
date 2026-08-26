@@ -66,7 +66,7 @@ at `03:30` on Sundays, and a 5% data check runs at `04:00` on Sundays.
 Retention is:
 
 ```text
-14 daily, 8 weekly, 12 monthly, 3 yearly snapshots
+7 daily, 4 weekly, 6 monthly, 3 yearly snapshots
 ```
 
 ## Restore test

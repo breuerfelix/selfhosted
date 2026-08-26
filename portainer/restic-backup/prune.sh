@@ -7,8 +7,8 @@ trap release_lock EXIT INT TERM
 
 restic forget \
   --tag portainer-host \
-  --keep-daily 14 \
-  --keep-weekly 8 \
-  --keep-monthly 12 \
+  --keep-daily 7 \
+  --keep-weekly 4 \
+  --keep-monthly 6 \
   --keep-yearly 3 \
   --prune
