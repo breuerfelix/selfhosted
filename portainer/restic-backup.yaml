@@ -10,7 +10,7 @@
 #   AWS_DEFAULT_REGION     defaults to eu-central-1
 #
 # The backup image deliberately mounts /data read-only, but the backup scripts
-# pass only the explicit application paths to restic, including /data/papra.
+# pass only the explicit application paths to restic.
 services:
   restic-backup:
     build:
