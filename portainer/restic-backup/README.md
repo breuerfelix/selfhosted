@@ -6,11 +6,10 @@ Portainer GitOps from `portainer/restic-backup.yaml`.
 ## Scope
 
 The container mounts `/data` read-only, but restic is passed exactly these
-four paths:
+three paths:
 
 ```text
 /data/portainer
-/data/hermes
 /data/hindsight
 /data/papra
 ```
@@ -21,7 +20,6 @@ these containers before and after the backup:
 ```text
 papra
 hindsight
-hermes
 portainer
 ```
 
