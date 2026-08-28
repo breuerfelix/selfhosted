@@ -1,4 +1,4 @@
-# Hermes gateway plus colocated Hindsight service.
+# Hermes gateway, WebUI, plus colocated Hindsight service.
 #
 # Important: do not deploy this stack while the current standalone `hermes`
 # container is still running, or host ports/container names will conflict.
@@ -20,6 +20,34 @@ services:
       - "9119:9119"
     volumes:
       - /data/hermes:/opt/data
+      # The source volume is initialized from /opt/hermes in this image.
+      # Recreate it after an agent image upgrade to refresh the source copy.
+      - hermes-agent-src:/opt/hermes
+
+  hermes-webui:
+    # Source: https://github.com/nesquena/hermes-webui
+    image: ghcr.io/nesquena/hermes-webui:0.52.113
+    container_name: hermes-webui
+    depends_on:
+      - hermes
+    restart: unless-stopped
+    ports:
+      # Keep the UI on loopback; expose it through the existing host tunnel.
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - /data/hermes:/home/hermeswebui/.hermes
+      # The WebUI reads the agent source to install its Python dependencies.
+      - hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent:ro
+      # Persist the UI workspace separately from Hermes configuration/state.
+      - ${HERMES_WEBUI_WORKSPACE:-/data/hermes/workspace}:/workspace
+    environment:
+      HERMES_HOME: "/home/hermeswebui/.hermes"
+      HERMES_WEBUI_HOST: "0.0.0.0"
+      HERMES_WEBUI_PORT: "8787"
+      HERMES_WEBUI_STATE_DIR: "/home/hermeswebui/.hermes/webui"
+      HERMES_WEBUI_DEFAULT_WORKSPACE: "/workspace"
+      HERMES_WEBUI_PASSWORD: "${HERMES_WEBUI_PASSWORD:-}"
+      HERMES_API_URL: "http://hermes:8642"
 
   hindsight:
     image: ghcr.io/vectorize-io/hindsight:0.9.2
@@ -49,3 +77,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
+
+volumes:
+  hermes-agent-src:
