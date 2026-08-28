@@ -20,6 +20,9 @@ services:
       - "9119:9119"
     volumes:
       - /data/hermes:/opt/data
+      # Keep native Hermes backup archives outside the main Hermes state tree.
+      # The restic stack includes this host path explicitly.
+      - /data/hermes-backup:/opt/data/backups
 
   hindsight:
     image: ghcr.io/vectorize-io/hindsight:0.9.2

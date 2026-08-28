@@ -10,7 +10,8 @@
 #   AWS_DEFAULT_REGION     defaults to eu-central-1
 #
 # The backup image deliberately mounts /data read-only, but the backup scripts
-# pass only the explicit application paths to restic.
+# pass only the explicit application paths to restic, including the staged
+# Hermes backup archive path.
 services:
   restic-backup:
     build:

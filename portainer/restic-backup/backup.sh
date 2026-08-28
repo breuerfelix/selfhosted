@@ -62,5 +62,6 @@ restic backup \
   --tag portainer-host \
   --tag nightly \
   /data/portainer \
+  /data/hermes-backup \
   /data/hindsight \
   /data/papra

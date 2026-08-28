@@ -6,13 +6,30 @@ Portainer GitOps from `portainer/restic-backup.yaml`.
 ## Scope
 
 The container mounts `/data` read-only, but restic is passed exactly these
-three paths:
+four paths:
 
 ```text
 /data/portainer
+/data/hermes-backup
 /data/hindsight
 /data/papra
 ```
+
+The Hermes stack mounts the host path `/data/hermes-backup` at
+`/opt/data/backups`. The Hermes cron backup job writes its ZIP archives there,
+and the restic job captures that directory as a separate backup source.
+
+Before redeploying the Hermes stack, create the host directory with ownership
+matching the Hermes container's runtime user. The current image runs as
+UID/GID `10000:10000`:
+
+```bash
+sudo install -d -o 10000 -g 10000 -m 0700 /data/hermes-backup
+```
+
+If `/data/hermes/backups` already contains archives that should be retained,
+copy them to `/data/hermes-backup` before redeploying. The new bind mount hides
+the old directory from the Hermes container.
 
 The Docker socket is mounted so the backup job can stop and restart exactly
 these containers before and after the backup:
