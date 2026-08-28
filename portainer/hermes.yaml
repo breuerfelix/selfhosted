@@ -4,7 +4,7 @@
 # container is still running, or host ports/container names will conflict.
 services:
   hermes:
-    image: nousresearch/hermes-agent:v2026.8.19
+    image: nousresearch/hermes-agent:v2026.8.27
     container_name: hermes
     restart: always
     command:
@@ -15,18 +15,24 @@ services:
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:?HERMES_DASHBOARD_BASIC_AUTH_USERNAME must be set}"
       HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:?HERMES_DASHBOARD_BASIC_AUTH_PASSWORD must be set}"
       HERMES_DASHBOARD_BASIC_AUTH_SECRET: "${HERMES_DASHBOARD_BASIC_AUTH_SECRET:?HERMES_DASHBOARD_BASIC_AUTH_SECRET must be set}"
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+      API_SERVER_KEY: "${API_SERVER_KEY:?API_SERVER_KEY must be set}"
     ports:
       - "8642:8642"
       - "9119:9119"
     volumes:
       - /data/hermes:/opt/data
+      # Both services must see the same path for gateway-backed browser sessions.
+      - ${HERMES_WORKSPACE:-/data/hermes/workspace}:/workspace
       # The source volume is initialized from /opt/hermes in this image.
       # Recreate it after an agent image upgrade to refresh the source copy.
       - hermes-agent-src:/opt/hermes
 
   hermes-webui:
     # Source: https://github.com/nesquena/hermes-webui
-    image: ghcr.io/nesquena/hermes-webui:0.52.113
+    # Pinned experimental release aligned with Hermes Agent v2026.8.27.
+    image: ghcr.io/nesquena/hermes-webui:0.52.264
     container_name: hermes-webui
     depends_on:
       - hermes
@@ -39,7 +45,7 @@ services:
       # The WebUI reads the agent source to install its Python dependencies.
       - hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent:ro
       # Persist the UI workspace separately from Hermes configuration/state.
-      - ${HERMES_WEBUI_WORKSPACE:-/data/hermes/workspace}:/workspace
+      - ${HERMES_WORKSPACE:-/data/hermes/workspace}:/workspace
     environment:
       HERMES_HOME: "/home/hermeswebui/.hermes"
       HERMES_WEBUI_HOST: "0.0.0.0"
@@ -47,6 +53,10 @@ services:
       HERMES_WEBUI_STATE_DIR: "/home/hermeswebui/.hermes/webui"
       HERMES_WEBUI_DEFAULT_WORKSPACE: "/workspace"
       HERMES_WEBUI_PASSWORD: "${HERMES_WEBUI_PASSWORD:-}"
+      HERMES_WEBUI_CHAT_BACKEND: "gateway"
+      HERMES_WEBUI_GATEWAY_BASE_URL: "http://hermes:8642"
+      HERMES_WEBUI_GATEWAY_API_KEY: "${API_SERVER_KEY:?API_SERVER_KEY must be set}"
+      HERMES_WEBUI_GATEWAY_USE_RUNS_API: "true"
       HERMES_API_URL: "http://hermes:8642"
 
   hindsight:
