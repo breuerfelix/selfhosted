@@ -1,4 +1,4 @@
-# Hermes gateway, WebUI, plus colocated Hindsight service.
+# Hermes gateway, independent WebUI, plus colocated Hindsight service.
 #
 # Important: do not deploy this stack while the current standalone `hermes`
 # container is still running, or host ports/container names will conflict.
@@ -15,20 +15,19 @@ services:
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:?HERMES_DASHBOARD_BASIC_AUTH_USERNAME must be set}"
       HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:?HERMES_DASHBOARD_BASIC_AUTH_PASSWORD must be set}"
       HERMES_DASHBOARD_BASIC_AUTH_SECRET: "${HERMES_DASHBOARD_BASIC_AUTH_SECRET:?HERMES_DASHBOARD_BASIC_AUTH_SECRET must be set}"
-      API_SERVER_ENABLED: "true"
-      API_SERVER_HOST: "0.0.0.0"
-      API_SERVER_KEY: "${API_SERVER_KEY:?API_SERVER_KEY must be set}"
     ports:
       - "8642:8642"
       - "9119:9119"
     volumes:
       - /data/hermes:/opt/data
-      # Both services must see the same path for gateway-backed browser sessions.
+      # Both frontends see the same project files through this path.
       - ${HERMES_WORKSPACE:-/data/hermes/workspace}:/workspace
       # The source volume is initialized from /opt/hermes in this image.
       # Recreate it after an agent image upgrade to refresh the source copy.
       - hermes-agent-src:/opt/hermes
 
+  # The WebUI intentionally runs its own in-process agent. It shares the Hermes
+  # home, agent source, and workspace with the gateway service.
   hermes-webui:
     # Source: https://github.com/nesquena/hermes-webui
     # Pinned experimental release aligned with Hermes Agent v2026.8.27.
@@ -53,11 +52,6 @@ services:
       HERMES_WEBUI_STATE_DIR: "/home/hermeswebui/.hermes/webui"
       HERMES_WEBUI_DEFAULT_WORKSPACE: "/workspace"
       HERMES_WEBUI_PASSWORD: "${HERMES_WEBUI_PASSWORD:-}"
-      HERMES_WEBUI_CHAT_BACKEND: "gateway"
-      HERMES_WEBUI_GATEWAY_BASE_URL: "http://hermes:8642"
-      HERMES_WEBUI_GATEWAY_API_KEY: "${API_SERVER_KEY:?API_SERVER_KEY must be set}"
-      HERMES_WEBUI_GATEWAY_USE_RUNS_API: "true"
-      HERMES_API_URL: "http://hermes:8642"
 
   hindsight:
     image: ghcr.io/vectorize-io/hindsight:0.9.2
