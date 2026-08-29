@@ -24,6 +24,41 @@ services:
       # The restic stack includes this host path explicitly.
       - /data/hermes-backup:/opt/data/backups
 
+  # Hermes Workspace is a separate web UI. It connects to the existing Hermes
+  # gateway/dashboard and does not start a second Hermes Agent runtime.
+  hermes-workspace:
+    # Source: https://github.com/outsourc-e/hermes-workspace
+    # Immutable digest for the image published from commit c631425.
+    image: ghcr.io/outsourc-e/hermes-workspace:latest@sha256:1ec05339750da7caaf1cd0183c8c3b188856918b377407b4ac1dafca67e42d88
+    container_name: hermes-workspace
+    depends_on:
+      - hermes
+    restart: unless-stopped
+    environment:
+      # Share the Hermes home so profiles, config, memory, and skills are
+      # visible; canonical sessions are accessed through the APIs above.
+      HERMES_HOME: "/home/workspace/.hermes"
+      # Keep the file browser scoped to an explicit persistent directory.
+      HERMES_WORKSPACE_DIR: "/workspace"
+      # Reach the existing services over the hermes Compose network.
+      HERMES_API_URL: "http://hermes:8642"
+      HERMES_DASHBOARD_URL: "http://hermes:9119"
+      # Set API_SERVER_KEY in the Portainer stack environment when the gateway
+      # API is authenticated; do not commit its value here.
+      HERMES_API_TOKEN: "${API_SERVER_KEY:-}"
+      # The Workspace container binds 0.0.0.0 internally and requires its own
+      # password even though the host publish below is loopback-only.
+      HERMES_PASSWORD: "${HERMES_WORKSPACE_PASSWORD:?HERMES_WORKSPACE_PASSWORD must be set}"
+      # Use 1 behind the existing HTTPS tunnel; set 0 for direct plain HTTP.
+      COOKIE_SECURE: "${HERMES_WORKSPACE_COOKIE_SECURE:-1}"
+    ports:
+      # Keep the high-privilege UI off the public interface; route it through
+      # the existing host tunnel/reverse proxy.
+      - "127.0.0.1:${HERMES_WORKSPACE_PORT:-3000}:3000"
+    volumes:
+      - /data/hermes:/home/workspace/.hermes
+      - ${HERMES_WORKSPACE_DIR:-/data/hermes/workspace}:/workspace
+
   hindsight:
     image: ghcr.io/vectorize-io/hindsight:0.9.2
     container_name: hindsight
