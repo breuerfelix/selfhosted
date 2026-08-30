@@ -1,0 +1,29 @@
+# Tailscale subnet router for the home LAN.
+#
+# Required Portainer stack environment variables:
+#   TS_AUTHKEY  Tailscale auth key; keep it in Portainer, never in Git.
+#   TS_ROUTES   Home subnet(s), for example 192.168.1.0/24.
+#
+# The Docker host must be connected to the home LAN and have IP forwarding
+# enabled. See portainer/tailscale.md before deploying this stack.
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: tailscale
+    hostname: ${TS_HOSTNAME:-tailscale-subnet-router}
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TS_ACCEPT_DNS: "false"
+      TS_AUTHKEY: "${TS_AUTHKEY:?TS_AUTHKEY must be set in Portainer}"
+      TS_AUTH_ONCE: "true"
+      TS_ROUTES: "${TS_ROUTES:?TS_ROUTES must be set in Portainer}"
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - /data/tailscale:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
