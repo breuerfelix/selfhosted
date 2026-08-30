@@ -5,9 +5,28 @@
 # read/write: Codex may refresh OAuth state and writes session history there.
 # Keep both host paths private and do not copy their contents into Git.
 services:
+  mission-control-init:
+    # Docker creates a new bind-mount directory as root. Prepare only the
+    # Mission Control data path, then keep the application itself non-root.
+    image: busybox:1.37.0
+    container_name: mission-control-init
+    user: "0:0"
+    command:
+      - sh
+      - -c
+      - >-
+        mkdir -p /data/mission-control &&
+        chown -R 1000:1000 /data/mission-control
+    restart: "no"
+    volumes:
+      - /data/mission-control:/data/mission-control
+
   mission-control:
     image: ghcr.io/builderz-labs/mission-control:2.3.0
     container_name: mission-control
+    depends_on:
+      mission-control-init:
+        condition: service_completed_successfully
     user: "1000:1000"
     init: true
     restart: unless-stopped
