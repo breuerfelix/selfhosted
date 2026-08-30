@@ -15,6 +15,7 @@ Before deploying:
 3. Enable forwarding on the underlying Linux host. The settings are host-wide; they cannot be supplied reliably by this Compose file:
 
    ```sh
+   printf '%s\n' tun | sudo tee /etc/modules-load.d/tun.conf
    sudo modprobe tun
    printf '%s\n' \
      'net.ipv4.ip_forward = 1' \
@@ -22,6 +23,11 @@ Before deploying:
      | sudo tee /etc/sysctl.d/99-tailscale-subnet-router.conf
    sudo sysctl --system
    ```
+
+   The `modprobe` command loads `tun` for the current boot. The
+   `/etc/modules-load.d/tun.conf` file makes systemd load it again after future
+   reboots. If the host kernel has TUN built in, the module file is harmless and
+   `/dev/net/tun` should still be available.
 
    IPv6 forwarding is included for completeness. If you only advertise IPv4 routes, IPv4 forwarding is the required setting.
 4. Confirm that `/dev/net/tun` exists and that the host firewall permits forwarding/masquerading. Tailscale uses SNAT for subnet routes by default, so LAN devices do not need a return route to the Tailscale address range.
