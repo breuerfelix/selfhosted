@@ -7,7 +7,7 @@
 # the host's restic backup set.
 services:
   papra:
-    image: ghcr.io/papra-hq/papra:26.6.1-rootless
+    image: ghcr.io/papra-hq/papra:26.6.2-rootless
     container_name: papra
     restart: unless-stopped
     user: "1000:1000"
