@@ -98,6 +98,11 @@ configs:
                 host: beelink
                 service: cadvisor
 
+        - job_name: victoriametrics
+          static_configs:
+            - targets:
+                - victoriametrics:8428
+
 networks:
   monitoring:
     # Keep existing network name for the monitoring agents.
