@@ -10,3 +10,8 @@ scrape_configs:
         labels:
           host: beelink
           service: cadvisor
+
+  - job_name: victoriametrics
+    static_configs:
+      - targets:
+          - victoriametrics:8428
