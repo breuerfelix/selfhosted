@@ -11,9 +11,7 @@ cAdvisor -> vmagent -> VictoriaMetrics <- Grafana
 
 The Portainer stack uses the Git repository's `portainer/monitoring.yaml` file.
 The vmagent scrape configuration is inlined in its Compose `configs` entry because
-Portainer Git stacks do not materialize relative `configs.file` paths. The source
-copy at `portainer/vmagent/prometheus.yml` documents the same configuration, but
-the deployed stack does not require a host-side configuration file. The Grafana
+Portainer Git stacks do not materialize relative `configs.file` paths. The Grafana
 dashboard is managed directly in Grafana and is intentionally not provisioned
 from this repository.
 
