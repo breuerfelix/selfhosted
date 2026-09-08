@@ -16,7 +16,7 @@ services:
       - monitoring
 
   victoriametrics:
-    image: victoriametrics/victoria-metrics:v1.150.0
+    image: victoriametrics/victoria-metrics:v1.151.0
     container_name: victoriametrics
     restart: unless-stopped
     command:
