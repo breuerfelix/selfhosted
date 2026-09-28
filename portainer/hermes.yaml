@@ -47,7 +47,7 @@ services:
       - /data/hindsight:/home/hindsight/.pg0
       - /data/hindsight/codex:/var/lib/hindsight/codex
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      test: ["CMD", "/app/api/.venv/bin/python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8888/health', timeout=4)"]
       interval: 15s
       timeout: 5s
       retries: 5
