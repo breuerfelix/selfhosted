@@ -1,0 +1,31 @@
+# Paperclip self-hosted AI agent orchestration.
+# Upstream: https://github.com/paperclipai/paperclip
+#
+# Required Portainer stack environment variables:
+#   BETTER_AUTH_SECRET   random secret used to sign login sessions
+#   PAPERCLIP_PUBLIC_URL exact URL used to open Paperclip, including port
+#
+# Host port 3100 is already used by Loki, so Paperclip defaults to 3101.
+services:
+  paperclip:
+    image: ghcr.io/paperclipai/paperclip:2026.916.1
+    container_name: paperclip
+    restart: unless-stopped
+    pids_limit: 2048
+    ports:
+      - "${PAPERCLIP_PORT:-3101}:3100"
+    environment:
+      HOST: "0.0.0.0"
+      PAPERCLIP_HOME: "/paperclip"
+      PAPERCLIP_DEPLOYMENT_MODE: "authenticated"
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "private"
+      PAPERCLIP_PUBLIC_URL: "${PAPERCLIP_PUBLIC_URL:?PAPERCLIP_PUBLIC_URL must be set in Portainer}"
+      PAPERCLIP_ALLOWED_HOSTNAMES: "${PAPERCLIP_ALLOWED_HOSTNAMES:-}"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET must be set in Portainer}"
+    volumes:
+      # Database, uploads, agent workspaces, and Paperclip configuration.
+      - /data/paperclip:/paperclip
+      # Share the existing ChatGPT/Codex OAuth state with Hindsight. The
+      # official image uses HOME=/paperclip, so Codex reads /paperclip/.codex.
+      # Keep this read/write: Codex may refresh rotating subscription tokens.
+      - /data/hindsight/codex:/paperclip/.codex
