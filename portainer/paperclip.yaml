@@ -25,7 +25,3 @@ services:
     volumes:
       # Database, uploads, agent workspaces, and Paperclip configuration.
       - /data/paperclip:/paperclip
-      # Share the existing ChatGPT/Codex OAuth state with Hindsight. The
-      # official image uses HOME=/paperclip, so Codex reads /paperclip/.codex.
-      # Keep this read/write: Codex may refresh rotating subscription tokens.
-      - /data/hindsight/codex:/paperclip/.codex
