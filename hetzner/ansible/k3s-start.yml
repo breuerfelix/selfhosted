@@ -1,0 +1,39 @@
+---
+- name: Enable and start K3s after Cloud Firewall verification
+  hosts: hetzner
+  gather_facts: false
+
+  tasks:
+    - name: Require explicit confirmation that firewall and fresh SSH were verified
+      ansible.builtin.assert:
+        that:
+          - firewall_verified | default(false) | bool
+        fail_msg: >-
+          Attach Hetzner Cloud Firewall and verify a fresh ssh cool connection,
+          then rerun with -e firewall_verified=true.
+
+    - name: Enable and start K3s
+      ansible.builtin.systemd_service:
+        name: k3s
+        enabled: true
+        state: started
+
+    - name: Wait for local Kubernetes API
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 6443
+        state: started
+        timeout: 180
+
+    - name: Wait for node readiness
+      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node --all --timeout=180s
+      changed_when: false
+
+    - name: Show node status
+      ansible.builtin.command: k3s kubectl get nodes -o wide
+      register: node_status
+      changed_when: false
+
+    - name: Print node status
+      ansible.builtin.debug:
+        var: node_status.stdout_lines

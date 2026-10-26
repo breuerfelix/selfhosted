@@ -1,0 +1,86 @@
+---
+- name: Stage pinned single-node K3s without starting it
+  hosts: hetzner
+  gather_facts: true
+  vars:
+    # Bootstrap only. Future patch updates belong to Flux's system-upgrade Plan.
+    k3s_bootstrap_version: v1.36.5+k3s1
+
+  tasks:
+    - name: Require Ubuntu 24.04
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == 'Ubuntu'
+          - ansible_distribution_version == '24.04'
+
+    - name: Check whether K3s binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
+    - name: Confirm old Docker workloads remain stopped before first install
+      ansible.builtin.command: docker ps -q
+      register: running_docker_containers
+      changed_when: false
+      check_mode: false
+      when: not k3s_binary.stat.exists
+
+    - name: Refuse initial install while Docker workloads run
+      ansible.builtin.assert:
+        that:
+          - running_docker_containers.stdout == ''
+      when: not k3s_binary.stat.exists
+
+    - name: Create K3s configuration directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Configure single-node K3s
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/config.yaml
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          # Managed by selfhosted/hetzner/ansible/k3s.yml
+          disable:
+            - traefik
+          tls-san:
+            - "{{ ansible_default_ipv4.address }}"
+          write-kubeconfig-mode: "0600"
+
+    - name: Download official K3s installer
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /usr/local/src/k3s-install.sh
+        owner: root
+        group: root
+        mode: '0700'
+        force: false
+      when: not k3s_binary.stat.exists
+
+    - name: Install pinned K3s without enabling or starting service
+      ansible.builtin.command:
+        cmd: /bin/sh /usr/local/src/k3s-install.sh
+        creates: /usr/local/bin/k3s
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_bootstrap_version }}"
+        INSTALL_K3S_EXEC: server
+        INSTALL_K3S_SKIP_ENABLE: 'true'
+        INSTALL_K3S_SKIP_START: 'true'
+      when: not k3s_binary.stat.exists
+
+    - name: Read staged K3s version
+      ansible.builtin.command: /usr/local/bin/k3s --version
+      register: staged_k3s_version
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Show staged K3s version
+      ansible.builtin.debug:
+        var: staged_k3s_version.stdout_lines
+      when: not ansible_check_mode

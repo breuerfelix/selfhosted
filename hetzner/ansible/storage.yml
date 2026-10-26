@@ -1,0 +1,29 @@
+---
+- name: Prepare local application storage
+  hosts: hetzner
+  gather_facts: false
+
+  tasks:
+    - name: Create application data root
+      ansible.builtin.file:
+        path: /srv/k3s-data
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Create Ghost data directory
+      ansible.builtin.file:
+        path: /srv/k3s-data/ghost
+        state: directory
+        owner: '1000'
+        group: '0'
+        mode: '0755'
+
+    - name: Create Fathom data directory
+      ansible.builtin.file:
+        path: /srv/k3s-data/fathom
+        state: directory
+        owner: '0'
+        group: '0'
+        mode: '0755'

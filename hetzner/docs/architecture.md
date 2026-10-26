@@ -1,0 +1,82 @@
+# Target architecture
+
+Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule and K3s are deployed; Flux and applications are not.
+
+## Goals and accepted constraints
+
+- One Hetzner VPS, Ubuntu 24.04 LTS, one K3s server. No HA or distributed storage.
+- Git repository `git@github.com:breuerfelix/selfhosted.git` is source of truth for host provisioning code, Flux configuration, and application manifests. New implementation and documentation belong under `hetzner/`.
+- User accepts downtime lasting days. Migration occurs on existing VPS; no parallel server or DNS cutover is required.
+- Preserve Ghost and Fathom data. Screeps data may be lost. Keep old Coolify folders until new apps and recovery path have been checked.
+- Backup destination is this Mac, inside repository `temp/`, excluded from Git by root `.gitignore`. This is one Mac-local copy, not independently replicated or versioned by Git.
+- User wants guided, checkpoint-based execution. Do not perform all stages autonomously.
+
+## Proposed components
+
+| Concern | Choice | Notes |
+| --- | --- | --- |
+| Kubernetes | K3s single server, default embedded SQLite | `v1.36.5+k3s1` running with systemd enabled. Node and CoreDNS/local-path/metrics-server are Ready. No etcd or external database. |
+| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` now exist and contain verified copies. PV/PVC manifests are not yet created. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner can remain for disposable volumes. Screeps may use `/srv/k3s-data/screeps` without backup. |
+| GitOps | Flux manifests under `hetzner/cluster/flux-system` | Flux reads public GitHub repository anonymously over HTTPS. Mac uses its existing SSH credentials for Git pushes. No Flux Git credential is needed for recovery while repository stays public. |
+| Secrets | SOPS with age, consumed by Flux | Commit only encrypted secret values. Keep age private key outside Git, including a recoverable copy on this Mac or in a password manager. |
+| Ingress | Traefik managed by Flux, K3s ServiceLB | Disable K3s packaged Traefik so chart version stays pinned in Git. No MetalLB or Hetzner cloud controller. Coolify proxy currently stopped, leaving ports 80/443 free. |
+| TLS | cert-manager with Let's Encrypt HTTP-01 | Automatic renewal after public ingress is working. Existing Coolify certificates need not be migrated. |
+| Ubuntu updates | `unattended-upgrades` with automatic reboot | Applied via `hetzner/ansible/ubuntu-updates.yml`: refresh 01:00, install 02:00, reboot at 03:00 if required, all Europe/Berlin. Keep future backup/K3s upgrade windows separate. |
+| K3s updates | system-upgrade-controller with a maintenance window | Ansible's `v1.36.5+k3s1` version is first-install bootstrap only; it skips installer once binary exists and must not downgrade future versions. Flux will later install controller and one server Plan tracking `v1.36` patch channel. Advance minor version through reviewed Git change. Exact window still needs selection. |
+| Backup | Mac-initiated copy of Ghost and Fathom only | One verified migration archive exists. Ongoing backup schedule and consistency mechanism still need a decision. If Mac is off or lost, this backup is unavailable. |
+
+Avoid Longhorn, Velero, MetalLB, external databases, and extra controllers without a concrete need. Keep image references pinned rather than using `latest` in final manifests; update them through reviewed Git changes.
+
+## Intended repository layout
+
+```text
+hetzner/
+  docs/                 # This handoff, architecture, migration and recovery
+  ansible/              # Host configuration, updates, directories, K3s install
+  cluster/
+    flux-system/        # Flux bootstrap output
+    infrastructure/     # Traefik, cert-manager, upgrade controller, storage
+    apps/               # Namespaces, workloads, Services, Ingresses, secrets
+  backup/               # Mac-side backup/restore scripts if ongoing backup chosen
+```
+
+`hetzner/docs/` and initial `hetzner/ansible/` playbooks exist now. Cluster manifests and ongoing backup automation do not. Keep all new Flux files and docs under `hetzner/`.
+
+## Applications to migrate
+
+Current app definitions are in `coolify/applications/*/docker-compose.yaml`. Treat these as migration references, not authoritative Kubernetes manifests. Coolify-generated routing labels are absent; verify routes during implementation.
+
+| App | Public host | Existing image | Persistent source on VPS |
+| --- | --- | --- | --- |
+| Ghost (`danielkueffler`) | `danielkueffler.de` | `ghost:5-alpine` | `/data/coolify/applications/daniel` → `/var/lib/ghost/content` |
+| Fathom | `stats.felixbreuer.me` | `usefathom/fathom:version-1.2.1` | `/data/coolify/applications/fathom` → `/data` |
+| Screeps | `screeps.felixbreuer.me` | `screepers/screeps-launcher:latest` | `/data/coolify/applications/screeps` → `/screeps`; disposable per user |
+| Redirect | `felixbreuer.me` | `grahamdigital/simple-redirect:latest` | None |
+| Noobgallery | `photos.felixbreuer.me` | `felixbreuer/noobgallery:latest` | None |
+| Travian inactive finder | `inactive-finder.felixbreuer.me` | `felixbreuer/travian-inactive-finder:latest` | None |
+| Idle proxy | `idle-proxy.felixbreuer.me` | `ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy:latest` | None |
+
+Screeps live container also mounts `/data/coolify/applications/u8ckco8wk8o84wgw00s0044o/screeps/config.yml` to `/screeps/config.yml`. That source was nonempty (506 bytes) when inspected; `/data/coolify/applications/screeps/config.yml` was empty. Preserve required configuration in Git or as a SOPS secret before removing Coolify, even if game data is discarded. Redirect app's `PROTOCOL` and `REDIRECT_TO` values are redacted in committed Compose file; recover them from live container/configuration before migration, without exposing secrets in logs or Git.
+
+Old `/data/coolify/applications/screeps2` and `screeps3` folders exist but no corresponding running containers were found. They are outside current migration scope unless user decides otherwise.
+
+## Recovery model
+
+Primary rebuild path: provision Ubuntu/K3s from `hetzner/ansible`, apply committed Flux manifests from `hetzner/cluster/flux-system`, restore SOPS age key when encrypted secrets are introduced, restore Ghost/Fathom files to deterministic paths, then let Flux reconcile manifests. The public repository needs no Flux Git credential. Cluster resources should be disposable and reproducible from Git. For faster same-host recovery, a consistent K3s SQLite datastore copy plus `/var/lib/rancher/k3s/server/token` can be added later; token is required to restore that datastore. Do not treat raw SQLite copy taken during writes as a tested backup.
+
+Before declaring migration complete: verify Ghost/Fathom content, all seven routes, TLS issuance, Flux reconciliation, automatic recovery after reboot, and a restore of the Mac backup. Keep old Coolify files until those checks pass.
+
+## Open implementation choices
+
+1. Choose ongoing backup cadence and how Mac initiates it. Mac availability is a direct constraint; current archive is only a migration backup.
+2. Choose K3s minor channel and separate K3s upgrade window from Ubuntu's 01:00/02:00/03:00 Berlin schedule. Host timezone is now Europe/Berlin.
+3. Decide whether Screeps starts empty or its existing data is copied once. Its configuration must still be migrated.
+4. Tighten Hetzner Cloud Firewall API rule when convenient: user reported TCP 6443 is currently allowed from anywhere. API requires valid client credentials, but source-limiting it to Mac IP would reduce exposure. Hetzner firewall configuration cannot be read over SSH; fresh SSH and Mac API access have been tested. Keep TCP 22 allowed until new source restrictions are tested.
+
+## References
+
+- K3s datastore and backup: https://docs.k3s.io/datastore and https://docs.k3s.io/datastore/backup-restore
+- K3s local storage: https://docs.k3s.io/add-ons/storage
+- K3s automated upgrades: https://docs.k3s.io/upgrades/automated
+- Flux public Git sources and SOPS: https://fluxcd.io/flux/components/source/gitrepositories/ and https://fluxcd.io/flux/guides/mozilla-sops/
+- Ubuntu unattended upgrades: https://documentation.ubuntu.com/security/security-updates/

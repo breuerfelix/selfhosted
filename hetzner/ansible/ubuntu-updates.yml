@@ -1,0 +1,105 @@
+---
+- name: Configure nightly Ubuntu updates
+  hosts: hetzner
+  gather_facts: false
+  vars:
+    maintenance_timezone: Europe/Berlin
+
+  pre_tasks:
+    - name: Read current host timezone
+      ansible.builtin.command: timedatectl show -p Timezone --value
+      register: current_timezone
+      changed_when: false
+      check_mode: false
+
+  tasks:
+    - name: Ensure unattended-upgrades is installed
+      ansible.builtin.package:
+        name: unattended-upgrades
+        state: present
+
+    - name: Use Berlin time for maintenance window
+      ansible.builtin.command:
+        argv:
+          - timedatectl
+          - set-timezone
+          - "{{ maintenance_timezone }}"
+      when: current_timezone.stdout != maintenance_timezone
+      notify: Restart APT timers
+
+    - name: Create APT timer override directories
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ item }}.timer.d"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - apt-daily
+        - apt-daily-upgrade
+
+    - name: Schedule package list refresh at 01:00
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/apt-daily.timer.d/override.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          # Managed by selfhosted/hetzner/ansible/ubuntu-updates.yml
+          [Timer]
+          OnCalendar=
+          OnCalendar=*-*-* 01:00:00
+          RandomizedDelaySec=0
+          Persistent=false
+      notify: Restart APT timers
+
+    - name: Schedule unattended upgrades at 02:00
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/apt-daily-upgrade.timer.d/override.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          # Managed by selfhosted/hetzner/ansible/ubuntu-updates.yml
+          [Timer]
+          OnCalendar=
+          OnCalendar=*-*-* 02:00:00
+          RandomizedDelaySec=0
+          Persistent=false
+      notify: Restart APT timers
+
+    - name: Enable nightly APT runs and conditional reboot at 03:00
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/90selfhosted-unattended-upgrades
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          // Managed by selfhosted/hetzner/ansible/ubuntu-updates.yml
+          // Keep Ubuntu's default allowed origins. Explicitly allow trusted
+          // third-party origins when adding their APT repositories.
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          Unattended-Upgrade::Automatic-Reboot "true";
+          Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
+          Unattended-Upgrade::Automatic-Reboot-Time "03:00";
+
+    - name: Ensure APT timers are enabled and active
+      ansible.builtin.systemd_service:
+        name: "{{ item }}.timer"
+        enabled: true
+        state: started
+      loop:
+        - apt-daily
+        - apt-daily-upgrade
+
+  handlers:
+    - name: Restart APT timers
+      ansible.builtin.systemd_service:
+        name: "{{ item }}.timer"
+        daemon_reload: true
+        state: restarted
+        enabled: true
+      loop:
+        - apt-daily
+        - apt-daily-upgrade
