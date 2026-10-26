@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ./flux-system
   - ./infrastructure/storage
+  - ./infrastructure/cert-manager
   - ./apps/ghost
   - ./apps/fathom
   - ./apps/redirect

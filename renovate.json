@@ -17,6 +17,12 @@
       "/^hetzner\\/cluster\\/apps\\/.*\\.ya?ml$/"
     ]
   },
+  "flux": {
+    "managerFilePatterns": [
+      "/^hetzner\\/cluster\\/flux-system\\/gotk-components\\.ya?ml$/",
+      "/^hetzner\\/cluster\\/infrastructure\\/cert-manager\\/.*\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
     {
       "matchDatasources": ["docker"],
