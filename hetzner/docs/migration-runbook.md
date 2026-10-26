@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all application containers are stopped. K3s is running and enabled at boot.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is installed and reconciling `main`.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
 
 Original server data remains in place:
 
@@ -12,13 +12,13 @@ Original server data remains in place:
 - Fathom: `/data/coolify/applications/fathom` (about 2.8 MB).
 - Screeps: `/data/coolify/applications/screeps` (about 949 MB at last check; not backed up by agreement).
 
-**Ghost and Fathom were copied into `/srv/k3s-data`. K3s cluster is running; Flux and app/PV manifests are not deployed. No Coolify data or containers were deleted.**
+**Ghost and Fathom were copied into `/srv/k3s-data`. K3s and Flux are running; app/PV manifests are not deployed. No Coolify data or containers were deleted.**
 
 ## Completed actions, in order
 
 1. Inspected repo and VPS read-only. Repo remote: `git@github.com:breuerfelix/selfhosted.git`; current branch was `main`. VPS: Ubuntu 24.04, 4 CPUs, 8 GB RAM, 75 GB root filesystem, about 42 GB free before migration. Coolify ran seven applications; its proxy owned ports 80/443.
 2. User upgraded and rebooted Ubuntu. Post-reboot check found Docker and all Coolify containers running. No K3s service existed.
-3. Created root `.gitignore` entry `/temp/` and local `/Users/felix/code/selfhosted/temp/coolify-migration/`. Verified Git ignores files there. Root `.gitignore` is currently an **uncommitted** repository change.
+3. Created root `.gitignore` entry `/temp/` and local `/Users/felix/code/selfhosted/temp/coolify-migration/`. Verified Git ignores files there. Root `.gitignore` was committed with host and Flux configuration in `097e010`.
 4. Saved container names and original restart policies locally to `temp/coolify-migration/container-names.txt` and `temp/coolify-migration/restart-policies.txt`.
 5. Changed all 13 Docker container restart policies to `no`, then stopped all containers. Some exited after Docker's timeout; all are now stopped. Original containers and application directories remain available for rollback.
 6. With containers stopped, streamed Ghost and Fathom directories into `temp/coolify-migration/ghost-fathom.tar` on this Mac. Archive size is about 2.7 GB and contains 1,873 entries. Created `ghost-fathom.tar.sha256`.
@@ -30,6 +30,8 @@ Original server data remains in place:
 12. Staged K3s `v1.36.5+k3s1` through `hetzner/ansible/k3s.yml`, with bundled Traefik disabled and server public IPv4 in TLS SAN. Official installer was run with `INSTALL_K3S_SKIP_ENABLE=true` and `INSTALL_K3S_SKIP_START=true`. Verified `k3s` service was disabled/inactive and no process listened on 6443. Ansible rerun reported `changed=0`. No cluster has been started; Hetzner Cloud Firewall setup is pending user confirmation.
 13. User reported Hetzner Cloud Firewall attached, with TCP 22 and TCP 6443 currently allowed from anywhere; user plans to tighten these later. Opened a new SSH TCP connection successfully. Then ran `hetzner/ansible/k3s-start.yml -e firewall_verified=true`: K3s service became enabled/active and node `coolify` reached Ready at `v1.36.5+k3s1`. Rerun reported `changed=0`.
 14. Copied root-only `/etc/rancher/k3s/k3s.yaml` to Mac `temp/hetzner-kubeconfig`, changed server URL to `https://91.99.161.123:6443`, and set file mode `0600`. Git ignores it. `kubectl get nodes` from Mac passed TLS and showed Ready; CoreDNS, local-path-provisioner, and metrics-server deployments all became 1/1 Available. Port 80/443 still had no listener, and Docker running count remained zero. No reboot test yet.
+15. Generated Flux v2.9.6 manifests under `hetzner/cluster/` with only source, Kustomize, and Helm controllers. Its Git source uses anonymous HTTPS for this public GitHub repository and has no `secretRef`. `kubectl kustomize hetzner/cluster` rendered successfully; `.gitignore` kept Mac backup and kubeconfig out of Git. Committed all host/bootstrap files as `097e010` and pushed `main`.
+16. Applied Flux components, waited for GitRepository and Kustomization CRDs, then applied the sync objects. All three controller deployments rolled out. `flux check` passed, and source plus Kustomization were Ready at `main@sha1:097e0104`. No application workloads were deployed. See [flux-bootstrap.md](flux-bootstrap.md) for recovery steps.
 
 Archive SHA-256:
 
@@ -48,7 +50,7 @@ Local archive and policy files are **ignored by Git**. A fresh checkout or anoth
 
 ## Immediate next stage
 
-Pause here. Review Flux bootstrap plan and repository authentication with user before deployment. Then create Flux manifests under `hetzner/cluster/`, bootstrap against this Git repo, and verify reconciliation. Static PV/PVC and application deployment remain later checkpoints. Keep old Coolify directories and Mac archive intact.
+Pause here. Flux bootstrap is complete. Next proposed checkpoint: define deterministic static PV/PVC resources for Ghost/Fathom through Flux, verify claims bind to existing `/srv/k3s-data` paths without starting apps, then review app deployment. Keep old Coolify directories and Mac archive intact.
 
 ## Rollback to Coolify
 
@@ -77,9 +79,7 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 ## Future implementation stages
 
-1. Extend idempotent host provisioning under `hetzner/ansible/`: required packages, persistent directories, K3s configuration and pinned install. Ubuntu time/update settings are already managed there. Keep SSH access and guard API port 6443.
-2. Install K3s; verify systemd boot enablement and node readiness. Use single-server SQLite. Disable bundled Traefik if installing Flux-managed Traefik.
-3. Bootstrap Flux against this repository with sync path under `hetzner/cluster/`. Store Git deploy credentials and SOPS age identity outside Git for recovery.
-4. Deploy infrastructure and seven applications through Flux. Use deterministic retained local PVs for Ghost/Fathom. Migrate Screeps configuration; recover redirect values from old runtime configuration. Keep stateful apps at one replica and use `Recreate` strategy for SQLite-backed apps.
-5. Configure ingress and automatic TLS. Verify every public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
-6. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.
+1. Create static retained local PVs/PVCs for Ghost and Fathom through Flux. Verify binding to deterministic paths before starting workloads.
+2. Deploy infrastructure and seven applications through Flux. Migrate Screeps configuration; recover redirect values from old runtime configuration. Keep stateful apps at one replica and use `Recreate` strategy for SQLite-backed apps. Store SOPS age identity outside Git when encrypted app secrets are introduced.
+3. Configure ingress and automatic TLS. Verify every public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
+4. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.
