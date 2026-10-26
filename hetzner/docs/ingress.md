@@ -30,4 +30,6 @@ curl -I 'https://felixbreuer.me/path?x=1'
 
 Expected: ClusterIssuer and five Certificates Ready; Ghost/Fathom/Noobgallery/Screeps Deployments 1/1; Ghost/Fathom/Screeps PVCs Bound; first three HTTPS routes return 200. Screeps `/` redirects to `/web/`, which returns 200; `/api/version` returns 200. HTTP app routes redirect to HTTPS; final redirect returns `Location: https://breuer.dev/path?x=1`. The HTTPS requests validate Let's Encrypt certificates without `curl -k`. Unknown hosts still return Traefik 404.
 
+Ghost's homepage previously returned 200 while its active `t7394482` theme rendered bare links. After the approved switch to `edge`, verify its page visually as well as by status code: navigation and photo grid should display, with `/assets/built/screen.css` and post images loading. See [migration-runbook.md](migration-runbook.md).
+
 If issuance fails, inspect `Certificate`, `CertificateRequest`, `Order`, and `Challenge` in `apps`; check DNS A/AAAA and public port 80. Do not apply certificates or private keys manually. Flux owns route manifests; cert-manager owns generated Secrets and renewals. A fresh-cluster restore recreates certificates from Git definitions and ACME, subject to DNS and rate limits. See [cert-manager.md](cert-manager.md).
