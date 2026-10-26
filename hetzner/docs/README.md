@@ -4,4 +4,6 @@ Read [migration-runbook.md](migration-runbook.md) first. It records live migrati
 
 As of 2026-10-26, Coolify remains stopped; Ghost/Fathom were backed up to this Mac and copied into `/srv/k3s-data`; nightly Ubuntu updates are configured. K3s `v1.36.5+k3s1` is **running and enabled**, with bundled Traefik and ServiceLB handling ports 80/443. Mac can access Kubernetes API using ignored `temp/hetzner-kubeconfig`. Flux v2.9.6 is reconciling this public Git repository over HTTPS. Ghost/Fathom PVs/PVCs are Bound. Ghost, Fathom, Noobgallery, and Screeps run at one replica each; a Traefik route replaces the old redirect pod. cert-manager has issued five certificates. All five public routes work over HTTPS. Screeps starts with fresh, disposable local storage; its old Coolify data was not copied.
 
+Controlled reboot recovery passed: K3s, Flux, Traefik, cert-manager, all app workloads, PVCs, and routes returned without manual repair. Coolify containers stayed stopped. Ongoing Ghost/Fathom backup and restore remain next checkpoint.
+
 Work one stage at a time with user. Before each consequential server change, state exact action and expected result; stop at checkpoint afterward. Do not run whole migration unattended.
