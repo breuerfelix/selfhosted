@@ -5,6 +5,7 @@ resources:
   - ./infrastructure/storage
   - ./infrastructure/cert-manager
   - ./infrastructure/traefik
+  - ./infrastructure/system-upgrade-controller
   - ./apps/ghost
   - ./apps/fathom
   - ./apps/redirect

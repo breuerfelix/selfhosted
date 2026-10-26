@@ -14,7 +14,8 @@
   },
   "kubernetes": {
     "managerFilePatterns": [
-      "/^hetzner\\/cluster\\/apps\\/.*\\.ya?ml$/"
+      "/^hetzner\\/cluster\\/apps\\/.*\\.ya?ml$/",
+      "/^hetzner\\/cluster\\/infrastructure\\/system-upgrade-controller\\/controller\\.yaml$/"
     ]
   },
   "flux": {
