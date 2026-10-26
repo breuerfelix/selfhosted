@@ -53,7 +53,7 @@ services:
       - monitoring
 
   vmagent:
-    image: victoriametrics/vmagent:v1.154.0
+    image: victoriametrics/vmagent:v1.155.0
     container_name: vmagent
     restart: unless-stopped
     command:
