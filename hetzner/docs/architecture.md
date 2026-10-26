@@ -1,6 +1,6 @@
 # Target architecture
 
-Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed. SOPS age decryption is configured. Ghost/Fathom run internally; three other app manifests remain inactive. Public ingress is not deployed.
+Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed. SOPS age decryption is configured. Ghost, Fathom, redirect, and Noobgallery run internally; Screeps remains inactive. Public ingress is not deployed.
 
 ## Goals and accepted constraints
 
@@ -40,7 +40,7 @@ hetzner/
   backup/               # Mac-side backup/restore scripts if ongoing backup chosen
 ```
 
-`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and five application manifests exist now. Ghost/Fathom are active; Screeps, redirect, and Noobgallery are inactive. Ingress and ongoing backup automation do not exist. Keep all new Flux files and docs under `hetzner/`.
+`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and five application manifests exist now. Four apps are active internally; Screeps is inactive. Ingress and ongoing backup automation do not exist. Keep all new Flux files and docs under `hetzner/`.
 
 ## Applications to migrate (five)
 
