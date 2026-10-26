@@ -23,25 +23,3 @@ spec:
                 name: ghost
                 port:
                   name: http
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ghost-http
-  namespace: apps
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: apps-redirect-https@kubernetescrd
-spec:
-  ingressClassName: traefik
-  rules:
-    - host: danielkueffler.de
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: ghost
-                port:
-                  name: http
