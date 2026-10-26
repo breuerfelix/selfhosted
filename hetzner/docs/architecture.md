@@ -16,7 +16,7 @@ Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update sch
 | Concern | Choice | Notes |
 | --- | --- | --- |
 | Kubernetes | K3s single server, default embedded SQLite | `v1.36.5+k3s1` running with systemd enabled. Node and CoreDNS/local-path/metrics-server are Ready. No etcd or external database. |
-| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` contain verified copies. PVs/PVCs are Bound in the `apps` namespace and use explicit paths. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner can remain for disposable volumes. Screeps may use `/srv/k3s-data/screeps` without backup. |
+| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` contain verified copies. PVs/PVCs are Bound in the `apps` namespace and use explicit paths. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner remains for Screeps' disposable, unbacked-up PVC. |
 | GitOps | Flux v2.9.6 under `hetzner/cluster/flux-system` | Deployed: source, Kustomize, and Helm controllers. Flux reads public GitHub repository anonymously over HTTPS. Mac uses its existing SSH credentials for Git pushes. No Flux Git credential is needed for recovery while repository stays public. |
 | Secrets | SOPS with age, consumed by Flux | Screeps config is encrypted in Git. Flux has private age key in `flux-system/sops-age`; Mac key file is ignored by Git and needs a password-manager backup. No encrypted app Secret has been deployed yet. |
 | Ingress | Traefik managed by Flux, K3s ServiceLB | Disable K3s packaged Traefik so chart version stays pinned in Git. No MetalLB or Hetzner cloud controller. Coolify proxy currently stopped, leaving ports 80/443 free. |
@@ -25,7 +25,7 @@ Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update sch
 | K3s updates | system-upgrade-controller with a maintenance window | Ansible's `v1.36.5+k3s1` version is first-install bootstrap only; it skips installer once binary exists and must not downgrade future versions. Flux will later install controller and one server Plan tracking `v1.36` patch channel. Advance minor version through reviewed Git change. Exact window still needs selection. |
 | Backup | Mac-initiated copy of Ghost and Fathom only | One verified migration archive exists. Ongoing backup schedule and consistency mechanism still need a decision. If Mac is off or lost, this backup is unavailable. |
 
-Avoid Longhorn, Velero, MetalLB, external databases, and extra controllers without a concrete need. Keep image references pinned rather than using `latest` in final manifests; update them through reviewed Git changes.
+Avoid Longhorn, Velero, MetalLB, external databases, and extra controllers without a concrete need. Pin each image to a digest, including registries that publish only `latest`; update them through reviewed Git changes.
 
 ## Intended repository layout
 
@@ -42,7 +42,7 @@ hetzner/
 
 `hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and inactive application manifests exist now. Ingress and ongoing backup automation do not. Keep all new Flux files and docs under `hetzner/`.
 
-## Applications to migrate
+## Applications to migrate (five)
 
 Current app definitions are in `coolify/applications/*/docker-compose.yaml`. Treat these as migration references, not authoritative Kubernetes manifests. Coolify-generated routing labels are absent; verify routes during implementation.
 
@@ -53,8 +53,8 @@ Current app definitions are in `coolify/applications/*/docker-compose.yaml`. Tre
 | Screeps | `screeps.felixbreuer.me` | `screepers/screeps-launcher:latest` | `/data/coolify/applications/screeps` → `/screeps`; disposable per user |
 | Redirect | `felixbreuer.me` | `grahamdigital/simple-redirect:latest` | None |
 | Noobgallery | `photos.felixbreuer.me` | `felixbreuer/noobgallery:latest` | None |
-| Travian inactive finder | `inactive-finder.felixbreuer.me` | `felixbreuer/travian-inactive-finder:latest` | None |
-| Idle proxy | `idle-proxy.felixbreuer.me` | `ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy:latest` | None |
+
+Travian inactive finder and idle proxy are retired by user choice. Their stopped Coolify containers and legacy repository definitions remain only as historical rollback material; do not deploy them on K3s or include their routes in ingress.
 
 Screeps live container also mounts `/data/coolify/applications/u8ckco8wk8o84wgw00s0044o/screeps/config.yml` to `/screeps/config.yml`. That source was nonempty (506 bytes) when inspected; `/data/coolify/applications/screeps/config.yml` was empty. Preserve required configuration in Git or as a SOPS secret before removing Coolify, even if game data is discarded. Redirect app's `PROTOCOL` and `REDIRECT_TO` values are redacted in committed Compose file; recover them from live container/configuration before migration, without exposing secrets in logs or Git.
 
@@ -62,9 +62,9 @@ Old `/data/coolify/applications/screeps2` and `screeps3` folders exist but no co
 
 ## Recovery model
 
-Primary rebuild path: provision Ubuntu/K3s from `hetzner/ansible`, apply committed Flux manifests from `hetzner/cluster/flux-system`, restore SOPS age key when encrypted secrets are introduced, restore Ghost/Fathom files to deterministic paths, then let Flux reconcile manifests. The public repository needs no Flux Git credential. Cluster resources should be disposable and reproducible from Git. For faster same-host recovery, a consistent K3s SQLite datastore copy plus `/var/lib/rancher/k3s/server/token` can be added later; token is required to restore that datastore. Do not treat raw SQLite copy taken during writes as a tested backup.
+Primary rebuild path: provision Ubuntu/K3s from `hetzner/ansible`, apply committed Flux manifests from `hetzner/cluster/flux-system`, restore SOPS age key, restore Ghost/Fathom files to deterministic paths, then let Flux reconcile manifests. The public repository needs no Flux Git credential. Cluster resources should be disposable and reproducible from Git. For faster same-host recovery, a consistent K3s SQLite datastore copy plus `/var/lib/rancher/k3s/server/token` can be added later; token is required to restore that datastore. Do not treat raw SQLite copy taken during writes as a tested backup.
 
-Before declaring migration complete: verify Ghost/Fathom content, all seven routes, TLS issuance, Flux reconciliation, automatic recovery after reboot, and a restore of the Mac backup. Keep old Coolify files until those checks pass.
+Before declaring migration complete: verify Ghost/Fathom content, all five planned routes, TLS issuance, Flux reconciliation, automatic recovery after reboot, and a restore of the Mac backup. Keep old Coolify files until those checks pass.
 
 ## Open implementation choices
 

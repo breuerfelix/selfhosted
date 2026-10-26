@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. App manifests are prepared but inactive.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. Five app manifests are prepared but inactive.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
 
 Original server data remains in place:
 
@@ -35,6 +35,7 @@ Original server data remains in place:
 17. Added static `local` PVs and PVCs for Ghost (`10Gi`) and Fathom (`1Gi`) under `hetzner/cluster/infrastructure/storage`, plus the `apps` namespace. Prebound by name, excluded default `local-path` class with `storageClassName: ""`, set `Retain`, and pinned node affinity to `kubernetes.io/hostname=coolify`. Pushed commit `d419073`; Flux reported Ready at that revision. Both PVCs and PVs reached `Bound`; `apps` had no pods/deployments. Rechecked data directory sizes (`2.7G` Ghost, `2.8M` Fathom) and ownership. See [storage.md](storage.md).
 18. Copied the nonempty Screeps config to ignored `temp/screeps-config.yml` and generated an age identity at ignored `temp/hetzner-sops-age.key` (mode `0600`). The key must be copied into a password manager by the user. Encrypted Screeps config in Git, validated local decryption against the original, and manually installed matching key as `flux-system/sops-age`. Added SOPS decryption to Flux's Git-managed Kustomization. Removed temporary plaintext Screeps config/Secret and redirect environment copies afterward; original Coolify files remain. See [secrets.md](secrets.md).
 19. Prepared seven app Deployment/Service directories under `hetzner/cluster/apps/`, each with an image digest pin. The three images with version tags use them; four images that only publish `latest`/`main` use `latest@sha256` pins. Updated Renovate's Kubernetes manager pattern. App directories are not in root cluster Kustomization, so nothing starts. Rendered and server-dry-run validated manifests; Screeps encrypted Secret was decrypted only for validation. See [app-preparation.md](app-preparation.md).
+20. User retired Travian inactive finder and idle proxy. Removed their two inactive K3s manifest directories and excluded both routes from the migration plan. Five app directories remain. Old Coolify containers and legacy definitions were kept for history/rollback; they remain stopped and will not be started by the rollback commands below.
 
 Archive SHA-256:
 
@@ -57,23 +58,19 @@ Pause here. App preparation checkpoint is complete. User must store `/Users/feli
 
 ## Rollback to Coolify
 
-If K3s ingress has already taken ports 80/443, release those ports first. Existing Docker containers and data must remain untouched for this procedure. Commands below restore recorded restart policies and start prior stack; run from `ssh cool` as root. Container names were verified on 2026-10-25; inspect before use if state has changed.
+If K3s ingress has already taken ports 80/443, release those ports first. Existing Docker containers and data must remain untouched for this procedure. Commands below restore restart policies and start only the five retained apps plus Coolify; retired inactive finder and idle proxy stay stopped. Run from `ssh cool` as root. Container names were verified on 2026-10-25; inspect before use if state has changed.
 
 ```bash
 docker update --restart=always coolify coolify-realtime coolify-db coolify-redis
 docker update --restart=unless-stopped \
   screeps coolify-proxy danielkueffler fathom \
   hk800wo04cg40kskco04g8k4-182621145125 \
-  tcwk0w00ssookk84w8880oog-150844045641 \
-  qw08wsg44cgossk8sg0sws8k-112020026593 \
-  wwgk8sgck44gocwscc0gs4ck-111920518419
+  tcwk0w00ssookk84w8880oog-150844045641
 docker start coolify-db coolify-redis
 docker start coolify coolify-realtime coolify-sentinel
 docker start danielkueffler fathom screeps \
   hk800wo04cg40kskco04g8k4-182621145125 \
-  tcwk0w00ssookk84w8880oog-150844045641 \
-  qw08wsg44cgossk8sg0sws8k-112020026593 \
-  wwgk8sgck44gocwscc0gs4ck-111920518419
+  tcwk0w00ssookk84w8880oog-150844045641
 docker start coolify-proxy
 docker ps --format '{{.Names}} {{.Status}}'
 ```
@@ -84,5 +81,5 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 1. Activate Ghost and Fathom through Flux. Both use bound retained local PVs, one replica, and `Recreate`. Verify data with internal access before opening public routes.
 2. Activate other prepared apps in batches. Screeps uses unbacked-up local-path storage and a SOPS-encrypted config; verify its fresh server works. Inspect any failed starts before changing their configs or image versions.
-3. Configure ingress and automatic TLS. Verify every public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
+3. Configure ingress and automatic TLS for five retained apps. Verify every planned public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
 4. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.

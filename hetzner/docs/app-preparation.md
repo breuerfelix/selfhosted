@@ -1,6 +1,6 @@
 # Prepared application manifests
 
-Seven app directories under `hetzner/cluster/apps/` contain Deployments and ClusterIP Services. They are **not included** in the live `hetzner/cluster/kustomization.yaml`; no application workload or ingress is deployed by this stage. Later stages add selected directories to the root Kustomization one checkpoint at a time.
+Five app directories under `hetzner/cluster/apps/` contain Deployments and ClusterIP Services. They are **not included** in the live `hetzner/cluster/kustomization.yaml`; no application workload or ingress is deployed by this stage. Later stages add selected directories to the root Kustomization one checkpoint at a time. Travian inactive finder and idle proxy were removed from the migration scope at user request; their old Coolify containers remain stopped until final teardown.
 
 | Directory | Container port | State | Image pin |
 | --- | ---: | --- | --- |
@@ -9,8 +9,6 @@ Seven app directories under `hetzner/cluster/apps/` contain Deployments and Clus
 | `screeps` | 21025 | New, unbacked-up `local-path` PVC; encrypted config Secret; one replica, `Recreate` | Exact `v1.17.0` tag and current digest |
 | `redirect` | 80 | None | Only `latest` tag published; current digest pinned |
 | `noobgallery` | 80 | None | Only `latest` tag published; current digest pinned |
-| `travian-inactive-finder` | 80 | None | Only `latest` tag published; current digest pinned |
-| `idle-proxy` | 8080 | None | Only `latest` and `main` tags published; current digest pinned |
 
 Image digests were copied from images used by stopped Coolify containers and checked against public registries. `tag@sha256:digest` is immutable at deployment even when tag text says `latest`. Root `renovate.json` now tells the Kubernetes manager to inspect `hetzner/cluster/apps/**/*.yaml` and gives Fathom's `version-1.2.1` tag an explicit version parser, so Renovate can propose tag and digest updates. Review updates before merging; merging an activated app's image change will roll its Deployment.
 
