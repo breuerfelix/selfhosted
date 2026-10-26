@@ -1,0 +1,59 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: felixbreuer-me-tls
+  namespace: apps
+spec:
+  secretName: felixbreuer-me-tls
+  dnsNames:
+    - felixbreuer.me
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-to-breuer-dev
+  namespace: apps
+spec:
+  redirectRegex:
+    regex: '^https?://felixbreuer\.me(.*)'
+    replacement: 'https://breuer.dev${1}'
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: redirect-http
+  namespace: apps
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`felixbreuer.me`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-breuer-dev
+      services:
+        - name: noop@internal
+          kind: TraefikService
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: redirect-https
+  namespace: apps
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`felixbreuer.me`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-breuer-dev
+      services:
+        - name: noop@internal
+          kind: TraefikService
+  tls:
+    secretName: felixbreuer-me-tls
