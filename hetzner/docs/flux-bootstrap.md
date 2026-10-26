@@ -40,6 +40,8 @@ The reconciled path is `./hetzner/cluster`. The root `kustomization.yaml` names 
    KUBECONFIG=temp/hetzner-kubeconfig flux reconcile kustomization flux-system -n flux-system
    ```
 
+   The root sync also applies system-upgrade-controller and its Plan CRD. It creates a separate `flux-system/k3s-upgrade-plan` Kustomization which waits for root readiness before applying the 04:00 patch Plan. No manual Plan apply is needed on a fresh host.
+
 4. Verify controllers and reconciliation:
 
    ```bash
@@ -49,6 +51,7 @@ The reconciled path is `./hetzner/cluster`. The root `kustomization.yaml` names 
    KUBECONFIG=temp/hetzner-kubeconfig flux check
    KUBECONFIG=temp/hetzner-kubeconfig flux get sources git
    KUBECONFIG=temp/hetzner-kubeconfig flux get kustomizations
+   KUBECONFIG=temp/hetzner-kubeconfig kubectl -n system-upgrade get deploy,plan
    ```
 
 No `flux bootstrap git` command is used: that command's SSH setup would generate a deploy key, which this public repository does not need.

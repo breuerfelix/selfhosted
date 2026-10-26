@@ -22,8 +22,8 @@ Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update sch
 | Ingress | K3s-packaged Traefik and ServiceLB | Keep packaged chart at K3s defaults. K3s supplies a compatible Traefik chart with its release; advance Traefik with K3s upgrades rather than a separate Flux HelmRelease. Only add a `HelmChartConfig` if a concrete setting is needed. No MetalLB or Hetzner cloud controller. Ghost, Fathom, Noobgallery, Screeps, and redirect routes are live. |
 | TLS | cert-manager with Let's Encrypt HTTP-01 | cert-manager v1.21.3 and production `ClusterIssuer` are deployed through Flux. Five certificates are Ready; cert-manager handles renewal. HTTP-01 uses Traefik's `traefik` IngressClass. Existing Coolify certificates were not migrated. |
 | Ubuntu updates | `unattended-upgrades` with automatic reboot | Applied via `hetzner/ansible/ubuntu-updates.yml`: refresh 01:00, install 02:00, reboot at 03:00 if required, all Europe/Berlin. Keep future backup/K3s upgrade windows separate. |
-| K3s updates | system-upgrade-controller with a maintenance window | Ansible's `v1.36.5+k3s1` version is first-install bootstrap only; it skips installer once binary exists and must not downgrade future versions. Flux will later install controller and one server Plan tracking `v1.36` patch channel. Advance minor version through reviewed Git change. Exact window still needs selection. |
-| Backup | Mac-initiated copy of Ghost and Fathom only | One verified migration archive exists. Ongoing backup schedule and consistency mechanism still need a decision. If Mac is off or lost, this backup is unavailable. |
+| K3s updates | system-upgrade-controller with a maintenance window | Flux installed controller v0.20.2 and one server Plan tracking the `v1.36` patch channel. Jobs may start daily 04:00–05:00 Europe/Berlin. First scheduled run is untested. Ansible's `v1.36.5+k3s1` version is first-install bootstrap only; it skips installer once binary exists and must not downgrade future versions. Advance minor versions through reviewed Git changes, one minor at a time. See [k3s-updates.md](k3s-updates.md). |
+| Backup | Existing Mac migration archive; later AWS S3 design | Ghost/Fathom archive and post-theme Ghost database snapshot exist only in ignored `temp/` on this Mac. User closed Mac backup automation and restore-drill tasks and deferred ongoing backups to a later AWS S3 design. No ongoing backup runs; restore has not been tested. If Mac is off or lost, these copies are unavailable. |
 
 Avoid Longhorn, Velero, MetalLB, external databases, and extra controllers without a concrete need. Pin each image to a digest, including registries that publish only `latest`; update them through reviewed Git changes.
 
@@ -37,10 +37,10 @@ hetzner/
     flux-system/        # Flux bootstrap output
     infrastructure/     # cert-manager, upgrade controller, storage
     apps/               # Namespaces, workloads, Services, Ingresses, secrets
-  backup/               # Mac-side backup/restore scripts if ongoing backup chosen
+  backup/               # Future S3 backup code, if chosen
 ```
 
-`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage, cert-manager, and application routes exist now. Four app Deployments and one Traefik redirect are public. Ongoing backup automation does not exist. Keep all new Flux files and docs under `hetzner/`.
+`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage, cert-manager, system-upgrade-controller, and application routes exist now. Four app Deployments and one Traefik redirect are public. Ongoing backup automation does not exist. Keep all new Flux files and docs under `hetzner/`.
 
 ## Applications to migrate (five)
 
@@ -64,12 +64,12 @@ Old `/data/coolify/applications/screeps2` and `screeps3` folders exist but no co
 
 Primary rebuild path: provision Ubuntu/K3s from `hetzner/ansible`, apply committed Flux manifests from `hetzner/cluster/flux-system`, restore SOPS age key, restore Ghost/Fathom files to deterministic paths, then let Flux reconcile manifests. The original Ghost/Fathom migration archive predates the Ghost theme fix; after extracting it, restore the separate post-switch Ghost SQLite snapshot or activate `edge` in Ghost Admin. See [migration-runbook.md](migration-runbook.md). The public repository needs no Flux Git credential. Cluster resources should be disposable and reproducible from Git. For faster same-host recovery, a consistent K3s SQLite datastore copy plus `/var/lib/rancher/k3s/server/token` can be added later; token is required to restore that datastore. Do not treat raw SQLite copy taken during writes as a tested backup.
 
-Ghost/Fathom content, all five routes, TLS issuance, Flux reconciliation, and automatic recovery after a controlled reboot were checked. Before declaring migration complete: test an ongoing Ghost/Fathom backup and restore. Screeps web page and version API passed HTTP checks; authenticated gameplay was not tested. Keep old Coolify files until recovery checks pass.
+Ghost/Fathom content, all five routes, TLS issuance, Flux reconciliation, and automatic recovery after a controlled reboot were checked. User deferred an ongoing backup and restore test until a later AWS S3 design; this recovery gap remains. Screeps web page and version API passed HTTP checks; authenticated gameplay was not tested. Keep old Coolify files until separately approved for removal.
 
 ## Open implementation choices
 
-1. Choose ongoing backup cadence and how Mac initiates it. Mac availability is a direct constraint; current archive is only a migration backup.
-2. Choose K3s minor channel and separate K3s upgrade window from Ubuntu's 01:00/02:00/03:00 Berlin schedule. Host timezone is now Europe/Berlin.
+1. Design and test AWS S3 backups for Ghost/Fathom later; Mac backup automation and restore drill were closed by user decision. The existing Mac migration archive is not current data protection.
+2. Observe the first 04:00 K3s patch Plan window. Future minor-version channel changes need reviewed Git changes and compatibility checks.
 3. Tighten Hetzner Cloud Firewall API rule when convenient: user reported TCP 6443 is currently allowed from anywhere. API requires valid client credentials, but source-limiting it to Mac IP would reduce exposure. Hetzner firewall configuration cannot be read over SSH; fresh SSH and Mac API access have been tested. Keep TCP 22 allowed until new source restrictions are tested.
 
 ## References

@@ -10,7 +10,7 @@ Managed by `hetzner/ansible/ubuntu-updates.yml`. Applied on `cool` on 2026-10-26
 
 Host timezone is `Europe/Berlin`. Both APT timers have no randomized delay and `Persistent=false`. A missed night is skipped rather than caught up during daytime. Daily `APT::Periodic` settings are managed by Ansible; Ubuntu's default allowed origins remain in effect. Automatic reboot proceeds even with an SSH user logged in. No reboot occurs every night by default.
 
-Only third-party APT repository found before applying this policy was Docker's. Ubuntu's default unattended-upgrades configuration does not automatically update packages from that repository. Docker is stopped and slated for removal with Coolify. When adding a third-party APT repository later, decide whether to allow its automatic upgrades and add the specific origin in a managed APT configuration file. K3s is not an APT package in the proposed setup; its upgrade schedule is separate.
+Only third-party APT repository found before applying this policy was Docker's. Ubuntu's default unattended-upgrades configuration does not automatically update packages from that repository. Docker is stopped and slated for removal with Coolify. When adding a third-party APT repository later, decide whether to allow its automatic upgrades and add the specific origin in a managed APT configuration file. K3s is not an APT package; its Flux-managed patch upgrade window starts at 04:00. See [k3s-updates.md](k3s-updates.md).
 
 The 03:00 reboot time is a target, not a hard maintenance cutoff if package installation takes longer. Ubuntu package updates can also restart affected services during the 02:00 run.
 
