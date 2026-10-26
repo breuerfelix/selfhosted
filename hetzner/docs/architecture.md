@@ -1,6 +1,6 @@
 # Target architecture
 
-Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, and Flux are deployed; applications are not.
+Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed; applications are not.
 
 ## Goals and accepted constraints
 
@@ -16,7 +16,7 @@ Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update sch
 | Concern | Choice | Notes |
 | --- | --- | --- |
 | Kubernetes | K3s single server, default embedded SQLite | `v1.36.5+k3s1` running with systemd enabled. Node and CoreDNS/local-path/metrics-server are Ready. No etcd or external database. |
-| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` now exist and contain verified copies. PV/PVC manifests are not yet created. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner can remain for disposable volumes. Screeps may use `/srv/k3s-data/screeps` without backup. |
+| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` contain verified copies. PVs/PVCs are Bound in the `apps` namespace and use explicit paths. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner can remain for disposable volumes. Screeps may use `/srv/k3s-data/screeps` without backup. |
 | GitOps | Flux v2.9.6 under `hetzner/cluster/flux-system` | Deployed: source, Kustomize, and Helm controllers. Flux reads public GitHub repository anonymously over HTTPS. Mac uses its existing SSH credentials for Git pushes. No Flux Git credential is needed for recovery while repository stays public. |
 | Secrets | SOPS with age, consumed by Flux | Commit only encrypted secret values. Keep age private key outside Git, including a recoverable copy on this Mac or in a password manager. |
 | Ingress | Traefik managed by Flux, K3s ServiceLB | Disable K3s packaged Traefik so chart version stays pinned in Git. No MetalLB or Hetzner cloud controller. Coolify proxy currently stopped, leaving ports 80/443 free. |
@@ -40,7 +40,7 @@ hetzner/
   backup/               # Mac-side backup/restore scripts if ongoing backup chosen
 ```
 
-`hetzner/docs/`, initial `hetzner/ansible/` playbooks, and Flux self-management manifests exist now. Application, storage, ingress, and ongoing backup automation do not. Keep all new Flux files and docs under `hetzner/`.
+`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, and Ghost/Fathom storage manifests exist now. Application, ingress, and ongoing backup automation do not. Keep all new Flux files and docs under `hetzner/`.
 
 ## Applications to migrate
 

@@ -1,6 +1,6 @@
 # Ghost and Fathom storage
 
-Flux manages two static local PVs and their claims in `hetzner/cluster/infrastructure/storage`. Both claims live in the `apps` namespace. The node is currently named `coolify`, so PV node affinity uses `kubernetes.io/hostname=coolify`.
+Flux manages two static local PVs and their claims in `hetzner/cluster/infrastructure/storage`. Both claims live in the `apps` namespace. The node is currently named `coolify`, so PV node affinity uses `kubernetes.io/hostname=coolify`. Both PVs/PVCs became Bound through Flux at revision `d419073` on 2026-10-26; no app workloads were started.
 
 | Claim (`apps` namespace) | Local directory on VPS | Declared size | Original Coolify directory |
 | --- | --- | --- | --- |

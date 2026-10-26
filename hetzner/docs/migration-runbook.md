@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is installed and reconciling `main`.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is installed and reconciling `main`; Ghost/Fathom PVs and PVCs are Bound.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
 
 Original server data remains in place:
 
@@ -12,7 +12,7 @@ Original server data remains in place:
 - Fathom: `/data/coolify/applications/fathom` (about 2.8 MB).
 - Screeps: `/data/coolify/applications/screeps` (about 949 MB at last check; not backed up by agreement).
 
-**Ghost and Fathom were copied into `/srv/k3s-data`. K3s and Flux are running; app/PV manifests are not deployed. No Coolify data or containers were deleted.**
+**Ghost and Fathom were copied into `/srv/k3s-data`; both retained local PVs and PVCs are Bound. K3s and Flux are running. No app workloads are deployed. No Coolify data or containers were deleted.**
 
 ## Completed actions, in order
 
@@ -32,6 +32,7 @@ Original server data remains in place:
 14. Copied root-only `/etc/rancher/k3s/k3s.yaml` to Mac `temp/hetzner-kubeconfig`, changed server URL to `https://91.99.161.123:6443`, and set file mode `0600`. Git ignores it. `kubectl get nodes` from Mac passed TLS and showed Ready; CoreDNS, local-path-provisioner, and metrics-server deployments all became 1/1 Available. Port 80/443 still had no listener, and Docker running count remained zero. No reboot test yet.
 15. Generated Flux v2.9.6 manifests under `hetzner/cluster/` with only source, Kustomize, and Helm controllers. Its Git source uses anonymous HTTPS for this public GitHub repository and has no `secretRef`. `kubectl kustomize hetzner/cluster` rendered successfully; `.gitignore` kept Mac backup and kubeconfig out of Git. Committed all host/bootstrap files as `097e010` and pushed `main`.
 16. Applied Flux components, waited for GitRepository and Kustomization CRDs, then applied the sync objects. All three controller deployments rolled out. `flux check` passed, and source plus Kustomization were Ready at `main@sha1:097e0104`. No application workloads were deployed. See [flux-bootstrap.md](flux-bootstrap.md) for recovery steps.
+17. Added static `local` PVs and PVCs for Ghost (`10Gi`) and Fathom (`1Gi`) under `hetzner/cluster/infrastructure/storage`, plus the `apps` namespace. Prebound by name, excluded default `local-path` class with `storageClassName: ""`, set `Retain`, and pinned node affinity to `kubernetes.io/hostname=coolify`. Pushed commit `d419073`; Flux reported Ready at that revision. Both PVCs and PVs reached `Bound`; `apps` had no pods/deployments. Rechecked data directory sizes (`2.7G` Ghost, `2.8M` Fathom) and ownership. See [storage.md](storage.md).
 
 Archive SHA-256:
 
@@ -50,7 +51,7 @@ Local archive and policy files are **ignored by Git**. A fresh checkout or anoth
 
 ## Immediate next stage
 
-Pause here. Flux bootstrap is complete. Next proposed checkpoint: define deterministic static PV/PVC resources for Ghost/Fathom through Flux, verify claims bind to existing `/srv/k3s-data` paths without starting apps, then review app deployment. Keep old Coolify directories and Mac archive intact.
+Pause here. Storage checkpoint is complete. Next proposed checkpoint: review application configuration and SOPS age secret handling, then prepare app manifests for later deployment. Do not start apps until user approves the next stage. Keep old Coolify directories and Mac archive intact.
 
 ## Rollback to Coolify
 
@@ -79,7 +80,7 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 ## Future implementation stages
 
-1. Create static retained local PVs/PVCs for Ghost and Fathom through Flux. Verify binding to deterministic paths before starting workloads.
-2. Deploy infrastructure and seven applications through Flux. Migrate Screeps configuration; recover redirect values from old runtime configuration. Keep stateful apps at one replica and use `Recreate` strategy for SQLite-backed apps. Store SOPS age identity outside Git when encrypted app secrets are introduced.
+1. Prepare application manifests and SOPS age secret handling. Migrate Screeps configuration and recover redirect values from old runtime configuration. Store SOPS age identity outside Git when encrypted app secrets are introduced.
+2. Deploy infrastructure and seven applications through Flux. Keep stateful apps at one replica and use `Recreate` strategy for SQLite-backed apps. Verify Ghost/Fathom data before opening public routes.
 3. Configure ingress and automatic TLS. Verify every public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
 4. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.
