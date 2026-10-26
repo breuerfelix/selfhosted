@@ -4,7 +4,7 @@ The private age identity is on this Mac at `/Users/felix/code/selfhosted/temp/he
 
 An identical copy of the age identity is in the manually created `flux-system/sops-age` Kubernetes Secret under key `age.agekey`. The Flux self-reconciling Kustomization in `hetzner/cluster/flux-system/gotk-sync.yaml` declares `decryption.provider: sops` and references that Secret. When an encrypted Secret manifest enters the live cluster Kustomization, Flux decrypts it and applies an ordinary Kubernetes Secret. SOPS protects Git; the cluster has the key and decrypted data.
 
-The existing Screeps config was copied to ignored `temp/screeps-config.yml`, wrapped as a Kubernetes Secret, and encrypted at `hetzner/cluster/apps/screeps/config.sops.yaml`. Local decryption was checked against the original file. The encrypted file is staged for later deployment; its app directory is not yet included in `hetzner/cluster/kustomization.yaml`.
+The existing Screeps config was copied to ignored `temp/screeps-config.yml`, wrapped as a Kubernetes Secret, and encrypted at `hetzner/cluster/apps/screeps/config.sops.yaml`. Local decryption was checked against the original file. Temporary plaintext Screeps and redirect environment copies were then removed from `temp/`; the original stopped Coolify files remain on the VPS. The encrypted file is staged for later deployment; its app directory is not yet included in `hetzner/cluster/kustomization.yaml`.
 
 ## Fresh cluster recovery
 
