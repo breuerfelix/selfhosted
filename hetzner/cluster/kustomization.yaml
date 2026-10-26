@@ -9,3 +9,4 @@ resources:
   - ./apps/fathom
   - ./apps/redirect
   - ./apps/noobgallery
+  - ./apps/screeps
