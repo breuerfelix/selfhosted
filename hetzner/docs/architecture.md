@@ -1,6 +1,6 @@
 # Target architecture
 
-Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed. SOPS age decryption is configured. Ghost, Fathom, redirect, and Noobgallery run internally; Screeps remains inactive. Public ingress is not deployed.
+Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed. SOPS age decryption is configured. Ghost, Fathom, redirect, and Noobgallery run internally; Screeps remains inactive. K3s packages Traefik, but no public application routes exist yet.
 
 ## Goals and accepted constraints
 
@@ -19,7 +19,7 @@ Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update sch
 | Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` contain verified copies. PVs/PVCs are Bound in the `apps` namespace and use explicit paths. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner remains for Screeps' disposable, unbacked-up PVC. |
 | GitOps | Flux v2.9.6 under `hetzner/cluster/flux-system` | Deployed: source, Kustomize, and Helm controllers. Flux reads public GitHub repository anonymously over HTTPS. Mac uses its existing SSH credentials for Git pushes. No Flux Git credential is needed for recovery while repository stays public. |
 | Secrets | SOPS with age, consumed by Flux | Screeps config is encrypted in Git. Flux has private age key in `flux-system/sops-age`; Mac key file is ignored by Git and needs a password-manager backup. No encrypted app Secret has been deployed yet. |
-| Ingress | Traefik managed by Flux, K3s ServiceLB | Disable K3s packaged Traefik so chart version stays pinned in Git. No MetalLB or Hetzner cloud controller. Coolify proxy currently stopped, leaving ports 80/443 free. |
+| Ingress | K3s-packaged Traefik and ServiceLB | Keep packaged chart at K3s defaults. K3s supplies a compatible Traefik chart with its release; advance Traefik with K3s upgrades rather than a separate Flux HelmRelease. Only add a `HelmChartConfig` if a concrete setting is needed. No MetalLB or Hetzner cloud controller. No public application routes yet. |
 | TLS | cert-manager with Let's Encrypt HTTP-01 | Automatic renewal after public ingress is working. Existing Coolify certificates need not be migrated. |
 | Ubuntu updates | `unattended-upgrades` with automatic reboot | Applied via `hetzner/ansible/ubuntu-updates.yml`: refresh 01:00, install 02:00, reboot at 03:00 if required, all Europe/Berlin. Keep future backup/K3s upgrade windows separate. |
 | K3s updates | system-upgrade-controller with a maintenance window | Ansible's `v1.36.5+k3s1` version is first-install bootstrap only; it skips installer once binary exists and must not downgrade future versions. Flux will later install controller and one server Plan tracking `v1.36` patch channel. Advance minor version through reviewed Git change. Exact window still needs selection. |
@@ -35,12 +35,12 @@ hetzner/
   ansible/              # Host configuration, updates, directories, K3s install
   cluster/
     flux-system/        # Flux bootstrap output
-    infrastructure/     # Traefik, cert-manager, upgrade controller, storage
+    infrastructure/     # cert-manager, upgrade controller, storage
     apps/               # Namespaces, workloads, Services, Ingresses, secrets
   backup/               # Mac-side backup/restore scripts if ongoing backup chosen
 ```
 
-`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and five application manifests exist now. Four apps are active internally; Screeps is inactive. Ingress and ongoing backup automation do not exist. Keep all new Flux files and docs under `hetzner/`.
+`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and five application manifests exist now. Four apps are active internally; Screeps is inactive. Application Ingress resources and ongoing backup automation do not exist. Keep all new Flux files and docs under `hetzner/`.
 
 ## Applications to migrate (five)
 

@@ -1,5 +1,5 @@
 ---
-- name: Stage pinned single-node K3s without starting it
+- name: Configure pinned single-node K3s
   hosts: hetzner
   gather_facts: true
   vars:
@@ -47,11 +47,48 @@
         mode: '0600'
         content: |
           # Managed by selfhosted/hetzner/ansible/k3s.yml
-          disable:
-            - traefik
           tls-san:
             - "{{ ansible_default_ipv4.address }}"
           write-kubeconfig-mode: "0600"
+      register: k3s_config
+
+    - name: Check whether K3s is already running
+      ansible.builtin.command: systemctl is-active k3s
+      register: k3s_was_active
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      when: k3s_binary.stat.exists
+
+    - name: Restart running K3s when configuration changes
+      ansible.builtin.systemd_service:
+        name: k3s
+        state: restarted
+      when:
+        - k3s_binary.stat.exists
+        - k3s_was_active.stdout | default('') == 'active'
+        - k3s_config.changed
+
+    - name: Wait for restarted Kubernetes API
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 6443
+        state: started
+        timeout: 180
+      when:
+        - not ansible_check_mode
+        - k3s_binary.stat.exists
+        - k3s_was_active.stdout | default('') == 'active'
+        - k3s_config.changed
+
+    - name: Wait for node readiness after configuration change
+      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node --all --timeout=180s
+      changed_when: false
+      when:
+        - not ansible_check_mode
+        - k3s_binary.stat.exists
+        - k3s_was_active.stdout | default('') == 'active'
+        - k3s_config.changed
 
     - name: Download official K3s installer
       ansible.builtin.get_url:

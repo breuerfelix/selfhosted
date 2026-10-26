@@ -9,7 +9,7 @@ Proposed incoming rules for VPS `cool`:
 | Protocol and port | Source | Purpose |
 | --- | --- | --- |
 | TCP 22 | `0.0.0.0/0`, `::/0` | Preserve SSH access during setup. Narrow only in a later step after testing. |
-| TCP 80, 443 | `0.0.0.0/0`, `::/0` | Public web ingress, deployed later. |
+| TCP 80, 443 | `0.0.0.0/0`, `::/0` | K3s-packaged Traefik is reachable; application routes will be deployed later. |
 | TCP 6443 | Current Mac public IPv4 `/32` | Recommended later tightening for direct Kubernetes API access from Mac. Current SSH source on 2026-10-26 was `89.1.213.170/32`; verify it has not changed. |
 
 Leave outgoing rules empty so outgoing traffic remains allowed. Hetzner Cloud Firewall drops all other new inbound traffic by default and preserves established connections. These rules block public access to K3s kubelet and Flannel ports without host UFW/nftables rules. See https://docs.hetzner.com/cloud/firewalls/faq/.
