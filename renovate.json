@@ -11,5 +11,17 @@
     "managerFilePatterns": [
       "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
     ]
-  }
+  },
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^hetzner\\/cluster\\/apps\\/.*\\.ya?ml$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["usefathom/fathom"],
+      "versioning": "regex:^version-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+    }
+  ]
 }

@@ -30,4 +30,4 @@ The reconciled path is `./hetzner/cluster`. The root `kustomization.yaml` names 
 
 No `flux bootstrap git` command is used: that command's SSH setup would generate a deploy key, which this public repository does not need.
 
-The Flux `Kustomization` has `prune: true`. Removing a managed resource from Git will delete it from the cluster. Review deletion effects before merging future changes. App secrets will use SOPS with an age private key stored outside Git in a later stage.
+The Flux `Kustomization` has `prune: true`. Removing a managed resource from Git will delete it from the cluster. Review deletion effects before merging future changes. Its SOPS age private key lives in a manually created `flux-system/sops-age` Secret outside Git; see [secrets.md](secrets.md) for recovery.

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idle-proxy
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: idle-proxy
+  template:
+    metadata:
+      labels:
+        app: idle-proxy
+    spec:
+      containers:
+        - name: idle-proxy
+          image: ghcr.io/breuerfelix/idle-mmo-extensions/idle-proxy:latest@sha256:99c23d6ec2d92a4ea72ddfa6f9c3166f44d6615b4ec2aad18685f8e506f83d69
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: idle-proxy
+  namespace: apps
+spec:
+  selector:
+    app: idle-proxy
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

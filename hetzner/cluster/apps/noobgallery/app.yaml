@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noobgallery
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noobgallery
+  template:
+    metadata:
+      labels:
+        app: noobgallery
+    spec:
+      containers:
+        - name: noobgallery
+          image: felixbreuer/noobgallery:latest@sha256:097605268eb4997b1a2e89843e9a8b148de005dea55a9a819576d7129d6d8031
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            tcpSocket:
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: noobgallery
+  namespace: apps
+spec:
+  selector:
+    app: noobgallery
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

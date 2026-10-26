@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ghost
+  template:
+    metadata:
+      labels:
+        app: ghost
+    spec:
+      containers:
+        - name: ghost
+          image: ghost:5.130.6-alpine@sha256:a0506f3f05f5bdc6c950c5113cdcdb1e1f96fbf15f6dc0a39fc093c25348bdb5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 2368
+          env:
+            - name: NODE_ENV
+              value: development
+            - name: security__staffDeviceVerification
+              value: "false"
+            - name: url
+              value: https://danielkueffler.de
+            - name: database__connection__filename
+              value: /var/lib/ghost/content/data/ghost.db
+          readinessProbe:
+            tcpSocket:
+              port: http
+          volumeMounts:
+            - name: content
+              mountPath: /var/lib/ghost/content
+      volumes:
+        - name: content
+          persistentVolumeClaim:
+            claimName: ghost-content
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost
+  namespace: apps
+spec:
+  selector:
+    app: ghost
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is installed and reconciling `main`; Ghost/Fathom PVs and PVCs are Bound.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. App manifests are prepared but inactive.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
 
 Original server data remains in place:
 
@@ -33,6 +33,8 @@ Original server data remains in place:
 15. Generated Flux v2.9.6 manifests under `hetzner/cluster/` with only source, Kustomize, and Helm controllers. Its Git source uses anonymous HTTPS for this public GitHub repository and has no `secretRef`. `kubectl kustomize hetzner/cluster` rendered successfully; `.gitignore` kept Mac backup and kubeconfig out of Git. Committed all host/bootstrap files as `097e010` and pushed `main`.
 16. Applied Flux components, waited for GitRepository and Kustomization CRDs, then applied the sync objects. All three controller deployments rolled out. `flux check` passed, and source plus Kustomization were Ready at `main@sha1:097e0104`. No application workloads were deployed. See [flux-bootstrap.md](flux-bootstrap.md) for recovery steps.
 17. Added static `local` PVs and PVCs for Ghost (`10Gi`) and Fathom (`1Gi`) under `hetzner/cluster/infrastructure/storage`, plus the `apps` namespace. Prebound by name, excluded default `local-path` class with `storageClassName: ""`, set `Retain`, and pinned node affinity to `kubernetes.io/hostname=coolify`. Pushed commit `d419073`; Flux reported Ready at that revision. Both PVCs and PVs reached `Bound`; `apps` had no pods/deployments. Rechecked data directory sizes (`2.7G` Ghost, `2.8M` Fathom) and ownership. See [storage.md](storage.md).
+18. Copied the nonempty Screeps config to ignored `temp/screeps-config.yml` and generated an age identity at ignored `temp/hetzner-sops-age.key` (mode `0600`). The key must be copied into a password manager by the user. Encrypted Screeps config in Git, validated local decryption against the original, and manually installed matching key as `flux-system/sops-age`. Added SOPS decryption to Flux's Git-managed Kustomization. See [secrets.md](secrets.md).
+19. Prepared seven app Deployment/Service directories under `hetzner/cluster/apps/`, each with an image digest pin. The three images with version tags use them; four images that only publish `latest`/`main` use `latest@sha256` pins. Updated Renovate's Kubernetes manager pattern. App directories are not in root cluster Kustomization, so nothing starts. Rendered and server-dry-run validated manifests; Screeps encrypted Secret was decrypted only for validation. See [app-preparation.md](app-preparation.md).
 
 Archive SHA-256:
 
@@ -51,7 +53,7 @@ Local archive and policy files are **ignored by Git**. A fresh checkout or anoth
 
 ## Immediate next stage
 
-Pause here. Storage checkpoint is complete. Next proposed checkpoint: review application configuration and SOPS age secret handling, then prepare app manifests for later deployment. Do not start apps until user approves the next stage. Keep old Coolify directories and Mac archive intact.
+Pause here. App preparation checkpoint is complete. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: activate Ghost and Fathom manifests via Flux, then verify their data through internal port-forwarding. Do not start apps until user approves that next stage. Keep old Coolify directories and Mac archive intact.
 
 ## Rollback to Coolify
 
@@ -80,7 +82,7 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 ## Future implementation stages
 
-1. Prepare application manifests and SOPS age secret handling. Migrate Screeps configuration and recover redirect values from old runtime configuration. Store SOPS age identity outside Git when encrypted app secrets are introduced.
-2. Deploy infrastructure and seven applications through Flux. Keep stateful apps at one replica and use `Recreate` strategy for SQLite-backed apps. Verify Ghost/Fathom data before opening public routes.
+1. Activate Ghost and Fathom through Flux. Both use bound retained local PVs, one replica, and `Recreate`. Verify data with internal access before opening public routes.
+2. Activate other prepared apps in batches. Screeps uses unbacked-up local-path storage and a SOPS-encrypted config; verify its fresh server works. Inspect any failed starts before changing their configs or image versions.
 3. Configure ingress and automatic TLS. Verify every public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
 4. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.

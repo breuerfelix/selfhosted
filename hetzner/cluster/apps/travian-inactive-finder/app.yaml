@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travian-inactive-finder
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: travian-inactive-finder
+  template:
+    metadata:
+      labels:
+        app: travian-inactive-finder
+    spec:
+      containers:
+        - name: travian-inactive-finder
+          image: felixbreuer/travian-inactive-finder:latest@sha256:6cc50786c593ff161edc83e73819780c048e7606bafe5927657f633132be6c45
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            tcpSocket:
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: travian-inactive-finder
+  namespace: apps
+spec:
+  selector:
+    app: travian-inactive-finder
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

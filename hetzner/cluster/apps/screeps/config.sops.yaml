@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: screeps-config
+    namespace: apps
+type: Opaque
+stringData:
+    config.yml: ENC[AES256_GCM,data:/eZIZ7esuXXoEQZ16+IwP2v8EdGAJKvnWiumHmJLDmR48rXGOdE+5yHOlCUmANqJEU1HqiMsXyXvAS8Vn3Xk9WCqtQsul65ah/8OoccIbc3zvlesiROyLiUQYmD3/9/yJJqxt7q0fZv9VeJOHcFUQMOXVGP+Da5i2W6gjpQAukU4DEh/IijwA+bkZ1Ne8F/75JoKfGm3U0u9dGhnyLkCsi3Ysc+ew+J+EnkGhUtRzd9RtXxIlGbF/UOvQ0LiP6zuIQ1DbuhadMqFaioQQFx5EAC+UbS6/XGaBL1u+3DtfDT8q2k3HVXJQ24TT+howCrfTjHBdig6lMGf6P3JiGbuQAmiSQY90cWJUfzNG86ZzIlxMjC0tyzAoH8Md2MydpXQGKy4/Ygim1q2cDZm2DSq3XVEpyvWaG09RNipp/ywFyzoL+X7sbbjJBLQjvyKaCrIIj4fhzpBJsiHUpEIgSZoioJDVtPQEZHIRidkMThlUgk/7dOdhoz9Qd/+lDHvR62sxLugoXNSswtoBSyd8VtoKwafeeOogw8z275nfZ0uAnEH2W2sK8EBxEBxKpMJq+EDaoK6G3xphR7f3xLd4FW3VZpS4penshVwSEtfT4Nx5TiWoT0QdMEMLuxTJyJVpoJshLp7Xi8uaGZfOpLBhNk1HObMViK9MccRMLM=,iv:xmtY+VTyc/QWOGM/6v2pR6kVeawRGZjFgdtAA4rChSs=,tag:7A/9iJuKU+I7IGzw+R+CsQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBXdUxhSHJxZXBFMTlwU1BG
+            UDljdm82MXMwOU54TWNxcDFOdENXdGlmUlZVCm9kK1FuSDlsUGlleDJnSjJtbWZB
+            QjZvbVAzd1JkMnQ4aXFja3RlV1MxbmsKLS0tIERsNEIzWFRoQW9KRERSa3JOSHJj
+            c3ZHSnB1UlYzZUdzYnE5d2J0Y0VPM2cKTsj5LdsL7GcwhiEvE4p4BdgaNplWKb9i
+            7bCtkM5CkUGrpF0HhBuIMP2eYponf5Oqnuf/hYJ/VFRzfaed9v3zCA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age17vfeatyacqy9ya9symdcxna5auw78atyw424lfgws6zyf2js4dwqpdmc9w
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-26T08:45:24Z"
+    mac: ENC[AES256_GCM,data:vvJjJhZmcYhbJAKRzVYQLDCT7uT32MFI8axzVRqGRvlsSUmpDpW9faqxSkK2p9Tojg4rF0EUILjO5GlA2WDDDU79e0HHOBONxS+tlWA0hT47paHcFAu1EuWxLGIhSh15s8eUUrlF08m9sJ4oG76wTWrzEDvFVNtYVRuujHhSixo=,iv:bvj2sflSd2zGtgltTwba33miQInFrdN3+Bp3gv9IxUw=,tag:bbE8sETz2K6C28zDmpPFbg==,type:str]
+    version: 3.13.3

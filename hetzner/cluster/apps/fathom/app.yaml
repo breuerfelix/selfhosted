@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fathom
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: fathom
+  template:
+    metadata:
+      labels:
+        app: fathom
+    spec:
+      containers:
+        - name: fathom
+          image: usefathom/fathom:version-1.2.1@sha256:909b9799cf8d7f8c19cc7e0755c1ee3086185c90643eecc00f6d49edd4d2e489
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: FATHOM_DEBUG
+              value: "true"
+            - name: FATHOM_GZIP
+              value: "true"
+            - name: FATHOM_DATABASE_NAME
+              value: /data/fathom.db
+          readinessProbe:
+            tcpSocket:
+              port: http
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: fathom-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fathom
+  namespace: apps
+spec:
+  selector:
+    app: fathom
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

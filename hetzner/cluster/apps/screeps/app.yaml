@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: screeps
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: screeps
+  template:
+    metadata:
+      labels:
+        app: screeps
+    spec:
+      containers:
+        - name: screeps
+          image: screepers/screeps-launcher:v1.17.0@sha256:d366401870162dfe1fbb84e4368265ec059669db66801e6de878650784a9a526
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 21025
+          readinessProbe:
+            tcpSocket:
+              port: http
+          volumeMounts:
+            - name: data
+              mountPath: /screeps
+            - name: config
+              mountPath: /screeps/config.yml
+              subPath: config.yml
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: screeps-data
+        - name: config
+          secret:
+            secretName: screeps-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: screeps-data
+  namespace: apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: screeps
+  namespace: apps
+spec:
+  selector:
+    app: screeps
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
