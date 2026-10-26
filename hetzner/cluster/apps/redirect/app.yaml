@@ -22,7 +22,7 @@ spec:
               containerPort: 80
           env:
             - name: PROTOCOL
-              value: http
+              value: https
             - name: REDIRECT_TO
               value: breuer.dev
           readinessProbe:
