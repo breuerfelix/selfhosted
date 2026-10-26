@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all Docker application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. Ghost, Fathom, redirect, and Noobgallery run internally at one replica each. K3s-packaged Traefik and ServiceLB are running.** Public applications are offline intentionally: no application Ingress or TLS issuer exists. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. K3s node and core deployments were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all Docker application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. Ghost, Fathom, redirect, and Noobgallery run internally at one replica each. K3s-packaged Traefik and ServiceLB are running; cert-manager is Ready.** Public applications are offline intentionally: no application Ingress or TLS issuer exists. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. K3s node and core deployments were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
 
 Original server data remains in place:
 
@@ -39,6 +39,7 @@ Original server data remains in place:
 21. Rechecked both PVC bindings, stopped old Docker containers, 39 GB free space, Mac backup SHA-256, and copied SQLite `integrity_check=ok`. Added only `./apps/ghost` and `./apps/fathom` to root Kustomization and pushed commit `9fdc994`. Flux applied it; both Deployments became 1/1 Ready with zero restarts. Internal port-forward requests returned HTTP 200 for both Services; an existing Ghost image returned HTTP 200 with `image/jpeg` and 476031 bytes. Ghost copied DB retained 30 posts, 149 tags, and 2 users, matching old DB; Fathom retained 3 sites and 1 user. Both copied DBs still passed `integrity_check=ok`. Ghost logged nonfatal theme validation/translation warnings; Fathom logged a missing `.env` warning but connected to SQLite and listened on 8080. Port-forward processes were stopped afterward. No ingress exists.
 22. Added only `./apps/redirect` and `./apps/noobgallery` to root Kustomization and pushed commit `6d61d63`. Flux applied it; both Deployments reached 1/1 Ready with zero restarts. Via local port-forward, redirect returned HTTP 301 with `Location: http://breuer.dev/`, matching recovered Coolify `PROTOCOL=http` and `REDIRECT_TO=breuer.dev`. Noobgallery returned HTTP 200 for its homepage, one gallery JPEG, and CSS. Port-forward processes were stopped. No ingress exists; public routes remain offline.
 23. Changed plan to use K3s-packaged Traefik. Removed `disable: traefik` from Ansible-managed K3s config and made `k3s.yml` restart the active service only if config changes. Dry run showed only the config change and planned restart; the pinned bootstrap installer was skipped. Applied playbook. K3s node returned Ready; packaged HelmChart `traefik` installed chart `40.1.5+up40.1.0`, with Traefik image `3.7.13`. Initial Helm job retried after CRDs became available, then completed. Traefik Deployment reached 1/1, ServiceLB DaemonSet reached 1/1, and LoadBalancer Service advertised `91.99.161.123` on 80/443. Public HTTP with an unknown Host returned 404. No Ingress exists, so apps remain unexposed. Four app Deployments stayed 1/1, Ghost/Fathom PVCs Bound, Flux Ready, and Docker running count zero. No custom `HelmChartConfig` is needed at this point; Traefik version follows K3s.
+24. Added cert-manager through Flux's `OCIRepository` and `HelmRelease`, using chart `v1.21.3` and digest-pinned controller, webhook, cainjector, solver, and startup API check images. Enabled chart CRDs. Rendered chart and root Kustomization, then pushed commit `ad4a85a`. Flux applied it. OCI source and HelmRelease became Ready, all three Deployments reached 1/1 with zero restarts, six cert-manager CRDs appeared, and API discovery succeeded. Four apps remained 1/1; Ghost/Fathom PVCs remained Bound. No Ingress or issuer was created; public HTTP still returned 404. See [cert-manager.md](cert-manager.md).
 
 Archive SHA-256:
 
@@ -57,7 +58,7 @@ Local archive and policy files are **ignored by Git**. A fresh checkout or anoth
 
 ## Immediate next stage
 
-Pause here. Four internal apps are verified; Screeps remains inactive. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: configure cert-manager and app Ingress resources, then verify public routes and automatic TLS. Screeps activation, backups, and reboot recovery remain separate later stages. Review redirect's HTTP destination before public ingress. Keep old Coolify directories and Mac archive intact.
+Pause here. Four internal apps are verified; Screeps remains inactive. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: configure a Let's Encrypt issuer and app Ingress resources, then verify public routes and automatic TLS. Check DNS and an ACME contact address first. Screeps activation, backups, and reboot recovery remain separate later stages. Review redirect's HTTP destination before public ingress. Keep old Coolify directories and Mac archive intact.
 
 ## Rollback to Coolify
 
@@ -82,6 +83,6 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 ## Future implementation stages
 
-1. Add cert-manager and app Ingress objects through Flux. Verify automatic TLS and routes for four running apps; review whether redirect should use HTTPS. Keep Screeps route absent until its workload is active.
+1. Add an ACME issuer and app Ingress objects through Flux. Verify automatic TLS and routes for four running apps; review whether redirect should use HTTPS. Keep Screeps route absent until its workload is active.
 2. Activate Screeps separately with its unbacked-up local-path storage and SOPS-encrypted config; verify its fresh server and public route. Inspect a failed start before changing config or image version. Reboot VPS once and verify automatic recovery.
 3. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.
