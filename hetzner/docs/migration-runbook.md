@@ -14,6 +14,8 @@ Original server data remains in place:
 
 **Ghost and Fathom were copied into `/srv/k3s-data`; both retained local PVs and PVCs are Bound. K3s, Flux, four app Deployments, and one Traefik redirect route are running. No Coolify data or containers were deleted.**
 
+**Open Ghost presentation issue:** `https://danielkueffler.de/` returns 200 but renders mostly bare links. Its active theme is `t7394482`; `assets/css/screen.css` returns 200 but contains only 111 bytes, and `index.hbs` outputs bare post links. The original stopped Coolify database also has `active_theme=t7394482` (updated 2026-10-01), and its theme files match the K3s copy. This state was copied from Coolify; no K3s ingress or missing-asset error was found. An installed `edge` theme has a 35 KB built stylesheet and stored custom settings. Do not treat Ghost's HTTP 200 as a visual check. Theme choice/change awaits user review; no theme or database setting has been changed.
+
 ## Completed actions, in order
 
 1. Inspected repo and VPS read-only. Repo remote: `git@github.com:breuerfelix/selfhosted.git`; current branch was `main`. VPS: Ubuntu 24.04, 4 CPUs, 8 GB RAM, 75 GB root filesystem, about 42 GB free before migration. Coolify ran seven applications; its proxy owned ports 80/443.
