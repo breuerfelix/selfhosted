@@ -2,7 +2,7 @@
 
 Installed 2026-10-26 through Flux at `hetzner/cluster/infrastructure/cert-manager/`. A later checkpoint added production `ClusterIssuer/letsencrypt-prod` with ACME contact `felix@breuer.dev`. Ghost, Fathom, Noobgallery, Screeps, and `felixbreuer.me` certificates are Ready. See [ingress.md](ingress.md) for routes.
 
-The OCI chart is `quay.io/jetstack/charts/cert-manager:v1.21.3`, pinned to manifest digest `sha256:e482675aec32862d323a9218293ff7de81192337998615e4378c56498473f240`. Flux's `OCIRepository` copies the Helm chart layer and the `HelmRelease` installs it in the `cert-manager` namespace with `crds.enabled: true`. Chart values pin controller, webhook, cainjector, HTTP-01 solver, and startup API check images to version `v1.21.3` plus digests. Renovate's Flux manager scans this directory; review chart and image updates together for compatibility before merging. cert-manager v1.21 supports and tests Kubernetes 1.36.
+The OCI chart is `quay.io/jetstack/charts/cert-manager:v1.21.3`, pinned to manifest digest `sha256:e482675aec32862d323a9218293ff7de81192337998615e4378c56498473f240`. Flux's `OCIRepository` copies the Helm chart layer and the `HelmRelease` installs it in the `cert-manager` namespace with `crds.enabled: true`. Component images use chart defaults, so updating the pinned chart updates its controller, webhook, cainjector, HTTP-01 solver, and startup API check image versions together. Renovate's Flux manager scans this directory; review chart updates for compatibility before merging. When changing the chart manually, update both tag and digest because Flux resolves the digest first. cert-manager v1.21 supports and tests Kubernetes 1.36.
 
 Source: https://cert-manager.io/docs/installation/helm/ and https://cert-manager.io/docs/releases/
 
