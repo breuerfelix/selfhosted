@@ -4,6 +4,7 @@ resources:
   - ./flux-system
   - ./infrastructure/storage
   - ./infrastructure/cert-manager
+  - ./infrastructure/traefik
   - ./apps/ghost
   - ./apps/fathom
   - ./apps/redirect
