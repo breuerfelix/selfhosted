@@ -1,0 +1,27 @@
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: k3s-server
+  namespace: system-upgrade
+spec:
+  concurrency: 1
+  cordon: false
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/control-plane: "true"
+  serviceAccountName: system-upgrade
+  channel: https://update.k3s.io/v1-release/channels/v1.36
+  upgrade:
+    image: rancher/k3s-upgrade
+  window:
+    days:
+      - sunday
+      - monday
+      - tuesday
+      - wednesday
+      - thursday
+      - friday
+      - saturday
+    startTime: "04:00"
+    endTime: "05:00"
+    timeZone: Europe/Berlin

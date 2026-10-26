@@ -6,6 +6,7 @@ resources:
   - ./infrastructure/cert-manager
   - ./infrastructure/traefik
   - ./infrastructure/system-upgrade-controller
+  - ./infrastructure/k3s-upgrade-sync.yaml
   - ./apps/ghost
   - ./apps/fathom
   - ./apps/redirect
