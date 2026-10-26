@@ -27,4 +27,4 @@ ssh cool 'systemctl is-enabled k3s; systemctl is-active k3s; k3s kubectl get nod
 
 The second playbook refuses to start without `firewall_verified=true`. After activation, copy `/etc/rancher/k3s/k3s.yaml` to an ignored, mode-0600 file on Mac and change server URL from `https://127.0.0.1:6443` to VPS public IPv4. Verify `kubectl get nodes` directly from Mac. Do not commit kubeconfig.
 
-Node, system pods, service enablement, and Mac API access were checked on 2026-10-26. Flux was deployed afterward; see [flux-bootstrap.md](flux-bootstrap.md). A real reboot recovery test, automatic K3s updates, PV manifests, and apps remain later stages.
+Node, system pods, service enablement, and Mac API access were checked on 2026-10-26. Flux, Ghost/Fathom PVs, and internal Ghost/Fathom workloads were deployed afterward; see [flux-bootstrap.md](flux-bootstrap.md) and [migration-runbook.md](migration-runbook.md). A real reboot recovery test and automatic K3s updates remain later stages.

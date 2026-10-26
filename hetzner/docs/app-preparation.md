@@ -1,6 +1,6 @@
 # Prepared application manifests
 
-Five app directories under `hetzner/cluster/apps/` contain Deployments and ClusterIP Services. They are **not included** in the live `hetzner/cluster/kustomization.yaml`; no application workload or ingress is deployed by this stage. Later stages add selected directories to the root Kustomization one checkpoint at a time. Travian inactive finder and idle proxy were removed from the migration scope at user request; their old Coolify containers remain stopped until final teardown.
+Five app directories under `hetzner/cluster/apps/` contain Deployments and ClusterIP Services. `ghost` and `fathom` are included in the live `hetzner/cluster/kustomization.yaml` and running internally. `screeps`, `redirect`, and `noobgallery` remain inactive. No ingress is deployed. Travian inactive finder and idle proxy were removed from migration scope at user request; their old Coolify containers remain stopped until final teardown.
 
 | Directory | Container port | State | Image pin |
 | --- | ---: | --- | --- |
@@ -14,8 +14,8 @@ Image digests were copied from images used by stopped Coolify containers and che
 
 Ghost and Fathom environment values match stopped Coolify Compose definitions, including Ghost `NODE_ENV=development` and Fathom `FATHOM_DEBUG=true`. Redirect values were recovered from its stopped container: `PROTOCOL=http`, `REDIRECT_TO=breuer.dev`. Screeps uses the nonempty live config from Coolify's UUID directory, not the empty alternate config path. That file still selects `version: latest` for the Screeps application package; only its container image is pinned in this stage. Revisit that package selector if automatic package changes cause trouble.
 
-Each Service is internal only. TCP readiness checks indicate whether the configured port accepts connections; real HTTP behavior and data compatibility still need testing after deployment. No liveness probes or resource limits were guessed from absent Coolify settings. Old Coolify data and containers remain for rollback.
+Each Service is internal only. TCP readiness checks indicate whether the configured port accepts connections. Ghost/Fathom passed HTTP and selected data checks after deployment; other app behavior remains untested. No liveness probes or resource limits were guessed from absent Coolify settings. Old Coolify data and containers remain for rollback.
 
 ## Later activation
 
-Add one or more chosen app directories to `hetzner/cluster/kustomization.yaml` in a reviewed commit. Start Ghost/Fathom first, test data via port-forwarding, then activate other apps in batches. The SOPS age key is already installed in Flux but encrypted Screeps config has not yet been reconciled. Ingress and TLS are separate stages.
+Ghost and Fathom were activated first at revision `9fdc994`; both passed internal port-forward checks. Add other app directories to `hetzner/cluster/kustomization.yaml` in reviewed batches. The SOPS age key is installed in Flux, but encrypted Screeps config has not yet been reconciled. Ingress and TLS remain separate stages.

@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. Five app manifests are prepared but inactive.** Public applications are offline intentionally. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. `docker ps` returned zero running containers. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all Docker application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound, and both apps run internally at one replica.** Public applications are offline intentionally: no ingress exists. All 13 Docker containers had restart policy changed to `no`, so reboot will not restart them. K3s node and CoreDNS, local-path-provisioner, metrics-server were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
 
 Original server data remains in place:
 
@@ -12,7 +12,7 @@ Original server data remains in place:
 - Fathom: `/data/coolify/applications/fathom` (about 2.8 MB).
 - Screeps: `/data/coolify/applications/screeps` (about 949 MB at last check; not backed up by agreement).
 
-**Ghost and Fathom were copied into `/srv/k3s-data`; both retained local PVs and PVCs are Bound. K3s and Flux are running. No app workloads are deployed. No Coolify data or containers were deleted.**
+**Ghost and Fathom were copied into `/srv/k3s-data`; both retained local PVs and PVCs are Bound. K3s, Flux, Ghost, and Fathom are running. No Coolify data or containers were deleted.**
 
 ## Completed actions, in order
 
@@ -36,6 +36,7 @@ Original server data remains in place:
 18. Copied the nonempty Screeps config to ignored `temp/screeps-config.yml` and generated an age identity at ignored `temp/hetzner-sops-age.key` (mode `0600`). The key must be copied into a password manager by the user. Encrypted Screeps config in Git, validated local decryption against the original, and manually installed matching key as `flux-system/sops-age`. Added SOPS decryption to Flux's Git-managed Kustomization. Removed temporary plaintext Screeps config/Secret and redirect environment copies afterward; original Coolify files remain. See [secrets.md](secrets.md).
 19. Prepared seven app Deployment/Service directories under `hetzner/cluster/apps/`, each with an image digest pin. The three images with version tags use them; four images that only publish `latest`/`main` use `latest@sha256` pins. Updated Renovate's Kubernetes manager pattern. App directories are not in root cluster Kustomization, so nothing starts. Rendered and server-dry-run validated manifests; Screeps encrypted Secret was decrypted only for validation. See [app-preparation.md](app-preparation.md).
 20. User retired Travian inactive finder and idle proxy. Removed their two inactive K3s manifest directories and excluded both routes from the migration plan. Five app directories remain. Old Coolify containers and legacy definitions were kept for history/rollback; they remain stopped and will not be started by the rollback commands below.
+21. Rechecked both PVC bindings, stopped old Docker containers, 39 GB free space, Mac backup SHA-256, and copied SQLite `integrity_check=ok`. Added only `./apps/ghost` and `./apps/fathom` to root Kustomization and pushed commit `9fdc994`. Flux applied it; both Deployments became 1/1 Ready with zero restarts. Internal port-forward requests returned HTTP 200 for both Services; an existing Ghost image returned HTTP 200 with `image/jpeg` and 476031 bytes. Ghost copied DB retained 30 posts, 149 tags, and 2 users, matching old DB; Fathom retained 3 sites and 1 user. Both copied DBs still passed `integrity_check=ok`. Ghost logged nonfatal theme validation/translation warnings; Fathom logged a missing `.env` warning but connected to SQLite and listened on 8080. Port-forward processes were stopped afterward. No ingress exists.
 
 Archive SHA-256:
 
@@ -54,11 +55,11 @@ Local archive and policy files are **ignored by Git**. A fresh checkout or anoth
 
 ## Immediate next stage
 
-Pause here. App preparation checkpoint is complete. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: activate Ghost and Fathom manifests via Flux, then verify their data through internal port-forwarding. Do not start apps until user approves that next stage. Keep old Coolify directories and Mac archive intact.
+Pause here. Ghost/Fathom internal activation checkpoint is complete. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: activate remaining apps in small batches, starting with redirect and Noobgallery; Screeps merits a separate checkpoint because of encrypted config and disposable volume. Public ingress/TLS, backups, and reboot recovery remain later stages. Keep old Coolify directories and Mac archive intact.
 
 ## Rollback to Coolify
 
-If K3s ingress has already taken ports 80/443, release those ports first. Existing Docker containers and data must remain untouched for this procedure. Commands below restore restart policies and start only the five retained apps plus Coolify; retired inactive finder and idle proxy stay stopped. Run from `ssh cool` as root. Container names were verified on 2026-10-25; inspect before use if state has changed.
+First remove `./apps/ghost` and `./apps/fathom` from `hetzner/cluster/kustomization.yaml`, push, and wait for Flux to remove the K3s Deployments. If K3s ingress has later taken ports 80/443, release those ports too. Existing Docker containers and data must remain untouched for this procedure. Commands below restore restart policies and start only the five retained apps plus Coolify; retired inactive finder and idle proxy stay stopped. Run from `ssh cool` as root. Container names were verified on 2026-10-25; inspect before use if state has changed. Coolify will use its original directories, so any writes made only to K3s copies after activation are not automatically carried back.
 
 ```bash
 docker update --restart=always coolify coolify-realtime coolify-db coolify-redis
@@ -79,7 +80,6 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 ## Future implementation stages
 
-1. Activate Ghost and Fathom through Flux. Both use bound retained local PVs, one replica, and `Recreate`. Verify data with internal access before opening public routes.
-2. Activate other prepared apps in batches. Screeps uses unbacked-up local-path storage and a SOPS-encrypted config; verify its fresh server works. Inspect any failed starts before changing their configs or image versions.
-3. Configure ingress and automatic TLS for five retained apps. Verify every planned public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
-4. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.
+1. Activate redirect and Noobgallery through Flux, then verify internal HTTP behavior. Activate Screeps separately with its unbacked-up local-path storage and SOPS-encrypted config; verify its fresh server works. Inspect failed starts before changing configs or image versions.
+2. Configure ingress and automatic TLS for five retained apps. Verify every planned public route and Ghost/Fathom data. Reboot VPS once and verify automatic recovery.
+3. Configure and test ongoing Mac backup if selected. Only then remove Coolify containers and old files. Keep backup archive until full restore has been tested.

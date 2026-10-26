@@ -1,6 +1,6 @@
 # Target architecture
 
-Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed. SOPS age decryption is configured. App manifests are prepared but not activated.
+Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, and Ghost/Fathom static PVs/PVCs are deployed. SOPS age decryption is configured. Ghost/Fathom run internally; three other app manifests remain inactive. Public ingress is not deployed.
 
 ## Goals and accepted constraints
 
@@ -40,7 +40,7 @@ hetzner/
   backup/               # Mac-side backup/restore scripts if ongoing backup chosen
 ```
 
-`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and inactive application manifests exist now. Ingress and ongoing backup automation do not. Keep all new Flux files and docs under `hetzner/`.
+`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage manifests, and five application manifests exist now. Ghost/Fathom are active; Screeps, redirect, and Noobgallery are inactive. Ingress and ongoing backup automation do not exist. Keep all new Flux files and docs under `hetzner/`.
 
 ## Applications to migrate (five)
 
@@ -56,7 +56,7 @@ Current app definitions are in `coolify/applications/*/docker-compose.yaml`. Tre
 
 Travian inactive finder and idle proxy are retired by user choice. Their stopped Coolify containers and legacy repository definitions remain only as historical rollback material; do not deploy them on K3s or include their routes in ingress.
 
-Screeps live container also mounts `/data/coolify/applications/u8ckco8wk8o84wgw00s0044o/screeps/config.yml` to `/screeps/config.yml`. That source was nonempty (506 bytes) when inspected; `/data/coolify/applications/screeps/config.yml` was empty. Preserve required configuration in Git or as a SOPS secret before removing Coolify, even if game data is discarded. Redirect app's `PROTOCOL` and `REDIRECT_TO` values are redacted in committed Compose file; recover them from live container/configuration before migration, without exposing secrets in logs or Git.
+Screeps' stopped container mounted `/data/coolify/applications/u8ckco8wk8o84wgw00s0044o/screeps/config.yml` to `/screeps/config.yml`. That source was nonempty (506 bytes); `/data/coolify/applications/screeps/config.yml` was empty. The nonempty config is preserved as a SOPS-encrypted Secret in Git. Redirect app's `PROTOCOL` and `REDIRECT_TO` values were recovered from its stopped container; see [app-preparation.md](app-preparation.md).
 
 Old `/data/coolify/applications/screeps2` and `screeps3` folders exist but no corresponding running containers were found. They are outside current migration scope unless user decides otherwise.
 
