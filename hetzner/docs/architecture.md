@@ -1,6 +1,6 @@
 # Target architecture
 
-Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, Ghost/Fathom static PVs/PVCs, Traefik, and cert-manager are deployed. SOPS age decryption is configured. Ghost, Fathom, and Noobgallery are public over HTTPS; `felixbreuer.me` redirects through Traefik. Screeps remains inactive.
+Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update schedule, K3s, Flux, Ghost/Fathom static PVs/PVCs, Traefik, and cert-manager are deployed. SOPS age decryption is configured. Ghost, Fathom, Noobgallery, and Screeps are public over HTTPS; `felixbreuer.me` redirects through Traefik.
 
 ## Goals and accepted constraints
 
@@ -16,11 +16,11 @@ Status: target design, partly implemented. Updated 2026-10-26. Ubuntu update sch
 | Concern | Choice | Notes |
 | --- | --- | --- |
 | Kubernetes | K3s single server, default embedded SQLite | `v1.36.5+k3s1` running with systemd enabled. Node and CoreDNS/local-path/metrics-server are Ready. No etcd or external database. |
-| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` contain verified copies. PVs/PVCs are Bound in the `apps` namespace and use explicit paths. Predictable paths support fresh-host restore without dynamically generated PV directory names. K3s local-path provisioner remains for Screeps' disposable, unbacked-up PVC. |
+| Storage | Static local PVs with `Retain` for important data | `/srv/k3s-data/ghost` and `/srv/k3s-data/fathom` contain verified copies. PVs/PVCs are Bound in the `apps` namespace and use explicit paths. Predictable paths support fresh-host restore without dynamically generated PV directory names. Screeps has a Bound 3Gi `local-path` PVC; its data is disposable and not backed up. |
 | GitOps | Flux v2.9.6 under `hetzner/cluster/flux-system` | Deployed: source, Kustomize, and Helm controllers. Flux reads public GitHub repository anonymously over HTTPS. Mac uses its existing SSH credentials for Git pushes. No Flux Git credential is needed for recovery while repository stays public. |
-| Secrets | SOPS with age, consumed by Flux | Screeps config is encrypted in Git. Flux has private age key in `flux-system/sops-age`; Mac key file is ignored by Git and needs a password-manager backup. No encrypted app Secret has been deployed yet. |
-| Ingress | K3s-packaged Traefik and ServiceLB | Keep packaged chart at K3s defaults. K3s supplies a compatible Traefik chart with its release; advance Traefik with K3s upgrades rather than a separate Flux HelmRelease. Only add a `HelmChartConfig` if a concrete setting is needed. No MetalLB or Hetzner cloud controller. Ghost, Fathom, Noobgallery, and redirect routes are live. |
-| TLS | cert-manager with Let's Encrypt HTTP-01 | cert-manager v1.21.3 and production `ClusterIssuer` are deployed through Flux. Four certificates are Ready; cert-manager handles renewal. HTTP-01 uses Traefik's `traefik` IngressClass. Existing Coolify certificates were not migrated. |
+| Secrets | SOPS with age, consumed by Flux | Screeps config is encrypted in Git and reconciled as `apps/screeps-config`. Flux has private age key in `flux-system/sops-age`; Mac key file is ignored by Git and needs a password-manager backup. |
+| Ingress | K3s-packaged Traefik and ServiceLB | Keep packaged chart at K3s defaults. K3s supplies a compatible Traefik chart with its release; advance Traefik with K3s upgrades rather than a separate Flux HelmRelease. Only add a `HelmChartConfig` if a concrete setting is needed. No MetalLB or Hetzner cloud controller. Ghost, Fathom, Noobgallery, Screeps, and redirect routes are live. |
+| TLS | cert-manager with Let's Encrypt HTTP-01 | cert-manager v1.21.3 and production `ClusterIssuer` are deployed through Flux. Five certificates are Ready; cert-manager handles renewal. HTTP-01 uses Traefik's `traefik` IngressClass. Existing Coolify certificates were not migrated. |
 | Ubuntu updates | `unattended-upgrades` with automatic reboot | Applied via `hetzner/ansible/ubuntu-updates.yml`: refresh 01:00, install 02:00, reboot at 03:00 if required, all Europe/Berlin. Keep future backup/K3s upgrade windows separate. |
 | K3s updates | system-upgrade-controller with a maintenance window | Ansible's `v1.36.5+k3s1` version is first-install bootstrap only; it skips installer once binary exists and must not downgrade future versions. Flux will later install controller and one server Plan tracking `v1.36` patch channel. Advance minor version through reviewed Git change. Exact window still needs selection. |
 | Backup | Mac-initiated copy of Ghost and Fathom only | One verified migration archive exists. Ongoing backup schedule and consistency mechanism still need a decision. If Mac is off or lost, this backup is unavailable. |
@@ -40,7 +40,7 @@ hetzner/
   backup/               # Mac-side backup/restore scripts if ongoing backup chosen
 ```
 
-`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage, cert-manager, and application routes exist now. Three app Deployments and one Traefik redirect are public; Screeps is inactive. Ongoing backup automation does not exist. Keep all new Flux files and docs under `hetzner/`.
+`hetzner/docs/`, initial `hetzner/ansible/` playbooks, Flux self-management manifests, Ghost/Fathom storage, cert-manager, and application routes exist now. Four app Deployments and one Traefik redirect are public. Ongoing backup automation does not exist. Keep all new Flux files and docs under `hetzner/`.
 
 ## Applications to migrate (five)
 
@@ -56,7 +56,7 @@ Current app definitions are in `coolify/applications/*/docker-compose.yaml`. Tre
 
 Travian inactive finder and idle proxy are retired by user choice. Their stopped Coolify containers and legacy repository definitions remain only as historical rollback material; do not deploy them on K3s or include their routes in ingress.
 
-Screeps' stopped container mounted `/data/coolify/applications/u8ckco8wk8o84wgw00s0044o/screeps/config.yml` to `/screeps/config.yml`. That source was nonempty (506 bytes); `/data/coolify/applications/screeps/config.yml` was empty. The nonempty config is preserved as a SOPS-encrypted Secret in Git. The legacy redirect container ignored `PROTOCOL` and generated an HTTP destination; it was replaced with a Traefik redirect to `https://breuer.dev/`. See [ingress.md](ingress.md).
+Screeps' stopped container mounted `/data/coolify/applications/u8ckco8wk8o84wgw00s0044o/screeps/config.yml` to `/screeps/config.yml`. That source was nonempty (506 bytes); `/data/coolify/applications/screeps/config.yml` was empty. The nonempty config is preserved as a SOPS-encrypted Secret in Git, with Screeps application package `version: 4.3.0` pinned after first startup. The launcher container uses `v1.17.0` plus digest. Its fresh local volume has no copy of old world data. The legacy redirect container ignored `PROTOCOL` and generated an HTTP destination; it was replaced with a Traefik redirect to `https://breuer.dev/`. See [ingress.md](ingress.md).
 
 Old `/data/coolify/applications/screeps2` and `screeps3` folders exist but no corresponding running containers were found. They are outside current migration scope unless user decides otherwise.
 
@@ -64,14 +64,13 @@ Old `/data/coolify/applications/screeps2` and `screeps3` folders exist but no co
 
 Primary rebuild path: provision Ubuntu/K3s from `hetzner/ansible`, apply committed Flux manifests from `hetzner/cluster/flux-system`, restore SOPS age key, restore Ghost/Fathom files to deterministic paths, then let Flux reconcile manifests. The public repository needs no Flux Git credential. Cluster resources should be disposable and reproducible from Git. For faster same-host recovery, a consistent K3s SQLite datastore copy plus `/var/lib/rancher/k3s/server/token` can be added later; token is required to restore that datastore. Do not treat raw SQLite copy taken during writes as a tested backup.
 
-Before declaring migration complete: verify Ghost/Fathom content, all five planned routes, TLS issuance, Flux reconciliation, automatic recovery after reboot, and a restore of the Mac backup. Keep old Coolify files until those checks pass.
+Ghost/Fathom content, all five routes, TLS issuance, and Flux reconciliation were checked. Before declaring migration complete: verify automatic recovery after reboot and a restore of the Mac backup. Screeps web page and version API passed HTTP checks; authenticated gameplay was not tested. Keep old Coolify files until recovery checks pass.
 
 ## Open implementation choices
 
 1. Choose ongoing backup cadence and how Mac initiates it. Mac availability is a direct constraint; current archive is only a migration backup.
 2. Choose K3s minor channel and separate K3s upgrade window from Ubuntu's 01:00/02:00/03:00 Berlin schedule. Host timezone is now Europe/Berlin.
-3. Decide whether Screeps starts empty or its existing data is copied once. Its configuration must still be migrated.
-4. Tighten Hetzner Cloud Firewall API rule when convenient: user reported TCP 6443 is currently allowed from anywhere. API requires valid client credentials, but source-limiting it to Mac IP would reduce exposure. Hetzner firewall configuration cannot be read over SSH; fresh SSH and Mac API access have been tested. Keep TCP 22 allowed until new source restrictions are tested.
+3. Tighten Hetzner Cloud Firewall API rule when convenient: user reported TCP 6443 is currently allowed from anywhere. API requires valid client credentials, but source-limiting it to Mac IP would reduce exposure. Hetzner firewall configuration cannot be read over SSH; fresh SSH and Mac API access have been tested. Keep TCP 22 allowed until new source restrictions are tested.
 
 ## References
 

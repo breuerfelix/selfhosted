@@ -20,3 +20,5 @@ KUBECONFIG=temp/hetzner-kubeconfig kubectl -n apps describe pvc ghost-content fa
 ```
 
 Both claims must be `Bound` to their named PVs before starting Ghost or Fathom. `Retain` is not a backup. Preserve Mac archive and old Coolify directories until restore is tested.
+
+Screeps uses a separate 3Gi `local-path` PVC named `apps/screeps-data`. It is Bound and contains a fresh world; no old Screeps data was copied. Its local-path provisioner directory is managed by K3s and is not part of the Ghost/Fathom backup. On a fresh cluster, let Flux recreate the claim and let Screeps start empty. PVC size is not a filesystem quota on this host.

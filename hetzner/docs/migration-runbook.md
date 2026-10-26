@@ -4,7 +4,7 @@ Last verified: 2026-10-26, Europe/Berlin. Read this before any server action. Ho
 
 ## Current checkpoint
 
-**Coolify and all Docker application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom PVs and PVCs are Bound. Ghost, Fathom, and Noobgallery run at one replica each. K3s-packaged Traefik and ServiceLB are running; cert-manager and four production Certificates are Ready.** Ghost, Fathom, Noobgallery, and `felixbreuer.me` redirect are public over HTTPS. Screeps remains inactive and has no route. All 13 old Docker containers had restart policy changed to `no`, so reboot will not restart them. K3s node and core deployments were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md).
+**Coolify and all Docker application containers are stopped. K3s is running and enabled at boot. Flux is reconciling `main`; Ghost/Fathom static PVs/PVCs and Screeps' disposable PVC are Bound. Ghost, Fathom, Noobgallery, and Screeps run at one replica each. K3s-packaged Traefik and ServiceLB are running; cert-manager and five production Certificates are Ready.** Those four apps and the `felixbreuer.me` redirect are public over HTTPS. Screeps has a fresh world; old Screeps data was not copied. All 13 old Docker containers had restart policy changed to `no`, so reboot will not restart them. K3s node and core deployments were Ready. SSH and Docker daemon remained available. Ghost/Fathom data exists under `/srv/k3s-data`; original Coolify folders and Mac archive remain intact. Ubuntu updates run at 01:00/02:00 Berlin time with conditional reboot at 03:00; see [ubuntu-updates.md](ubuntu-updates.md). Reboot recovery has not been tested yet.
 
 Original server data remains in place:
 
@@ -12,7 +12,7 @@ Original server data remains in place:
 - Fathom: `/data/coolify/applications/fathom` (about 2.8 MB).
 - Screeps: `/data/coolify/applications/screeps` (about 949 MB at last check; not backed up by agreement).
 
-**Ghost and Fathom were copied into `/srv/k3s-data`; both retained local PVs and PVCs are Bound. K3s, Flux, three app Deployments, and one Traefik redirect route are running. No Coolify data or containers were deleted.**
+**Ghost and Fathom were copied into `/srv/k3s-data`; both retained local PVs and PVCs are Bound. K3s, Flux, four app Deployments, and one Traefik redirect route are running. No Coolify data or containers were deleted.**
 
 ## Completed actions, in order
 
@@ -43,6 +43,9 @@ Original server data remains in place:
 25. Verified DNS A records for `danielkueffler.de`, `stats.felixbreuer.me`, `photos.felixbreuer.me`, and `felixbreuer.me` resolve to `91.99.161.123`, with no AAAA records returned. Public port 80 reached Traefik for each. Added production `ClusterIssuer/letsencrypt-prod`, shared HTTP-to-HTTPS Middleware, and Ghost HTTPS/HTTP Ingresses in commit `b805b94`. Ghost certificate became Ready; public HTTP redirected to HTTPS, and HTTPS returned 200 with a valid Let's Encrypt certificate. User then specified ACME contact `felix@breuer.dev` and HTTPS target for the redirect; issuer email was updated in Git.
 26. Added Fathom, Noobgallery, and `felixbreuer.me` Ingresses in commit `6efeaee`. Their certificates became Ready. Fathom and Noobgallery returned 200 over HTTPS, and HTTP redirected to HTTPS. Redirect container ignored `PROTOCOL=https` because its nginx config built Location from `$scheme`, so public HTTPS still pointed to `http://breuer.dev/`. Its Deployment had rolled out with the new env value; this was an image behavior, not a Flux delay.
 27. Replaced redirect container with Traefik `RedirectRegex` Middleware plus HTTP/HTTPS `IngressRoute` objects backed by `noop@internal`. Issued an explicit new Certificate first in commit `b1a50a3`, then removed obsolete redirect Deployment, Service, and Ingresses in commit `f4ffc7b`. Flux pruned them. The old `redirect-tls` Secret was deleted after its Certificate and Ingress disappeared; new `felixbreuer-me-tls` is Ready. Both `http://felixbreuer.me/path?x=1` and `https://felixbreuer.me/path?x=1` now redirect to `https://breuer.dev/path?x=1`. All three remaining app Deployments are 1/1 and Ghost/Fathom PVCs Bound. See [ingress.md](ingress.md).
+28. Added `./apps/screeps` to the root Kustomization and pushed `10fd28a`. Flux reconciled `apps/screeps-config` from SOPS, the digest-pinned launcher Deployment, Service, and fresh 3Gi `local-path` PVC. PVC became Bound. Initial image pull and native package build took about five minutes. Pod reached 1/1 Ready with zero restarts. Internal `/` redirected to `/web`; `/api/version` returned 200. No old Screeps files were copied.
+29. Initial encrypted config selected package `latest`; the installed package was `4.3.0`. Changed only its encrypted `version` selector to `4.3.0` in `475ff88`, checking that other decrypted config values matched. Because its Secret is mounted via `subPath`, changed the Deployment template annotation in `aadce92` to restart the pod. New pod mounted version `4.3.0`, installed package `4.3.0`, reached 1/1 Ready with zero restarts, and passed internal HTTP checks.
+30. Added Screeps HTTPS and HTTP Ingresses in `0235a7a`. DNS A record resolved to `91.99.161.123`, no AAAA was returned, and cert-manager issued `apps/screeps-tls` from Let's Encrypt. Public HTTP redirected to HTTPS; HTTPS `/` redirected to `/web/`, which returned 200; `/api/version` returned 200. TLS validation passed without `curl -k`. Ghost, Fathom, and Noobgallery still returned 200, and `felixbreuer.me` still redirected to `https://breuer.dev/` with path/query retained. Authenticated Screeps gameplay was not tested. Old Coolify folders remained untouched.
 
 Archive SHA-256:
 
@@ -61,7 +64,7 @@ Local archive and policy files are **ignored by Git**. A fresh checkout or anoth
 
 ## Immediate next stage
 
-Pause here. Three applications and a native redirect are verified publicly with four production certificates; Screeps remains inactive. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: review and activate Screeps with its encrypted config and disposable local volume, then add its route and certificate if healthy. Reboot recovery, ongoing backups, and automatic K3s upgrades remain later stages. Keep old Coolify directories and Mac archive intact.
+Pause here. Four applications and a native redirect are verified publicly with five production certificates. User must store `/Users/felix/code/selfhosted/temp/hetzner-sops-age.key` in a password manager. Next proposed checkpoint: review and perform one controlled reboot, then verify K3s, Flux, PVCs, certificates, apps, public routes, and stopped Coolify containers recover automatically. Ongoing Mac backups and automatic K3s upgrades remain later stages. Keep old Coolify directories and Mac archive intact.
 
 ## Rollback to Coolify
 
@@ -86,6 +89,6 @@ docker ps --format '{{.Names}} {{.Status}}'
 
 ## Future implementation stages
 
-1. Activate Screeps separately with its unbacked-up local-path storage and SOPS-encrypted config; verify its fresh server before adding public route. Inspect a failed start before changing config or image version.
-2. Reboot VPS once and verify automatic recovery of K3s, Flux, certificates, and all workloads/routes. Configure and test ongoing Mac backup. Only then remove Coolify containers and old files; keep migration archive until restore is tested.
+1. Reboot VPS once and verify automatic recovery of K3s, Flux, certificates, and all workloads/routes.
+2. Configure and test ongoing Mac backup and restore for Ghost/Fathom. Only then remove Coolify containers and old files; keep migration archive until restore is tested.
 3. Add automatic K3s patch upgrades with a maintenance window separate from Ubuntu's reboot window.
