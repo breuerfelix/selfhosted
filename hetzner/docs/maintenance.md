@@ -29,7 +29,7 @@ export SOPS_AGE_KEY_FILE="$PWD/temp/hetzner-sops-age.key"
 sops hetzner/cluster/apps/screeps/config.sops.yaml
 ```
 
-The generated Secret name changes when encrypted content changes. Kustomize updates the Deployment reference, causing a restart and a fresh `subPath` mount. No manual version annotation or restart is needed. Every app can use the same `config.sops.yaml` naming convention: `.sops.yaml` encrypts these files completely. Other `*.sops.yaml` files use the fallback Kubernetes Secret rule, which encrypts only `data` and `stringData`. Keep the generator's default name hash enabled.
+The generated Secret name changes when config changes. Kustomize updates the Deployment reference, causing a restart and a fresh `subPath` mount. No manual version annotation or restart is needed. Every app can use the same `config.sops.yaml` naming convention: `.sops.yaml` encrypts these files completely. Other `*.sops.yaml` files use the fallback Kubernetes Secret rule, which encrypts only `data` and `stringData`. Keep the generator's default name hash enabled.
 
 Never commit private keys, kubeconfigs, or decrypted config. `kubectl kustomize` builds ciphertext locally; Flux decrypts generated Secret values before applying them.
 
