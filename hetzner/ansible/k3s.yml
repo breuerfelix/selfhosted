@@ -1,9 +1,9 @@
 ---
-- name: Configure pinned single-node K3s
+- name: Configure single-node K3s
   hosts: hetzner
   gather_facts: true
   vars:
-    # Bootstrap only. Future patch updates belong to Flux's system-upgrade Plan.
+    # First install only. Flux's system-upgrade Plan owns subsequent updates.
     k3s_bootstrap_version: v1.36.5+k3s1
 
   tasks:
@@ -13,23 +13,10 @@
           - ansible_distribution == 'Ubuntu'
           - ansible_distribution_version == '24.04'
 
-    - name: Check whether K3s binary exists
+    - name: Check whether K3s is installed
       ansible.builtin.stat:
         path: /usr/local/bin/k3s
       register: k3s_binary
-
-    - name: Confirm old Docker workloads remain stopped before first install
-      ansible.builtin.command: docker ps -q
-      register: running_docker_containers
-      changed_when: false
-      check_mode: false
-      when: not k3s_binary.stat.exists
-
-    - name: Refuse initial install while Docker workloads run
-      ansible.builtin.assert:
-        that:
-          - running_docker_containers.stdout == ''
-      when: not k3s_binary.stat.exists
 
     - name: Create K3s configuration directory
       ansible.builtin.file:
@@ -52,44 +39,6 @@
           write-kubeconfig-mode: "0600"
       register: k3s_config
 
-    - name: Check whether K3s is already running
-      ansible.builtin.command: systemctl is-active k3s
-      register: k3s_was_active
-      changed_when: false
-      failed_when: false
-      check_mode: false
-      when: k3s_binary.stat.exists
-
-    - name: Restart running K3s when configuration changes
-      ansible.builtin.systemd_service:
-        name: k3s
-        state: restarted
-      when:
-        - k3s_binary.stat.exists
-        - k3s_was_active.stdout | default('') == 'active'
-        - k3s_config.changed
-
-    - name: Wait for restarted Kubernetes API
-      ansible.builtin.wait_for:
-        host: 127.0.0.1
-        port: 6443
-        state: started
-        timeout: 180
-      when:
-        - not ansible_check_mode
-        - k3s_binary.stat.exists
-        - k3s_was_active.stdout | default('') == 'active'
-        - k3s_config.changed
-
-    - name: Wait for node readiness after configuration change
-      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node --all --timeout=180s
-      changed_when: false
-      when:
-        - not ansible_check_mode
-        - k3s_binary.stat.exists
-        - k3s_was_active.stdout | default('') == 'active'
-        - k3s_config.changed
-
     - name: Download official K3s installer
       ansible.builtin.get_url:
         url: https://get.k3s.io
@@ -100,24 +49,31 @@
         force: false
       when: not k3s_binary.stat.exists
 
-    - name: Install pinned K3s without enabling or starting service
+    - name: Install pinned K3s
       ansible.builtin.command:
         cmd: /bin/sh /usr/local/src/k3s-install.sh
         creates: /usr/local/bin/k3s
       environment:
         INSTALL_K3S_VERSION: "{{ k3s_bootstrap_version }}"
         INSTALL_K3S_EXEC: server
-        INSTALL_K3S_SKIP_ENABLE: 'true'
         INSTALL_K3S_SKIP_START: 'true'
       when: not k3s_binary.stat.exists
 
-    - name: Read staged K3s version
-      ansible.builtin.command: /usr/local/bin/k3s --version
-      register: staged_k3s_version
-      changed_when: false
+    - name: Enable K3s and apply configuration
+      ansible.builtin.systemd_service:
+        name: k3s
+        enabled: true
+        state: "{{ 'restarted' if k3s_binary.stat.exists and k3s_config.changed else 'started' }}"
+      when: not ansible_check_mode or k3s_binary.stat.exists
+
+    - name: Wait for local Kubernetes API
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 6443
+        timeout: 180
       when: not ansible_check_mode
 
-    - name: Show staged K3s version
-      ansible.builtin.debug:
-        var: staged_k3s_version.stdout_lines
+    - name: Wait for node readiness
+      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node --all --timeout=180s
+      changed_when: false
       when: not ansible_check_mode

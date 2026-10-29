@@ -1,0 +1,4 @@
+---
+- import_playbook: ubuntu-updates.yml
+- import_playbook: storage.yml
+- import_playbook: k3s.yml

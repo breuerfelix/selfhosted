@@ -17,10 +17,16 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  decryption:
-    provider: sops
-    secretRef:
-      name: sops-age
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cert-manager
+      namespace: cert-manager
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: system-upgrade-controller
+      namespace: system-upgrade
+  timeout: 10m
   path: ./hetzner/cluster
   prune: true
   sourceRef:

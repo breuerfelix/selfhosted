@@ -1,12 +1,44 @@
-# Hetzner single-node K3s handoff
+# Personal VPS
 
-Read [migration-runbook.md](migration-runbook.md) first. It records live migration state, completed actions, backup location, rollback procedure, and next step. Read [architecture.md](architecture.md) for target design and decisions still pending. [ubuntu-updates.md](ubuntu-updates.md) records applied host update schedule; [k3s-updates.md](k3s-updates.md) records the 04:00 K3s patch window and minor-version policy. [firewall.md](firewall.md), [k3s-install.md](k3s-install.md), [flux-bootstrap.md](flux-bootstrap.md), [storage.md](storage.md), [secrets.md](secrets.md), [app-preparation.md](app-preparation.md), [cert-manager.md](cert-manager.md), and [ingress.md](ingress.md) cover installed components and rebuild steps.
+One Ubuntu 24.04 VPS running K3s, Flux, and personal applications. Downtime is acceptable. Keep upstream defaults and plain manifests; no HA or distributed storage.
 
-As of 2026-10-26, Coolify remains stopped; Ghost/Fathom were backed up to this Mac and copied into `/srv/k3s-data`; nightly Ubuntu updates are configured. K3s `v1.36.5+k3s1` is **running and enabled**, with bundled Traefik and ServiceLB handling ports 80/443. Mac can access Kubernetes API using ignored `temp/hetzner-kubeconfig`. Flux v2.9.6 is reconciling this public Git repository over HTTPS. Ghost/Fathom PVs/PVCs are Bound. Ghost, Fathom, Noobgallery, and Screeps run at one replica each; a Traefik route replaces the old redirect pod. cert-manager has issued five certificates. All five public routes work over HTTPS. Screeps starts with fresh, disposable local storage; its old Coolify data was not copied.
+- [Rebuild](rebuild.md): prerequisites, host setup, data restore, and Flux bootstrap.
+- [Maintenance](maintenance.md): app changes, secrets, updates, and troubleshooting.
 
-Traefik's Git-managed `HelmChartConfig` redirects app HTTP traffic to HTTPS globally. Each app has one HTTPS Ingress; cert-manager's HTTP-01 challenge path bypasses the global redirect. `felixbreuer.me` retains its direct redirect to `https://breuer.dev/`.
+## Layout
 
-Controlled reboot recovery passed: K3s, Flux, Traefik, cert-manager, all app workloads, PVCs, and routes returned without manual repair. Coolify containers stayed stopped.
-Flux now manages system-upgrade-controller and a `v1.36` patch Plan with a daily 04:00–05:00 Europe/Berlin window. First scheduled upgrade is still untested. User closed Mac backup automation and restore-drill tasks; AWS S3 backup design is deferred. Existing Mac migration archive remains, but no ongoing backup runs.
+```text
+hetzner/
+  ansible/                 # Host setup; site.yml runs all playbooks
+  cluster/
+    flux-system/          # Generated Flux components and Git sync
+    infrastructure/       # cert-manager, Traefik config, K3s updates
+    apps/                 # Shared namespace/issuer and app directories
+  docs/
+```
 
-Work one stage at a time with user. Before each consequential server change, state exact action and expected result; stop at checkpoint afterward. Do not run whole migration unattended.
+Each app owns its workload, service, ingress, configuration, and storage definitions. Stateful apps have a `storage.yaml`; stateless apps do not. The redirect uses native Traefik routes and needs no pod.
+
+## Components
+
+- **K3s:** single server with SQLite, bundled containerd, Traefik, ServiceLB, CoreDNS, and local-path storage. Ansible installs the initial version; the Flux-managed upgrade Plan handles later patches.
+- **Flux:** source, Kustomize, and Helm controllers. Reads this public GitHub repository over HTTPS without Git credentials. The root sync installs infrastructure and waits for cert-manager and system-upgrade-controller. The `apps` and `k3s-upgrade-plan` syncs depend on root readiness. Apps have their own rollout health checks.
+- **TLS:** cert-manager issues and renews Let's Encrypt certificates through HTTP-01. Traefik redirects HTTP to HTTPS globally, allows ACME challenges, and preserves the direct domain redirect.
+- **Secrets:** SOPS with age. Encrypted config stays in Git; the private key belongs in a password manager and `flux-system/sops-age`.
+- **Storage:** retained local PVs for data that must survive claim deletion; local-path PVCs for disposable data. Capacity declarations do not enforce disk quotas. All data shares the server disk.
+
+| App | Public host | Storage | Recovery policy |
+| --- | --- | --- | --- |
+| Ghost | `danielkueffler.de` | `/srv/k3s-data/ghost` | Restore content and SQLite database |
+| Fathom | `stats.felixbreuer.me` | `/srv/k3s-data/fathom` | Restore SQLite database |
+| Screeps | `screeps.felixbreuer.me` | `local-path` PVC | World data is disposable; config is in Git |
+| Noobgallery | `photos.felixbreuer.me` | None | Recreate from image |
+| Redirect | `felixbreuer.me` → `https://breuer.dev/` | None | Recreate from Git |
+
+These policies describe data requirements, not different deployment procedures. All apps reconcile through the same Flux sync.
+
+## Source of truth
+
+Versions and image digests live in manifests, not documentation. Renovate proposes app images, Flux manifests, and cert-manager chart updates. Review before merging to `main`: Flux applies merged changes automatically.
+
+Host configuration lives in Ansible. Application data lives on the VPS and is not reconstructed from Git. **No scheduled backup is configured.** Keep current, consistent off-server backups of data you want to retain and keep the age identity separately recoverable. `Retain` preserves local files after claim deletion; it does not protect against disk loss.

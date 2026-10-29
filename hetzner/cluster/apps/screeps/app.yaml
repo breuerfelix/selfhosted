@@ -14,8 +14,6 @@ spec:
     metadata:
       labels:
         app: screeps
-      annotations:
-        selfhosted.io/screeps-package-version: "4.3.0"
     spec:
       containers:
         - name: screeps
@@ -41,19 +39,6 @@ spec:
         - name: config
           secret:
             secretName: screeps-config
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: screeps-data
-  namespace: apps
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: local-path
-  resources:
-    requests:
-      storage: 3Gi
 ---
 apiVersion: v1
 kind: Service

@@ -4,26 +4,14 @@
   gather_facts: false
 
   tasks:
-    - name: Create application data root
+    - name: Create application data directories
       ansible.builtin.file:
-        path: /srv/k3s-data
+        path: "{{ item.path }}"
         state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Create Ghost data directory
-      ansible.builtin.file:
-        path: /srv/k3s-data/ghost
-        state: directory
-        owner: '1000'
+        owner: "{{ item.owner }}"
         group: '0'
         mode: '0755'
-
-    - name: Create Fathom data directory
-      ansible.builtin.file:
-        path: /srv/k3s-data/fathom
-        state: directory
-        owner: '0'
-        group: '0'
-        mode: '0755'
+      loop:
+        - { path: /srv/k3s-data, owner: '0' }
+        - { path: /srv/k3s-data/ghost, owner: '1000' }
+        - { path: /srv/k3s-data/fathom, owner: '0' }
