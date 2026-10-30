@@ -6,7 +6,26 @@ Deploy `portainer/nanobot.yaml` as stack `nanobot`. It builds the official v0.4.
 
 Open `http://<docker-host>:8765`. First-boot logs contain the generated WebUI password. Treat those logs as sensitive. The password is persisted in `/data/nanobot/config.json` at `channels.websocket.tokenIssueSecret`. Use only a trusted LAN, SSH tunnel, or authenticated HTTPS proxy. Set Portainer stack variable `NANOBOT_BIND_IP` to a trusted interface or `127.0.0.1` to restrict publication. Docker port mappings can bypass host firewall rules; do not expose this port to the internet.
 
-The gateway health endpoint is host-loopback-only at `http://127.0.0.1:18790/health`. No separate OpenAI-compatible API, chat-channel credentials, Docker socket, or host filesystem access is enabled.
+The gateway health endpoint is host-loopback-only at `http://127.0.0.1:18790/health`. No chat-channel credentials, Docker socket, or host filesystem access is enabled beyond nanobot's own data mount.
+
+## OpenAI-compatible API
+
+The `nanobot-api` service starts automatically with the stack and publishes port `8900` on the same interface selected by `NANOBOT_BIND_IP`. Base URL: `http://<docker-host>:8900/v1`. It supports `/v1/models` and `/v1/chat/completions` (including SSE streaming), not the complete OpenAI API surface. Send `Authorization: Bearer <api.apiKey>`; the generated key is stored in `/data/nanobot/config.json`, separately from Codex OAuth and the WebUI password. Inspect it locally through Portainer's container Console or Settings > System; never commit or paste it into chat. `/health` is intentionally unauthenticated.
+
+The API uses the same persisted provider/configuration and OAuth login, with a separate persistent workspace at `/data/nanobot/api-workspace`. Its clients have agent/tool access, not merely model access. Keep port 8900 on a trusted LAN or put it behind HTTPS and access controls; do not forward it to the public internet. Only one user message per request is supported. Discover the fixed model ID using `/v1/models`; arbitrary upstream model selection is not supported.
+
+For example, with the API key already set securely in your client shell:
+
+```sh
+curl --fail http://<docker-host>:8900/v1/models \
+  -H "Authorization: Bearer $NANOBOT_API_KEY"
+curl --fail http://<docker-host>:8900/v1/chat/completions \
+  -H "Authorization: Bearer $NANOBOT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}],"session_id":"example"}'
+```
+
+API configuration is loaded at process startup. After changing provider, model, or API settings, run `docker restart nanobot-api`. Do not also start the API from WebUI Settings > System: Compose already manages the listener. Upstream API behavior and compatibility limitations are documented in [openai-api.md](https://github.com/HKUDS/nanobot/blob/v0.4.0/docs/openai-api.md).
 
 ## Codex subscription login
 
@@ -26,10 +45,10 @@ nanobot provider login openai-codex --set-main
 
 Open the authorization URL in your browser. For remote login, follow the CLI's prompt for the complete redirected localhost callback URL; paste it only into the container terminal, never into chat. A localhost callback error in the browser is expected when the browser and container are different machines. No callback port needs to be published.
 
-After terminal-based configuration, restart only this container and verify a real completion:
+After terminal-based configuration, restart both nanobot services to load it and verify a real completion:
 
 ```sh
-docker restart nanobot
+docker restart nanobot nanobot-api
 docker exec --user nanobot nanobot nanobot agent -m "Reply with exactly NANOBOT_OK"
 ```
 

@@ -1,33 +1,52 @@
 # Nanobot v0.4.0. Upstream has no published container-image workflow;
 # build the official Dockerfile at an immutable upstream commit.
+x-common: &common
+  image: selfhosted-nanobot:0.4.0
+  build:
+    context: https://github.com/HKUDS/nanobot.git#8f7a7d17590de7ab187650381894dba2b9e060ab
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment:
+    NANOBOT_DOCKER_BOOTSTRAP: "1"
+    # oauth-cli-kit otherwise stores subscription credentials outside .nanobot.
+    XDG_DATA_HOME: /home/nanobot/.nanobot/data
+  volumes:
+    - /data/nanobot:/home/nanobot/.nanobot
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - SETGID
+    - SETUID
+  security_opt:
+    - no-new-privileges:true
+
 services:
   nanobot:
-    image: selfhosted-nanobot:0.4.0
-    build:
-      context: https://github.com/HKUDS/nanobot.git#8f7a7d17590de7ab187650381894dba2b9e060ab
-      dockerfile: Dockerfile
+    <<: *common
     container_name: nanobot
-    restart: unless-stopped
     command: ["gateway"]
-    environment:
-      NANOBOT_DOCKER_BOOTSTRAP: "1"
-      # oauth-cli-kit otherwise stores subscription credentials outside .nanobot.
-      XDG_DATA_HOME: /home/nanobot/.nanobot/data
-    volumes:
-      - /data/nanobot:/home/nanobot/.nanobot
     ports:
       - "${NANOBOT_BIND_IP:-0.0.0.0}:8765:8765"
       - "127.0.0.1:18790:18790"
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-    security_opt:
-      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18790/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  nanobot-api:
+    <<: *common
+    container_name: nanobot-api
+    command: ["serve", "--host", "0.0.0.0", "--port", "8900", "--workspace", "/home/nanobot/.nanobot/api-workspace"]
+    ports:
+      - "${NANOBOT_BIND_IP:-0.0.0.0}:8900:8900"
+    depends_on:
+      nanobot:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8900/health', timeout=4)"]
       interval: 30s
       timeout: 5s
       retries: 3
