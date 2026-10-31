@@ -23,9 +23,9 @@ spec:
         runAsNonRoot: true
       containers:
         - name: nanobot
-          # Import this exact existing Docker image before enabling the sync.
-          image: docker.io/library/selfhosted-nanobot:0.4.0-78f01703bf0e
-          imagePullPolicy: Never
+          # Built from the upstream commit in beelink/images/nanobot/source.json.
+          image: ghcr.io/breuerfelix/nanobot@sha256:8e8c97385ccf9d2b5b3ebfb687ab4699db3c7b1ccba221f761f282bfa11644fd
+          imagePullPolicy: IfNotPresent
           args: [gateway]
           env:
             - name: NANOBOT_DOCKER_BOOTSTRAP
