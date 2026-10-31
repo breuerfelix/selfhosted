@@ -18,14 +18,15 @@ No reboot was performed; the mount dependency and its successful startup checks 
 
 Flux source, Kustomize, and Helm controllers are installed. The public Git source uses `main` and root path `./beelink/cluster`. The existing Hetzner age identity is installed as `flux-system/sops-age`.
 
-Tailscale reconciliation is enabled. The operator Helm release waits for `tailscale/operator-oauth`; its pod cannot start until the Secret exists. Install remediation retries indefinitely. This is the expected authentication-pending state, not a completed tailnet enrollment. Follow [the Mac authentication steps](tailscale.md).
+Tailscale authentication completed on 31 October 2026. `operator-oauth.sops.yaml` is encrypted with the same age recipient as Hetzner; Flux decrypts it into `tailscale/operator-oauth`. The `tailscale` Kustomization and `tailscale-operator` HelmRelease are Ready. The operator pod is running and tailnet status confirms `beelink-k8s-operator` is online with `tag:k8s-operator`, at `beelink-k8s-operator.vulture-skink.ts.net`. MagicDNS and HTTPS certificate support are enabled. No plaintext credential file was created during validation or publication.
+
+This verifies operator enrollment, not application ingress. There is no app proxy or nanobot HTTPS endpoint yet. Future credential setup/rotation is described in [authentication steps](tailscale.md).
 
 The nanobot Kustomization remains suspended. No nanobot pod or persistent volume is created by this step. The existing Docker subnet router and all Docker apps remain in place.
 
 ## Pending
 
 1. Prepare/test the upstream nanobot image workflow, publish its image, and commit its digest/pull policy into the Deployment. Current local-image settings are fallback placeholders.
-2. Set up Tailscale OAuth/tags/MagicDNS/HTTPS, encrypt credentials, and verify operator enrollment.
-3. Stop both Docker nanobot writers before enabling the nanobot sync and validating cutover.
+2. Stop both Docker nanobot writers before enabling the nanobot sync and validating cutover, including HTTPS and WebSocket behavior through Tailscale.
 
 No application migration has occurred.

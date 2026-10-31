@@ -2,7 +2,7 @@
 
 Single-node K3s on `ssh bee`, managed by Flux from this repository. First app: nanobot gateway plus its built-in web UI. The separate nanobot API is retired at cutover. Other Docker workloads stay running.
 
-**K3s bootstrapped on 31 October 2026.** Node `beelink` is Ready; Traefik, ServiceLB, and dynamic local storage are disabled. Existing Docker containers remain running. Flux manages the Tailscale operator; it waits for OAuth credentials before becoming Ready. Kubernetes nanobot remains suspended. See [verified status](docs/status.md), [authentication steps](docs/tailscale.md), [the design](docs/design.md), and [the bootstrap and cutover runbook](docs/bootstrap.md).
+**K3s and Flux bootstrapped on 31 October 2026.** Node `beelink` is Ready; Traefik, ServiceLB, and dynamic local storage are disabled. The Flux-managed Tailscale operator is Ready and online as `beelink-k8s-operator`; its OAuth credentials are SOPS-encrypted in Git. MagicDNS and HTTPS are enabled. Existing Docker containers remain running; Kubernetes nanobot remains suspended. See [verified status](docs/status.md), [authentication steps](docs/tailscale.md), [the design](docs/design.md), and [the bootstrap and cutover runbook](docs/bootstrap.md).
 
 ```text
 beelink/

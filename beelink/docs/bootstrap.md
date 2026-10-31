@@ -2,7 +2,7 @@
 
 All local commands run from the repository root. See the current state below for completed steps. Tools: SSH, uv/Python, Ansible, kubectl, Flux, SOPS, age. Use a kubectl client within the supported minor-version skew of the selected K3s release.
 
-**Current state:** K3s and Flux are bootstrapped. The Tailscale operator waits for its OAuth Secret; use [authentication steps](tailscale.md) to provide it. Application cutover has not run. Before activating nanobot, implement the selected upstream-source CI/GHCR build and replace the Deployment's fallback local-image reference and `Never` pull policy. See [status](status.md).
+**Current state:** K3s and Flux are bootstrapped. The Tailscale operator is authenticated, online, and Ready; its encrypted OAuth Secret is managed by Flux. MagicDNS and HTTPS are enabled. Application cutover has not run. Before activating nanobot, implement the selected upstream-source CI/GHCR build and replace the Deployment's fallback local-image reference and `Never` pull policy. See [status](status.md). The authentication procedure remains documented for rebuilds and rotation.
 
 ## 1. Final preflight and Git preparation
 
