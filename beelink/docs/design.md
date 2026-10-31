@@ -2,7 +2,7 @@
 
 Reviewed 31 October 2026 against the live host, the Hetzner manifests, and upstream documentation. The original [homelab proposal](../../homelab-k3s-tailscale-pihole-design.md) is background; the findings below supersede its implementation order for this host.
 
-The inventory below records pre-bootstrap state. K3s was subsequently installed through Ansible; see [current status](status.md). The upstream image build plan below supersedes local-image import as the primary deployment path.
+The inventory below records pre-bootstrap state. K3s was subsequently installed through Ansible and nanobot migrated through Flux; see [current status](status.md). GitHub Actions now builds the upstream image; no Docker image import is needed.
 
 ## Verified host state
 
@@ -30,7 +30,7 @@ The user's SSD description maps to the existing `/data` filesystem. Linux report
 4. **Bind-mount reuse works with static local PVs.** Keep each existing source path, node affinity to `beelink`, an explicit PV/PVC binding, empty storage class, and `Retain`. Disable K3s's dynamic local-storage provisioner so future PVCs cannot silently create a new layout on the system disk. `20Gi` on nanobot's PV/PVC is binding metadata, not a quota. [Local volumes](https://kubernetes.io/docs/concepts/storage/volumes/#local).
 5. **Storage needs a startup check.** A directory existing under `/data` does not prove the SSD is mounted. Ansible verifies the UUID and existing config before installation. The K3s systemd unit requires `data.mount` and checks its UUID before starting. This prevents booting against an empty directory on the system disk. It is not hot-unplug protection or a backup mechanism.
 6. **Stopping only nanobot is insufficient.** Both `nanobot` and `nanobot-api` mount `/data/nanobot` read-write. Stop both and disable their Docker restart policies before Kubernetes starts. `ReadWriteOnce` does not lock out Docker, and it allows multiple pods on one node. Use one replica with `Recreate`; prevent Portainer from redeploying the old stack.
-7. **Build upstream sources through CI.** The existing `selfhosted-nanobot:0.4.0` image is local. The chosen replacement is a GitHub Actions build of a pinned upstream commit using its Dockerfile, publishing to GHCR, followed by a reviewed Deployment digest update. Flux deploys that committed digest. Upstream `v0.4.0` resolves to `8f7a7d17590de7ab187650381894dba2b9e060ab`; six inspected runtime/config files match the running container. The Dockerfile is compatible with the current mount, UID, and gateway command, but a full build and isolated runtime check are still required. CI definitions are not yet implemented. Existing manifests and import script retain the earlier local-image fallback; replace their image reference and pull policy before activating nanobot. [Pinned upstream Dockerfile](https://github.com/HKUDS/nanobot/blob/8f7a7d17590de7ab187650381894dba2b9e060ab/Dockerfile).
+7. **Build upstream sources through CI.** GitHub Actions builds the pinned commit in `images/nanobot/source.json` with the upstream Dockerfile, tests the gateway/WebUI as UID 1000 using disposable state, publishes to public GHCR, and opens a digest-update PR. Flux deploys the merged digest. The first build and live cutover passed. No registry credentials, forked Dockerfile, source copy, or manual image import are needed. Python dependencies and base-image tags are resolved at build time; the Deployment digest pins the resulting artifact. [Image build](../images/nanobot/README.md).
 
 ## Chosen cluster setup
 
@@ -41,14 +41,14 @@ The user's SSD description maps to the existing `/data` filesystem. Linux report
 - Keep the host's existing swap enabled and explicitly set kubelet `fail-swap-on=false`; this does not enable workload swap. No host DNS rewrite. CoreDNS uses K3s's normal resolver selection.
 - Kubernetes API administration uses the LAN or an SSH tunnel through `bee`. The API is authenticated by its kubeconfig. Do not add router forwards. No Kubernetes API proxy through Tailscale in this phase.
 - Flux source, Kustomize, and Helm controllers only. Generated components are kept under `beelink/`, independently of Hetzner.
-- Root Flux sync enables the Tailscale child sync and keeps nanobot suspended. The operator waits for its OAuth Secret; its chart retries failed installs until credentials are available. Nanobot depends on Tailscale readiness and activates only during cutover. Change suspension flags in Git; root reconciliation would overwrite a CLI-only resume.
+- Root Flux sync enables Tailscale and nanobot. Nanobot depends on Tailscale readiness. Keep it suspended during a first migration or restore until all other writers are stopped and data is ready. Change suspension flags in Git; root reconciliation would overwrite a CLI-only resume.
 
 ## Nanobot mapping
 
 | Setting | Existing Docker | Kubernetes |
 |---|---|---|
-| Image | `selfhosted-nanobot:0.4.0` | Same image bytes, ID-suffixed local tag |
-| Image ID | `sha256:78f01703bf0e49dbcb57aea3ebf36499d13057f81b8ba95a95bbf9232a7312f4` | Import script verifies this ID |
+| Image | `selfhosted-nanobot:0.4.0` | GitHub Actions build from pinned upstream sources, GHCR digest in `app.yaml` |
+| Source | Upstream `v0.4.0` | Same upstream commit; current pin in `images/nanobot/source.json` |
 | Entrypoint / argument | `entrypoint.sh gateway` | Image entrypoint retained; `args: [gateway]` |
 | Process user | Entrypoint drops root to UID:GID `1000:1000` | Start directly as `1000:1000`, matching existing SSD ownership |
 | Persistent mount | `/data/nanobot:/home/nanobot/.nanobot` | Identical host and container paths through a retained local PV |
@@ -59,7 +59,7 @@ The user's SSD description maps to the existing `/data` filesystem. Linux report
 
 Keep the existing mutable `/data/nanobot/config.json` on the SSD. Its provider credentials, sessions, workspace, databases, caches, and installed tools stay in place. Do not overlay a read-only Kubernetes Secret onto that file: it would change the app's current config editing behavior. SOPS protects new Git-managed secrets such as operator OAuth; it does not encrypt existing files on the SSD. If config later becomes Git-managed, make that an explicit separate change.
 
-No Docker-only service names or custom provider endpoints were found in the inspected config. Runtime tools, external providers, WebSocket behavior, login, and browser-origin behavior still need end-to-end checks after cutover. An HTTP 200 from the current UI does not prove all those paths work through HTTPS. Use the actual Ingress address; it depends on the tailnet name and hostname availability. Check that `nanobot` is unused in the tailnet before activation.
+No Docker-only service names or custom provider endpoints were found in the inspected config. Gateway health and the private HTTPS UI passed after cutover. A real provider/tool request and interactive login/chat remain user checks; HTTP 200 does not prove those paths. The actual Ingress address is `nanobot.vulture-skink.ts.net`. Check hostname availability before reproducing this setup in another tailnet.
 
 ## Tailscale prerequisites
 

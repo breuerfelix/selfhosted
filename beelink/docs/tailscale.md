@@ -1,6 +1,6 @@
 # Tailscale operator authentication
 
-The operator is managed by Flux from `cluster/infrastructure/tailscale`. Without `tailscale/operator-oauth`, its pod waits for the Secret and the HelmRelease/Kustomization are not Ready. Infinite install remediation allows recovery after credentials are added. Nanobot remains suspended throughout this setup.
+The operator is managed by Flux from `cluster/infrastructure/tailscale`. Without `tailscale/operator-oauth`, its pod waits for the Secret and the HelmRelease/Kustomization are not Ready. Infinite install remediation allows recovery after credentials are added. For a first migration or restore, keep nanobot suspended until authentication and storage checks are complete.
 
 ## Steps on your Mac
 

@@ -2,14 +2,14 @@
 
 All local commands run from the repository root. See the current state below for completed steps. Tools: SSH, uv/Python, Ansible, kubectl, Flux, SOPS, age. Use a kubectl client within the supported minor-version skew of the selected K3s release.
 
-**Current state:** K3s and Flux are bootstrapped. The Tailscale operator is authenticated, online, and Ready; its encrypted OAuth Secret is managed by Flux. MagicDNS and HTTPS are enabled. Application cutover has not run. Before activating nanobot, implement the selected upstream-source CI/GHCR build and replace the Deployment's fallback local-image reference and `Never` pull policy. See [status](status.md). The authentication procedure remains documented for rebuilds and rotation.
+**Current state:** K3s, Flux, the Tailscale operator, and nanobot are running. Image build and cutover completed; see [status](status.md). The procedure below is retained for rebuilds, migration, and rollback. During recovery, stop all writers and restore/verify SSD data before allowing the enabled nanobot sync to run.
 
 ## 1. Final preflight and Git preparation
 
 - Review the files and current `ssh bee` inventory again; confirm `/data` still has the UUID in `ansible/k3s.yml`.
 - Confirm nanobot image ID, config, health, and backup freshness. Record both Docker restart policies (`unless-stopped` at inventory).
 - Confirm router DHCP reservation for the current LAN IP, or plan to use the SSH tunnel below. Verify existing router forwards do not expose Kubernetes ports; UFW is currently inactive.
-- Keep nanobot suspended. The Tailscale sync can run before authentication; the operator pod waits for its missing OAuth Secret and the Helm chart retries installation. Commit and push the reviewed `beelink/` files to `main` before enabling root Git reconciliation. Include only reviewed changes; this checkout also contains unrelated Hetzner edits.
+- For a first migration or restore, set nanobot's sync to suspended in Git until storage and stopped-writer checks are complete. The live repository now enables it. Tailscale can run before authentication; the operator pod waits for its OAuth Secret. Include only reviewed changes when committing; unrelated Hetzner edits may exist locally.
 
 ## 2. Bootstrap K3s without stopping Docker
 
@@ -40,7 +40,7 @@ export KUBECONFIG="$PWD/temp/beelink-kubeconfig"
 kubectl get nodes -o wide
 ```
 
-The next image step is the upstream-source CI/GHCR workflow described in the design. No nanobot image was imported during bootstrap. `scripts/import-nanobot-image.sh` remains an optional fallback for the old local-image plan; it is not the selected path.
+The image pipeline is described in [images/nanobot/README.md](../images/nanobot/README.md). It builds/tests upstream sources and opens a Deployment digest PR. Merge the desired tested digest, then verify K3s can pull it anonymously before cutover. No Docker image import is needed.
 
 ## 3. Install Flux and the existing age identity
 
@@ -118,7 +118,7 @@ Verify `beelink-k8s-operator` joined the tailnet. If credentials, tags, permissi
 
 ## 5. Cut nanobot over
 
-Confirm the containerd image exists and the operator is healthy. Pause any old Portainer automatic stack redeployment that could restart these services. Then disable both restart policies, stop both shared-directory writers, and confirm they are stopped:
+Confirm the pinned image can be pulled and the operator is healthy. Verify old Portainer automatic stack redeployment is disabled. Then disable both restart policies, stop both shared-directory writers, and confirm they are stopped:
 
 ```bash
 ssh bee 'docker update --restart=no nanobot nanobot-api && docker stop nanobot-api nanobot'
@@ -141,7 +141,7 @@ Use the actual address reported by `kubectl -n nanobot get ingress nanobot` with
 
 Verify UI login, existing sessions/workspace, WebSocket chat and a real provider/tool request. Test on home Wi-Fi and cellular with Tailscale enabled; verify HTTPS and absence of Funnel/public access. Check pod logs locally, avoiding copied provider tokens. Confirm only the Kubernetes process now writes `/data/nanobot` and other Docker apps still work.
 
-Keep stopped containers for initial rollback. Remove their old stack definitions or automatic deployment source before declaring migration complete, so a Portainer redeploy cannot recreate either writer. Verify the existing nanobot backup procedure against the Kubernetes workload before the next backup run. Schedule a controlled reboot later to check SSD-before-K3s startup and app recovery.
+Keep stopped containers for initial rollback. Their restart policies and Portainer GitOps updates must stay disabled; do not manually redeploy the old stack while Kubernetes owns the mount. Verify the existing nanobot backup procedure against the Kubernetes workload before the next backup run. Schedule a controlled reboot later to check SSD-before-K3s startup and app recovery.
 
 ## 6. Rollback
 
@@ -168,7 +168,8 @@ Keep `nanobot-api` stopped. Restore a stopped-writer backup only if data compati
 
 ```bash
 temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/k3s.yml --syntax-check
-bash -n beelink/scripts/import-nanobot-image.sh
+bash -n beelink/images/nanobot/smoke-test.sh
+python3 beelink/images/nanobot/build-metadata.py
 kubectl kustomize beelink/cluster > temp/beelink-root-rendered.yaml
 kubectl kustomize beelink/cluster/infrastructure/tailscale > temp/beelink-tailscale-rendered.yaml
 kubectl kustomize beelink/cluster/apps/nanobot > temp/beelink-nanobot-rendered.yaml
