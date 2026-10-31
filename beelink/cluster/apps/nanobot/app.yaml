@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nanobot
+  namespace: nanobot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nanobot
+  template:
+    metadata:
+      labels:
+        app: nanobot
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        # Matches the running process and SSD ownership. Skip root entrypoint chown.
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+      containers:
+        - name: nanobot
+          # Import this exact existing Docker image before enabling the sync.
+          image: docker.io/library/selfhosted-nanobot:0.4.0-78f01703bf0e
+          imagePullPolicy: Never
+          args: [gateway]
+          env:
+            - name: NANOBOT_DOCKER_BOOTSTRAP
+              value: "1"
+            - name: XDG_DATA_HOME
+              value: /home/nanobot/.nanobot/data
+          ports:
+            - name: http
+              containerPort: 8765
+            - name: health
+              containerPort: 18790
+          startupProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18790/health', timeout=4)"
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18790/health', timeout=4)"
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /home/nanobot/.nanobot
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: nanobot-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nanobot
+  namespace: nanobot
+spec:
+  selector:
+    app: nanobot
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
