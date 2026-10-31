@@ -1,0 +1,109 @@
+name: Build nanobot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build-nanobot.yml
+      - beelink/images/nanobot/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nanobot-image
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.publish.outputs.image }}
+      source: ${{ steps.source.outputs.commit }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          path: selfhosted
+          persist-credentials: false
+      - name: Read pinned upstream source
+        id: source
+        run: python3 selfhosted/beelink/images/nanobot/build-metadata.py >> "$GITHUB_OUTPUT"
+      - name: Check out upstream sources
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ steps.source.outputs.repository }}
+          ref: ${{ steps.source.outputs.commit }}
+          path: upstream
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build the upstream Dockerfile
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: upstream
+          file: upstream/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.source.outputs.tag }}
+          build-args: |
+            NANOBOT_CHANNELS=${{ steps.source.outputs.channels }}
+            NANOBOT_EXTRAS=${{ steps.source.outputs.extras }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.source.outputs.commit }}
+            org.opencontainers.image.version=${{ steps.source.outputs.version }}
+            org.opencontainers.image.url=https://github.com/${{ steps.source.outputs.repository }}/commit/${{ steps.source.outputs.commit }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+      - name: Check gateway and WebUI with disposable state
+        env:
+          IMAGE: ${{ steps.source.outputs.tag }}
+        run: bash selfhosted/beelink/images/nanobot/smoke-test.sh "$IMAGE"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish and capture the immutable digest
+        id: publish
+        env:
+          IMAGE: ${{ steps.source.outputs.tag }}
+          REPOSITORY: ${{ steps.source.outputs.image }}
+        run: |
+          docker push "$IMAGE"
+          reference=$(docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}')
+          [[ "$reference" == "$REPOSITORY"@sha256:* ]]
+          echo "image=$reference" >> "$GITHUB_OUTPUT"
+          printf '## Nanobot image\n\n`%s`\n' "$reference" >> "$GITHUB_STEP_SUMMARY"
+
+  deployment-pr:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Pin the tested image
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: python3 beelink/images/nanobot/update-deployment.py "$IMAGE"
+      - name: Open deployment update
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          branch: codex/nanobot-image
+          delete-branch: true
+          add-paths: beelink/cluster/apps/nanobot/app.yaml
+          commit-message: Pin tested nanobot image
+          title: Update nanobot to the tested upstream build
+          body: |
+            Builds upstream HKUDS/nanobot commit `${{ needs.build.outputs.source }}` using its Dockerfile.
+
+            Image: `${{ needs.build.outputs.image }}`
+
+            Validation: isolated non-root gateway and WebUI smoke test passed. Existing host storage and the Flux suspension setting are unchanged.

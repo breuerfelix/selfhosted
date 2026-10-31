@@ -1,0 +1,8 @@
+{
+  "repository": "HKUDS/nanobot",
+  "commit": "8f7a7d17590de7ab187650381894dba2b9e060ab",
+  "version": "0.4.0",
+  "image": "ghcr.io/breuerfelix/nanobot",
+  "channels": "",
+  "extras": ""
+}
