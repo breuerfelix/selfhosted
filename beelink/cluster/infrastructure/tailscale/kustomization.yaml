@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - release.yaml
-  # Add operator-oauth.sops.yaml here before enabling tailscale-sync.
+  - operator-oauth.sops.yaml
