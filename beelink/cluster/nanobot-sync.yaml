@@ -4,8 +4,8 @@ metadata:
   name: nanobot
   namespace: flux-system
 spec:
-  # Enable in Git only after BOTH Docker containers are stopped.
-  suspend: true
+  # Both former Docker writers are stopped with restart policies disabled.
+  suspend: false
   interval: 10m
   dependsOn:
     - name: tailscale
