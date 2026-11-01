@@ -1,4 +1,10 @@
+# Grafana, Loki, and VictoriaMetrics retired to Beelink K3s on 2026-11-01.
+# Keep stack 26 GitOps updates DISABLED. Do not redeploy this shared stack.
+# Backend definitions are rollback references only: never start them while K3s
+# owns /data/grafana, /data/loki, or /data/victoriametrics.
+# cAdvisor and vmagent remain active and unchanged; telemetry migration is deferred.
 services:
+  # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   grafana:
     image: grafana/grafana:13.2.4
     container_name: grafana
@@ -18,6 +24,7 @@ services:
     networks:
       - monitoring
 
+  # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.154.0
     container_name: victoriametrics
@@ -69,6 +76,7 @@ services:
     networks:
       - monitoring
 
+  # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   loki:
     image: grafana/loki:3.7.8
     container_name: loki

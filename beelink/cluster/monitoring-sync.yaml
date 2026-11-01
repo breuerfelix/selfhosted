@@ -4,8 +4,8 @@ metadata:
   name: monitoring
   namespace: flux-system
 spec:
-  # Keep suspended until Docker writers are stopped and backups are verified.
-  suspend: true
+  # Docker writers stopped with restart=no; stopped-writer backups restore-tested.
+  suspend: false
   interval: 10m
   dependsOn:
     - name: tailscale

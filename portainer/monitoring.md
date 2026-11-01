@@ -1,3 +1,17 @@
+# Migration status — 1 November 2026
+
+Grafana, Loki, and VictoriaMetrics moved to Flux-managed Beelink K3s. See the
+[current monitoring runbook](../beelink/docs/monitoring.md) for access, verification,
+backups, and rollback. Their original Docker containers remain stopped with
+restart disabled. Stack 26 automatic updates must stay disabled. Do not redeploy
+or stop the shared stack: cAdvisor and vmagent remain active and unchanged.
+The backend entries in `monitoring.yaml` are retained only as rollback references.
+Historical procedures below describe the former Docker deployment and must not
+be run while Kubernetes owns the persistent paths. Deferred collectors may fail
+to deliver telemetry until their separate migration.
+
+---
+
 # Monitoring stack
 
 `monitoring.yaml` runs Grafana, VictoriaMetrics, Loki, and the Beelink host collector.
