@@ -26,7 +26,7 @@ services:
 
   # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   victoriametrics:
-    image: victoriametrics/victoria-metrics:v1.154.0
+    image: victoriametrics/victoria-metrics:v1.155.0
     container_name: victoriametrics
     restart: unless-stopped
     command:
