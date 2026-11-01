@@ -77,7 +77,6 @@
           write-kubeconfig-mode: "0600"
           disable:
             - traefik
-            - servicelb
             - local-storage
           kubelet-arg:
             - "fail-swap-on=false"
