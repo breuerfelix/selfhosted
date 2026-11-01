@@ -42,7 +42,7 @@ services:
 
   # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   loki:
-    image: grafana/loki:3.7.8
+    image: grafana/loki:3.7.9
     container_name: loki
     restart: unless-stopped
     command:
