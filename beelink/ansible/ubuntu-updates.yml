@@ -1,0 +1,6 @@
+---
+- name: Configure shared Ubuntu update policy
+  hosts: beelink
+  gather_facts: true
+  roles:
+    - ../../shared/ansible/roles/ubuntu_updates

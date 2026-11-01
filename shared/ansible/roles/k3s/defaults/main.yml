@@ -1,0 +1,5 @@
+---
+# First install only. Flux's system-upgrade Plan owns subsequent updates.
+k3s_bootstrap_version: v1.36.5+k3s1
+k3s_node_wait_target: --all
+k3s_extra_config_changed: false

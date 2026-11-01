@@ -1,0 +1,73 @@
+---
+- name: Require Ubuntu 24.04
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version == '24.04'
+
+- name: Check whether the K3s binary is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Check whether the K3s service unit is installed
+  ansible.builtin.stat:
+    path: /etc/systemd/system/k3s.service
+  register: k3s_service_unit
+
+- name: Create K3s configuration directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Configure host-specific K3s settings
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: '0600'
+    content: '{{ k3s_config_content }}'
+  register: k3s_config
+
+- name: Download official K3s installer
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /usr/local/src/k3s-install.sh
+    owner: root
+    group: root
+    mode: '0700'
+    force: false
+  when: not k3s_binary.stat.exists or not k3s_service_unit.stat.exists
+
+- name: Install K3s or repair an incomplete installation
+  ansible.builtin.command: /bin/sh /usr/local/src/k3s-install.sh
+  environment:
+    INSTALL_K3S_VERSION: '{{ k3s_bootstrap_version }}'
+    # Repair a missing unit without replacing a binary updated by Flux.
+    INSTALL_K3S_SKIP_DOWNLOAD: "{{ 'true' if k3s_binary.stat.exists else 'false' }}"
+    INSTALL_K3S_EXEC: server
+    INSTALL_K3S_SKIP_START: 'true'
+  when: not k3s_binary.stat.exists or not k3s_service_unit.stat.exists
+
+- name: Enable K3s and apply configuration
+  ansible.builtin.systemd_service:
+    name: k3s
+    daemon_reload: true
+    enabled: true
+    state: "{{ 'restarted' if k3s_binary.stat.exists and (k3s_config.changed or k3s_extra_config_changed | bool) else 'started' }}"
+  when: not ansible_check_mode or (k3s_binary.stat.exists and k3s_service_unit.stat.exists)
+
+- name: Wait for local Kubernetes API
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 180
+  when: not ansible_check_mode
+
+- name: Wait for node readiness
+  ansible.builtin.command: 'k3s kubectl wait --for=condition=Ready node {{ k3s_node_wait_target }} --timeout=180s'
+  changed_when: false
+  when: not ansible_check_mode

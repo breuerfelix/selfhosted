@@ -4,6 +4,7 @@ One Ubuntu 24.04 VPS running K3s, Flux, and personal applications. Downtime is a
 
 - [Rebuild](rebuild.md): prerequisites, host setup, data restore, and Flux bootstrap.
 - [Maintenance](maintenance.md): app changes, secrets, updates, and troubleshooting.
+- [Shared maintenance](../../shared/README.md): common host policy, K3s upgrades, and Flux components.
 
 ## Layout
 
@@ -11,8 +12,8 @@ One Ubuntu 24.04 VPS running K3s, Flux, and personal applications. Downtime is a
 hetzner/
   ansible/                 # Host setup; site.yml runs all playbooks
   cluster/
-    flux-system/          # Generated Flux components and Git sync
-    infrastructure/       # cert-manager, Traefik config, K3s updates
+    flux-system/          # Git sync and shared Flux component reference
+    infrastructure/       # cert-manager, Traefik config, shared K3s update references
     apps/                 # Shared namespace/issuer and app directories
   docs/
 ```

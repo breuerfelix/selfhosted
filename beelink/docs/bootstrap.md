@@ -11,16 +11,16 @@ All local commands run from the repository root. See the current state below for
 - Confirm router DHCP reservation for the current LAN IP, or plan to use the SSH tunnel below. Verify existing router forwards do not expose Kubernetes ports; UFW is currently inactive.
 - For a first migration or restore, set nanobot's sync to suspended in Git until storage and stopped-writer checks are complete. The live repository now enables it. Tailscale can run before authentication; the operator pod waits for its OAuth Secret. Include only reviewed changes when committing; unrelated Hetzner edits may exist locally.
 
-## 2. Bootstrap K3s without stopping Docker
+## 2. Configure host maintenance and bootstrap K3s
 
 ```bash
 uv venv temp/ansible-venv
-uv pip install --python temp/ansible-venv/bin/python -r beelink/ansible/requirements.txt
-temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/k3s.yml
+uv pip install --python temp/ansible-venv/bin/python -r shared/ansible/requirements.txt
+temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml
 ssh bee 'k3s kubectl get nodes -o wide; systemctl show k3s -p RequiresMountsFor -p BindsTo; findmnt /data'
 ```
 
-The playbook installs K3s, adds an SSD startup dependency, and leaves Docker apps running. It does not format storage, create app data directories, change ownership, change networking on the router, or upgrade an existing K3s binary. Confirm other Docker apps still work after installation; K3s adds host networking rules.
+The site playbook configures the [shared nightly update/reboot policy](../../shared/README.md), installs K3s, and adds an SSD startup dependency. Applying the configuration leaves Docker apps running; future required host reboots interrupt all workloads. It does not format storage, create app data directories, change ownership, change networking on the router, or upgrade an existing K3s binary. Confirm other Docker apps still work after installation; K3s adds host networking rules.
 
 Copy a private kubeconfig and either use the current LAN address or an SSH tunnel:
 
@@ -45,7 +45,7 @@ The image pipeline is described in [images/nanobot/README.md](../images/nanobot/
 ## 3. Install Flux and the existing age identity
 
 ```bash
-kubectl apply -f beelink/cluster/flux-system/gotk-components.yaml
+kubectl apply -k shared/cluster/flux-system
 kubectl wait --for=condition=Established --timeout=120s \
   crd/gitrepositories.source.toolkit.fluxcd.io \
   crd/kustomizations.kustomize.toolkit.fluxcd.io \
@@ -108,6 +108,7 @@ sops beelink/cluster/infrastructure/tailscale/operator-oauth.sops.yaml
 
 ```bash
 flux reconcile kustomization flux-system --with-source --timeout=10m
+flux reconcile kustomization k3s-upgrade-plan --timeout=5m
 flux reconcile kustomization tailscale --timeout=10m
 flux get helmreleases -A
 kubectl -n tailscale rollout status deployment/operator --timeout=300s
@@ -167,7 +168,7 @@ Keep `nanobot-api` stopped. Restore a stopped-writer backup only if data compati
 ## Validation before deployment
 
 ```bash
-temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/k3s.yml --syntax-check
+temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml --syntax-check
 bash -n beelink/images/nanobot/smoke-test.sh
 python3 beelink/images/nanobot/build-metadata.py
 kubectl kustomize beelink/cluster > temp/beelink-root-rendered.yaml

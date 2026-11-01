@@ -14,11 +14,11 @@ For retained local PVs, the node hostname must match `spec.nodeAffinity` in each
 
 ```bash
 uv venv temp/ansible-venv
-uv pip install --python temp/ansible-venv/bin/python -r hetzner/ansible/requirements.txt
+uv pip install --python temp/ansible-venv/bin/python -r shared/ansible/requirements.txt
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml
 ```
 
-The playbook configures nightly Ubuntu updates, creates retained storage directories, installs K3s if absent, and enables/starts its service. Existing K3s binaries are left at their installed version. Changed K3s configuration restarts the service. Individual playbooks can also be run separately.
+The playbook uses the [shared maintenance roles](../../shared/README.md), configures nightly Ubuntu updates, creates retained storage directories, installs K3s if absent, and enables/starts its service. Existing K3s binaries are left at their installed version. Changed K3s configuration restarts the service. Individual playbooks can also be run separately.
 
 Copy the kubeconfig without making it world-readable, then replace the loopback API address with the VPS public IPv4:
 
@@ -48,7 +48,7 @@ Disposable PVCs are created by K3s's local-path provisioner. Stateless apps need
 Ensure the desired revision is pushed to `main`. Apply the committed Flux components and wait for their controllers:
 
 ```bash
-kubectl apply -f hetzner/cluster/flux-system/gotk-components.yaml
+kubectl apply -k shared/cluster/flux-system
 kubectl wait --for=condition=Established --timeout=120s crd/gitrepositories.source.toolkit.fluxcd.io crd/kustomizations.kustomize.toolkit.fluxcd.io crd/ocirepositories.source.toolkit.fluxcd.io crd/helmreleases.helm.toolkit.fluxcd.io
 kubectl -n flux-system rollout status deployment/source-controller --timeout=180s
 kubectl -n flux-system rollout status deployment/kustomize-controller --timeout=180s

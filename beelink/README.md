@@ -6,8 +6,8 @@ Single-node K3s on `ssh bee`, managed by Flux from this repository. First app: n
 
 ```text
 beelink/
-  ansible/                    # Host bootstrap and SSD checks
-  cluster/flux-system/        # Independent Flux installation and Git source
+  ansible/                    # Host-specific configuration, SSD checks, shared-role wrappers
+  cluster/flux-system/        # Independent Git source; shared Flux components
   cluster/infrastructure/     # Tailscale Helm release; encrypted OAuth Secret added at setup
   cluster/apps/nanobot/       # Deployment, Service, retained local PV/PVC, private ingress
   cluster/*-sync.yaml         # Staged Flux reconciliation
@@ -22,3 +22,5 @@ All application persistence uses static retained local PVs at each app's existin
 Tailscale provides private HTTPS for the nanobot UI. Pi-hole runs separately and provides tailnet DNS. Flux reads public GitHub over HTTPS; it does not require a GitHub token. The Tailscale operator's OAuth credentials are encrypted with SOPS. GitHub Actions builds/publishes images with its built-in token; the GHCR package is public for anonymous cluster pulls.
 
 **LAN access:** ServiceLB is enabled. Nanobot also serves [HTTP on LAN port 8765](http://192.168.178.13:8765/), using the same pod and data. LAN exposure is opt-in through each app's `lan.yaml`; Traefik stays disabled. See [the ServiceLB pattern and verification](docs/servicelb-plan.md).
+
+Both hosts use the [shared maintenance code and policy](../shared/README.md): nightly Ubuntu updates and conditional reboot, K3s patch upgrades, Flux components, and common K3s bootstrap tasks. `ansible/site.yml` configures updates and K3s together.

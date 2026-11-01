@@ -3,85 +3,54 @@
   hosts: beelink
   gather_facts: true
   vars:
-    # Explicit bootstrap version. Existing installations are not upgraded here.
-    k3s_bootstrap_version: v1.36.5+k3s1
     data_uuid: 3da917f6-a469-43f4-831a-5a9eef982cd5
-
-  tasks:
+    k3s_extra_config_changed: '{{ k3s_mount_dependency.changed }}'
+    k3s_node_wait_target: beelink
+    k3s_config_content: |
+      # Managed by selfhosted/beelink/ansible/k3s.yml
+      node-name: beelink
+      node-ip: "{{ ansible_default_ipv4.address }}"
+      flannel-iface: "{{ ansible_default_ipv4.interface }}"
+      tls-san:
+        - "{{ ansible_default_ipv4.address }}"
+      write-kubeconfig-mode: "0600"
+      disable:
+        - traefik
+        - local-storage
+      kubelet-arg:
+        - "fail-swap-on=false"
+  pre_tasks:
     - name: Require the inventoried host and OS
       ansible.builtin.assert:
         that:
           - ansible_distribution == 'Ubuntu'
           - ansible_distribution_version == '24.04'
           - ansible_hostname == 'beelink'
-
     - name: Verify the existing data filesystem
       ansible.builtin.command: findmnt --noheadings --raw --mountpoint /data --output UUID
       register: data_mount
       changed_when: false
       check_mode: false
-
     - name: Require the inventoried SSD
       ansible.builtin.assert:
         that: data_mount.stdout | trim == data_uuid
         fail_msg: The expected SSD must already be mounted at /data. Do not create replacement directories.
-
     - name: Inspect existing nanobot storage without changing ownership
       ansible.builtin.stat:
         path: /data/nanobot/config.json
       register: nanobot_config
-
     - name: Require existing nanobot data
       ansible.builtin.assert:
         that:
           - nanobot_config.stat.exists
           - nanobot_config.stat.isreg
-
-    - name: Inspect K3s installation
-      ansible.builtin.stat:
-        path: "{{ item }}"
-      loop:
-        - /usr/local/bin/k3s
-        - /etc/systemd/system/k3s.service
-      register: k3s_installation
-
-    - name: Record installation state
-      ansible.builtin.set_fact:
-        k3s_binary_exists: "{{ k3s_installation.results[0].stat.exists }}"
-        k3s_unit_exists: "{{ k3s_installation.results[1].stat.exists }}"
-
-    - name: Create configuration directories
+    - name: Create service override directory
       ansible.builtin.file:
-        path: "{{ item.path }}"
+        path: /etc/systemd/system/k3s.service.d
         state: directory
         owner: root
         group: root
-        mode: "{{ item.mode }}"
-      loop:
-        - { path: /etc/rancher/k3s, mode: '0700' }
-        - { path: /etc/systemd/system/k3s.service.d, mode: '0755' }
-
-    - name: Configure K3s
-      ansible.builtin.copy:
-        dest: /etc/rancher/k3s/config.yaml
-        owner: root
-        group: root
-        mode: '0600'
-        content: |
-          # Managed by selfhosted/beelink/ansible/k3s.yml
-          node-name: beelink
-          node-ip: "{{ ansible_default_ipv4.address }}"
-          flannel-iface: "{{ ansible_default_ipv4.interface }}"
-          tls-san:
-            - "{{ ansible_default_ipv4.address }}"
-          write-kubeconfig-mode: "0600"
-          disable:
-            - traefik
-            - local-storage
-          kubelet-arg:
-            - "fail-swap-on=false"
-      register: k3s_config
-
+        mode: '0755'
     - name: Require the SSD before starting K3s
       ansible.builtin.copy:
         dest: /etc/systemd/system/k3s.service.d/data.conf
@@ -98,42 +67,5 @@
           ExecStartPre=/usr/bin/mountpoint --quiet /data
           ExecStartPre=/bin/sh -ec 'test "$(/usr/bin/findmnt --noheadings --raw --mountpoint /data --output UUID)" = "{{ data_uuid }}"'
       register: k3s_mount_dependency
-
-    - name: Download official K3s installer
-      ansible.builtin.get_url:
-        url: https://get.k3s.io
-        dest: /usr/local/src/beelink-k3s-install.sh
-        owner: root
-        group: root
-        mode: '0700'
-        force: false
-      when: not k3s_binary_exists or not k3s_unit_exists
-
-    - name: Install K3s or repair an incomplete installation
-      ansible.builtin.command: /bin/sh /usr/local/src/beelink-k3s-install.sh
-      environment:
-        INSTALL_K3S_VERSION: "{{ k3s_bootstrap_version }}"
-        INSTALL_K3S_SKIP_DOWNLOAD: "{{ 'true' if k3s_binary_exists else 'false' }}"
-        INSTALL_K3S_EXEC: server
-        INSTALL_K3S_SKIP_START: 'true'
-      when: not k3s_binary_exists or not k3s_unit_exists
-
-    - name: Enable K3s and apply configuration
-      ansible.builtin.systemd_service:
-        name: k3s
-        daemon_reload: true
-        enabled: true
-        state: "{{ 'restarted' if k3s_binary_exists and (k3s_config.changed or k3s_mount_dependency.changed) else 'started' }}"
-      when: not ansible_check_mode or (k3s_binary_exists and k3s_unit_exists)
-
-    - name: Wait for local Kubernetes API
-      ansible.builtin.wait_for:
-        host: 127.0.0.1
-        port: 6443
-        timeout: 180
-      when: not ansible_check_mode
-
-    - name: Wait for node readiness
-      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node/beelink --timeout=180s
-      changed_when: false
-      when: not ansible_check_mode
+  roles:
+    - ../../shared/ansible/roles/k3s

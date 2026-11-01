@@ -1,0 +1,13 @@
+---
+maintenance_timezone: Europe/Berlin
+ubuntu_updates_refresh_time: '01:00:00'
+ubuntu_updates_install_time: '02:00:00'
+ubuntu_updates_reboot_time: '03:00'
+ubuntu_updates_allowed_origins:
+  - '${distro_id}:${distro_codename}'
+  - '${distro_id}:${distro_codename}-updates'
+  - '${distro_id}:${distro_codename}-security'
+  - '${distro_id}:${distro_codename}-backports'
+  - '${distro_id}ESMApps:${distro_codename}-apps-security'
+  - '${distro_id}ESM:${distro_codename}-infra-security'
+  - 'Docker:${distro_codename}'

@@ -4,6 +4,6 @@ resources:
   - ./flux-system
   - ./infrastructure/cert-manager
   - ./infrastructure/traefik
-  - ./infrastructure/system-upgrade-controller
+  - ../../shared/cluster/system-upgrade-controller
   - ./infrastructure/k3s-upgrade-sync.yaml
   - ./apps-sync.yaml

@@ -35,26 +35,11 @@ Never commit private keys, kubeconfigs, or decrypted config. `kubectl kustomize`
 
 ## Updates
 
-| Europe/Berlin time | Action |
-| --- | --- |
-| 01:00 | Refresh Ubuntu package lists |
-| 02:00 | Install unattended updates |
-| 03:00 | Reboot when required |
-| 04:00–05:00 | Allow K3s patch upgrade Jobs to start |
+Hetzner and Beelink use the same [shared maintenance policy](../../shared/README.md): Ubuntu package updates and conditional reboots, K3s patch upgrades, Flux components, and Ansible bootstrap tasks. Schedules, allowed origins, shared release updates, validation, and rollout checks are documented there.
 
-Ubuntu timers use no randomized delay and do not catch up missed runs. The spring daylight-saving transition skips the 02:00 run. Ubuntu's default allowed origins remain in effect; explicitly configure any third-party repositories you want updated. A long update or reboot can extend beyond its intended window.
+Renovate proposes app image, shared Flux/controller image, and cert-manager chart updates. cert-manager component images follow the pinned chart defaults; update both OCI tag and digest when editing manually.
 
-The K3s Plan tracks one minor-version channel with no drain or cordon on the single node. A Job started in its window may finish later. For a new minor, review compatibility, advance one minor at a time, and update the Plan channel, controller's kubectl helper, and Ansible bootstrap version together. Ansible does not downgrade installed K3s.
-
-Renovate proposes app image, Flux, and cert-manager chart updates. cert-manager component images follow the pinned chart defaults; update both OCI tag and digest when editing manually. Flux's generated `gotk-components.yaml` should be regenerated with the same three components, not hand-edited:
-
-```bash
-flux install --export --components=source-controller,kustomize-controller,helm-controller > hetzner/cluster/flux-system/gotk-components.yaml
-```
-
-Use the intended Flux CLI version for this command. The system-upgrade-controller CRD and controller YAML are vendored upstream release files with pinned controller/helper images. Update the whole release together, reviewing RBAC and CRDs as well as images. Renovate's Deployment image proposal alone does not refresh the vendored release or the helper image in its ConfigMap.
-
-After upgrades, check Flux, node readiness, PVCs, certificates, and public routes. Upgrade Jobs expire after the configured TTL; inspect Plan status and events if Jobs are already gone.
+After upgrades, check Flux, node readiness, PVCs, certificates, and public routes. No scheduled backup runs; keep current off-server backups and verify restore procedures.
 
 ## Routine checks
 

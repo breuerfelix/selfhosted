@@ -15,12 +15,12 @@
   "kubernetes": {
     "managerFilePatterns": [
       "/^hetzner\\/cluster\\/apps\\/.*\\.ya?ml$/",
-      "/^hetzner\\/cluster\\/infrastructure\\/system-upgrade-controller\\/controller\\.yaml$/"
+      "/^shared\\/cluster\\/system-upgrade-controller\\/controller\\.yaml$/"
     ]
   },
   "flux": {
     "managerFilePatterns": [
-      "/^hetzner\\/cluster\\/flux-system\\/gotk-components\\.ya?ml$/",
+      "/^shared\\/cluster\\/flux-system\\/gotk-components\\.ya?ml$/",
       "/^hetzner\\/cluster\\/infrastructure\\/cert-manager\\/.*\\.ya?ml$/"
     ]
   },
