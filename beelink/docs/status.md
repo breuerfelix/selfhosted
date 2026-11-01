@@ -56,3 +56,19 @@ See [the ServiceLB pattern](servicelb-plan.md) for future app ports, conflict ch
 ## Pending
 
 K3s application backups are disabled for now. Docker Restic covers only its own Docker applications and has no Kubernetes credentials or lifecycle hooks. A controlled host reboot/recovery drill and a real provider/tool request remain separate checks.
+
+## Screeps agents
+
+1 November 2026: both agents migrated to namespace `screeps-agent`, each with
+one replica and Recreate, using the same original immutable registry digest.
+Portainer stacks 20/22 automatic updates are disabled; both Docker workers exited
+before Kubernetes started and remain stopped with restart policy `no`. No
+storage, backup, Service, Ingress, or published port was added. Monitoring
+readiness is a Flux dependency.
+
+Public collection and fresh VictoriaMetrics/Loki records passed. Private HTTPS
+responds from its pod, but its unchanged token returns HTTP 401; valid private
+credentials and post-restart ingestion verification remain required. Room
+Planner was explicitly deferred and remains running on Docker, with its Flux
+staging suspended. cAdvisor, vmagent, and unrelated applications are unchanged.
+See [full evidence and rollback](screeps-migration.md).
