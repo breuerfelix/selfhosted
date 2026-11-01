@@ -4,8 +4,8 @@ metadata:
   name: papra
   namespace: flux-system
 spec:
-  # Keep suspended until Docker is stopped and recovery is verified.
-  suspend: true
+  # Docker stopped with restart=no; stopped-writer recovery verified.
+  suspend: false
   interval: 10m
   dependsOn:
     - name: tailscale
