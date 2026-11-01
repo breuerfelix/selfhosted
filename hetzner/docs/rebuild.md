@@ -18,7 +18,7 @@ uv pip install --python temp/ansible-venv/bin/python -r shared/ansible/requireme
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml
 ```
 
-The playbook uses the [shared maintenance roles](../../shared/README.md), configures nightly Ubuntu updates, creates retained storage directories, installs K3s if absent, and enables/starts its service. Existing K3s binaries are left at their installed version. Changed K3s configuration restarts the service. Individual playbooks can also be run separately.
+The playbook uses the [shared maintenance roles](../../shared/README.md), configures nightly Ubuntu updates, creates retained storage directories, installs K3s if absent, repairs a missing service unit, and enables/starts its service. Existing K3s binaries are left at their installed version, including during service-unit repair. Changed K3s configuration restarts the service. Individual playbooks can also be run separately.
 
 Copy the kubeconfig without making it world-readable, then replace the loopback API address with the VPS public IPv4:
 
@@ -29,6 +29,7 @@ chmod 600 temp/hetzner-kubeconfig
 # Edit server: https://127.0.0.1:6443 to https://<VPS_IP>:6443.
 export KUBECONFIG="$PWD/temp/hetzner-kubeconfig"
 kubectl get nodes -o wide
+kubectl -n kube-system wait --for=create deployment/traefik --timeout=300s
 kubectl -n kube-system rollout status deployment/traefik --timeout=300s
 kubectl wait --for=condition=Established --timeout=120s crd/middlewares.traefik.io crd/ingressroutes.traefik.io
 ```

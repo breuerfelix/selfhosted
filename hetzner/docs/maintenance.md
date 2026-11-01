@@ -26,8 +26,10 @@ Screeps stores its application config directly as SOPS-encrypted YAML, consumed 
 
 ```bash
 export SOPS_AGE_KEY_FILE="$PWD/temp/hetzner-sops-age.key"
-sops hetzner/cluster/apps/screeps/config.sops.yaml
+sops --config hetzner/cluster/apps/.sops.yaml hetzner/cluster/apps/screeps/config.sops.yaml
 ```
+
+Use the explicit `--config` when creating another app's encrypted config or running `sops updatekeys` too: SOPS searches the working directory and its parents, not the target file's directory. Existing encrypted files carry their recipients, but new files need the creation rules.
 
 The generated Secret name changes when config changes. Kustomize updates the Deployment reference, causing a restart and a fresh `subPath` mount. No manual version annotation or restart is needed. Every app can use the same `config.sops.yaml` naming convention: `.sops.yaml` encrypts these files completely. Other `*.sops.yaml` files use the fallback Kubernetes Secret rule, which encrypts only `data` and `stringData`. Keep the generator's default name hash enabled.
 
