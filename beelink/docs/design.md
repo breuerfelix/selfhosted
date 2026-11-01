@@ -36,7 +36,7 @@ The user's SSD description maps to the existing `/data` filesystem. Linux report
 
 - One K3s server, SQLite, bundled containerd, Flannel and CoreDNS. Docker remains independent for the apps not being migrated.
 - Ansible installs an explicit initial K3s version and preserves an existing version on reruns. No automatic K3s upgrade controller in this first phase; maintenance upgrades need a separately reviewed version change and procedure. The bootstrap version matches the current Hetzner configuration.
-- Disable bundled Traefik, ServiceLB, and local-storage. Retain the default pod/service networks (`10.42.0.0/16`, `10.43.0.0/16`), which do not overlap the observed LAN or Docker routes.
+- Disable bundled Traefik and local-storage. ServiceLB is enabled for opt-in LAN Services; nanobot publishes IPv4 TCP 8765, restricted to LAN sources. See [the LAN Service pattern](servicelb-plan.md). Retain the default pod/service networks (`10.42.0.0/16`, `10.43.0.0/16`), which do not overlap the observed LAN or Docker routes.
 - Pin the node IP and Flannel interface to the host's current default LAN interface, avoiding selection of the existing Tailscale interface. Keep the current DHCP lease stable with a router reservation; the playbook does not change router settings.
 - Keep the host's existing swap enabled and explicitly set kubelet `fail-swap-on=false`; this does not enable workload swap. No host DNS rewrite. CoreDNS uses K3s's normal resolver selection.
 - Kubernetes API administration uses the LAN or an SSH tunnel through `bee`. The API is authenticated by its kubeconfig. Do not add router forwards. No Kubernetes API proxy through Tailscale in this phase.

@@ -137,7 +137,7 @@ kubectl -n nanobot get pods,pvc,svc,ingress
 kubectl get pv nanobot-data
 ```
 
-Use the actual address reported by `kubectl -n nanobot get ingress nanobot` with `https://`. Initial certificate provisioning can take time. The old LAN host ports 8765, 18790, and 8900 are intentionally not recreated by Kubernetes.
+Use the actual address reported by `kubectl -n nanobot get ingress nanobot` with `https://`. Initial certificate provisioning can take time. Nanobot now also has an opt-in [LAN Service on TCP 8765](servicelb-plan.md); gateway health port 18790 and obsolete API port 8900 are not published.
 
 Verify UI login, existing sessions/workspace, WebSocket chat and a real provider/tool request. Test on home Wi-Fi and cellular with Tailscale enabled; verify HTTPS and absence of Funnel/public access. Check pod logs locally, avoiding copied provider tokens. Confirm only the Kubernetes process now writes `/data/nanobot` and other Docker apps still work.
 

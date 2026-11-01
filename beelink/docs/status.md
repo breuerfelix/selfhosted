@@ -20,7 +20,7 @@ Flux source, Kustomize, and Helm controllers are installed. The public Git sourc
 
 Tailscale authentication completed on 31 October 2026. `operator-oauth.sops.yaml` is encrypted with the same age recipient as Hetzner; Flux decrypts it into `tailscale/operator-oauth`. The `tailscale` Kustomization and `tailscale-operator` HelmRelease are Ready. The operator pod is running and tailnet status confirms `beelink-k8s-operator` is online with `tag:k8s-operator`, at `beelink-k8s-operator.vulture-skink.ts.net`. MagicDNS and HTTPS certificate support are enabled. No plaintext credential file was created during validation or publication.
 
-This verifies operator enrollment, not application ingress. There is no app proxy or nanobot HTTPS endpoint yet. Future credential setup/rotation is described in [authentication steps](tailscale.md).
+Operator enrollment and application ingress are tracked separately; active app routes are recorded below. Future credential setup/rotation is described in [authentication steps](tailscale.md).
 
 ## Nanobot migration
 
@@ -42,6 +42,16 @@ GitHub Actions is allowed to create the workflow's digest-update PRs; default wo
 1 November 2026: the user configured Pi-hole directly on Tailscale. Device `pihole` is online at `100.107.42.49`. After stopping the old Beelink Docker container, direct DNS queries to that address succeeded over UDP and TCP, and nanobot HTTPS still returned 200 with certificate verification enabled.
 
 The old Docker container `tailscale` is stopped with restart policy `no`. Portainer GitOps updates for its stack (39) are disabled so a later repository update cannot recreate it automatically. Its data under `/data/tailscale` is retained. The old tailnet device is `tailscale-subnet-router` (`100.90.51.20`); the user can remove that entry from the Tailscale Machines page. Keep `pihole`, `beelink-k8s-operator`, and the nanobot proxy device.
+
+## LAN access with ServiceLB
+
+1 November 2026: ServiceLB was enabled through Ansible, preserving the disabled Traefik/local-storage settings. The controller restart completed successfully; the subsequent Ansible run reported zero changes.
+
+Flux manages `nanobot/nanobot-lan`, a separate IPv4 LoadBalancer Service exposing TCP 8765 on `192.168.178.13`, targeting the app's existing named `http` port. NodePort allocation is disabled and no NodePort was allocated. External sources are restricted to `192.168.178.0/24`; the corresponding ServiceLB and kube-proxy rules were inspected.
+
+LAN HTTP returned 200 from the Mac's LAN interface. Existing Tailscale HTTPS returned 200 with certificate validation. Global IPv6 port 8765 refused a connection while IPv6 SSH accepted a control connection; no IPv6 forwarding rules were created for this Service. Nanobot's PVC remains Bound and existing Docker container IDs/start times stayed unchanged. No off-site negative exposure test or interactive browser login was performed.
+
+See [the ServiceLB pattern](servicelb-plan.md) for future app ports, conflict checks, and rollback. Port 8888 remains owned by Docker Hindsight.
 
 ## Pending
 

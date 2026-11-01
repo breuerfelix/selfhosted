@@ -1,0 +1,23 @@
+# Reference pattern; not referenced by Flux. Nanobot's active copy is in its app directory.
+# For another app, change the resource names, namespace, selector, and port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nanobot-lan
+  namespace: nanobot
+spec:
+  type: LoadBalancer
+  allocateLoadBalancerNodePorts: false
+  externalTrafficPolicy: Cluster
+  ipFamilyPolicy: SingleStack
+  ipFamilies:
+    - IPv4
+  loadBalancerSourceRanges:
+    - 192.168.178.0/24
+  selector:
+    app: nanobot
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8765
+      targetPort: http
