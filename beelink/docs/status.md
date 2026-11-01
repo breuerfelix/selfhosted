@@ -37,6 +37,12 @@ Nanobot is enabled in Flux and running as one Ready pod with UID:GID `1000:1000`
 
 GitHub Actions is allowed to create the workflow's digest-update PRs; default workflow permissions remain read-only, with explicit per-job permissions in YAML. Future builds do not change nanobot's suspension state. Review and merge their digest PRs to deploy.
 
+## Pi-hole and old subnet router retirement
+
+1 November 2026: the user configured Pi-hole directly on Tailscale. Device `pihole` is online at `100.107.42.49`. After stopping the old Beelink Docker container, direct DNS queries to that address succeeded over UDP and TCP, and nanobot HTTPS still returned 200 with certificate verification enabled.
+
+The old Docker container `tailscale` is stopped with restart policy `no`. Portainer GitOps updates for its stack (39) are disabled so a later repository update cannot recreate it automatically. Its data under `/data/tailscale` is retained. The old tailnet device is `tailscale-subnet-router` (`100.90.51.20`); the user can remove that entry from the Tailscale Machines page. Keep `pihole`, `beelink-k8s-operator`, and the nanobot proxy device.
+
 ## Pending
 
 Verify the user's ongoing off-host nanobot backup method against the Kubernetes writer. The repository's existing Docker Restic job does not include nanobot. A controlled host reboot/recovery drill and a real provider/tool request remain separate checks.
