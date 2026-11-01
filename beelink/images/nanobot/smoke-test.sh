@@ -14,6 +14,9 @@ docker run --detach --name "$container" --network none \
   --env XDG_DATA_HOME=/home/nanobot/.nanobot/data \
   "$image" gateway >/dev/null
 
+# Run directly so a missing CLI fails immediately with a useful error.
+docker exec --user 1000:1000 "$container" gh --version
+
 for attempt in $(seq 1 60); do
   if docker exec "$container" python -c '
 import os, pathlib, urllib.request
@@ -23,7 +26,7 @@ assert urllib.request.urlopen("http://127.0.0.1:18790/health", timeout=4).status
 r = urllib.request.urlopen("http://127.0.0.1:8765/", timeout=4)
 assert r.status == 200 and "text/html" in r.headers.get("Content-Type", "")
 ' >/dev/null 2>&1; then
-    echo "Nanobot gateway, WebUI, bundled assets, and non-root smoke test passed."
+    echo "Nanobot gateway, WebUI, bundled assets, GitHub CLI, and non-root smoke test passed."
     exit 0
   fi
   if test "$(docker inspect "$container" --format '{{.State.Running}}')" != true; then

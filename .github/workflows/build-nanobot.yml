@@ -48,7 +48,7 @@ jobs:
           file: upstream/Dockerfile
           platforms: linux/amd64
           load: true
-          tags: ${{ steps.source.outputs.tag }}
+          tags: ${{ steps.source.outputs.tag }}-upstream
           build-args: |
             NANOBOT_CHANNELS=${{ steps.source.outputs.channels }}
             NANOBOT_EXTRAS=${{ steps.source.outputs.extras }}
@@ -60,7 +60,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
-      - name: Check gateway and WebUI with disposable state
+      - name: Build local additions on the upstream image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          # The docker driver can read the upstream image loaded into Docker's
+          # image store; the isolated Buildx container cannot.
+          builder: default
+          context: selfhosted/beelink/images/nanobot
+          file: selfhosted/beelink/images/nanobot/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.source.outputs.tag }}
+          build-args: |
+            NANOBOT_BASE=${{ steps.source.outputs.tag }}-upstream
+          provenance: false
+      - name: Check gateway, WebUI, and local tools with disposable state
         env:
           IMAGE: ${{ steps.source.outputs.tag }}
         run: bash selfhosted/beelink/images/nanobot/smoke-test.sh "$IMAGE"
@@ -100,10 +114,10 @@ jobs:
           delete-branch: true
           add-paths: beelink/cluster/apps/nanobot/app.yaml
           commit-message: Pin tested nanobot image
-          title: Update nanobot to the tested upstream build
+          title: Update nanobot to the tested custom build
           body: |
-            Builds upstream HKUDS/nanobot commit `${{ needs.build.outputs.source }}` using its Dockerfile.
+            Builds upstream HKUDS/nanobot commit `${{ needs.build.outputs.source }}` using its Dockerfile, then applies local additions from `beelink/images/nanobot/Dockerfile`.
 
             Image: `${{ needs.build.outputs.image }}`
 
-            Validation: isolated non-root gateway and WebUI smoke test passed. Existing host storage and the Flux suspension setting are unchanged.
+            Validation: isolated non-root gateway, WebUI, and GitHub CLI smoke test passed. Existing host storage and the Flux suspension setting are unchanged.
