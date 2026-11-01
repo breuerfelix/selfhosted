@@ -31,8 +31,8 @@ If `/data/hermes/backups` already contains archives that should be retained,
 copy them to `/data/hermes-backup` before redeploying. The new bind mount hides
 the old directory from the Hermes container.
 
-The Docker socket is mounted so the backup job can stop and restart exactly
-these containers before and after the backup:
+The Docker socket is mounted so the backup job can preserve the running state
+of these containers before and after the backup:
 
 ```text
 papra
@@ -40,8 +40,49 @@ hindsight
 portainer
 ```
 
-The monitoring stack is not stopped and none of its data paths are passed to
-restic.
+Papra now runs in Beelink K3s. Compose defaults `PAPRA_RUNTIME` to
+`kubernetes`; the retained Docker `papra` container must remain stopped.
+The image includes checksum-verified kubectl v1.36.5 for this amd64 host.
+`/data/restic-backup/papra.kubeconfig` is root-only and mounted through the
+existing read-only `/data` bind; it is deliberately outside the include list.
+Provision or refresh it after Flux creates the ServiceAccount:
+
+```bash
+ssh bee python3 - < beelink/scripts/configure-papra-backup.py
+```
+
+The scoped account can get/patch only `papra/papra` Deployment and list pods
+in namespace `papra`. It cannot read Secrets or modify other applications.
+Its manually managed ServiceAccount token has no scheduled expiry; delete
+`papra/restic-backup-token`, let Flux recreate it, then rerun the helper to
+revoke/rotate credentials. No Kubernetes admin kubeconfig enters Docker.
+
+Before stopping other backup containers, the job atomically marks the Papra
+Deployment with `kustomize.toolkit.fluxcd.io/reconcile: disabled` and sets its
+replica count to zero. Flux skips that Deployment even during forced
+reconciliation. The job waits until every Papra pod has disappeared, then
+runs the unchanged four-path Restic backup. Its EXIT/signal trap restores
+Docker running states and Papra's original replica count, removes the Flux
+override, and waits for readiness. Missing credentials, API failures,
+preexisting overrides, unexpected replicas, stale recovery state, or a
+running Docker Papra fail closed before the snapshot.
+
+If the backup process/container is killed without running its trap, inspect
+the snapshot and writer state before recovery. Ensure no Docker Papra is
+running, then restore replicas to one and remove only the temporary
+`kustomize.toolkit.fluxcd.io/reconcile` annotation from Deployment
+`papra/papra`; verify readiness. Inspect/remove stale
+`/run/restic-backup.papra-replicas` and `/run/restic-backup.lock` only after
+confirming no backup process remains. Do not start Docker as an automatic
+backup recovery action.
+
+For a deliberate return to Docker Papra, set `PAPRA_RUNTIME=docker` in backup
+stack 35 and redeploy only that backup stack, or restore the retained original
+backup container as described in the [Papra rollback runbook](../../beelink/docs/papra.md).
+Direct image use defaults to Docker mode for compatibility; Compose opts
+this host into Kubernetes mode explicitly.
+
+Monitoring is not stopped and none of its data paths are passed to restic.
 
 ## Portainer environment variables
 
@@ -104,5 +145,6 @@ docker exec restic-backup \
 
 The restic container mounts `/data` read-only and does not back up the Docker
 socket, credentials, images, host OS, Docker engine configuration, or
-monitoring data. Papra's `AUTH_SECRET` is a Portainer environment variable and
-is intentionally not stored in Git or in the restic Compose file.
+monitoring data. Papra's `AUTH_SECRET` is preserved in a SOPS-encrypted Secret under
+`beelink/cluster/apps/papra/`. Recovery requires the existing shared age key.
+The restic Compose file contains no application or repository credentials.

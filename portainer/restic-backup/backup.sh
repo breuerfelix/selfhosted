@@ -2,10 +2,21 @@
 set -eu
 
 . /usr/local/lib/restic-backup-common.sh
-acquire_lock
 
 # These are the only containers intentionally stopped. Monitoring is not
 # touched. The names match the current Portainer deployment.
+PAPRA_RUNTIME=${PAPRA_RUNTIME:-docker}
+case "$PAPRA_RUNTIME" in
+  docker) ;;
+  kubernetes) . /usr/local/lib/papra-kubernetes.sh;;
+  *) printf '%s\n' 'PAPRA_RUNTIME must be docker or kubernetes' >&2; exit 1;;
+esac
+acquire_lock
+if [ "$PAPRA_RUNTIME" = kubernetes ] && [ -e "$PAPRA_STATE_FILE" ]; then
+  printf '%s\n' 'Stale Papra backup state exists; inspect before retrying' >&2
+  release_lock
+  exit 1
+fi
 STOP_ORDER='papra hindsight portainer'
 START_ORDER='portainer hindsight papra'
 RUNNING_FILE=/run/restic-backup.running
@@ -25,6 +36,13 @@ finish() {
     fi
   done
 
+  if [ "$PAPRA_RUNTIME" = kubernetes ]; then
+    if ! papra_resume; then
+      printf '%s\n' 'failed to restore Papra Kubernetes state' >&2
+      rc=1
+    fi
+  fi
+
   rm -f "$RUNNING_FILE"
   release_lock
 
@@ -33,7 +51,9 @@ finish() {
   fi
   exit "$rc"
 }
-trap finish EXIT INT TERM
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Fail closed if the expected containers were renamed or removed. Backing up a
 # live database would otherwise create a misleadingly successful snapshot.
@@ -44,8 +64,13 @@ for container in $STOP_ORDER; do
   fi
 done
 
+if [ "$PAPRA_RUNTIME" = kubernetes ]; then
+  papra_quiesce
+fi
+
 for container in $STOP_ORDER; do
-  if [ "$(docker inspect -f '{{.State.Running}}' "$container")" = true ]; then
+  running=$(docker inspect -f '{{.State.Running}}' "$container")
+  if [ "$running" = true ]; then
     printf '%s\n' "$container" >> "$RUNNING_FILE"
   fi
 done

@@ -1,3 +1,6 @@
+# Legacy rollback definition only: Papra now runs in Beelink K3s.
+# Keep Portainer stack 37 automatic updates disabled. Never redeploy while
+# Kubernetes owns /data/papra. See ../beelink/docs/papra.md.
 # Papra document archiving platform.
 #
 # Required Portainer stack environment variable:
