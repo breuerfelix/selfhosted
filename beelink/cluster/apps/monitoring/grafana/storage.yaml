@@ -1,0 +1,42 @@
+# Capacity is a binding declaration, not a quota on this shared SSD.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: monitoring-grafana-data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: monitoring
+    name: grafana-data
+  local:
+    path: /data/grafana
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [beelink]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  namespace: monitoring
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes: [ReadWriteOnce]
+  volumeMode: Filesystem
+  storageClassName: ""
+  volumeName: monitoring-grafana-data
+  resources:
+    requests:
+      storage: 5Gi

@@ -1,0 +1,42 @@
+# Capacity is a binding declaration, not a quota on this shared SSD.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: monitoring-loki-data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: monitoring
+    name: loki-data
+  local:
+    path: /data/loki
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [beelink]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-data
+  namespace: monitoring
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes: [ReadWriteOnce]
+  volumeMode: Filesystem
+  storageClassName: ""
+  volumeName: monitoring-loki-data
+  resources:
+    requests:
+      storage: 10Gi

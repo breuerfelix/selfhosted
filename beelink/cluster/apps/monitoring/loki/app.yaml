@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 180
+      # Match Docker process IDs; do not use fsGroup or recursively chown data.
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+      containers:
+        - name: loki
+          image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193
+          imagePullPolicy: IfNotPresent
+          args: [-config.file=/etc/loki/local-config.yaml]
+          ports:
+            - name: http
+              containerPort: 3100
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /loki
+            - name: config
+              mountPath: /etc/loki
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: loki-data
+        - name: config
+          configMap:
+            name: loki-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: loki
+  ports:
+    - name: http
+      port: 3100
+      targetPort: http

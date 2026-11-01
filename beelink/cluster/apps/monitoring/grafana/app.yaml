@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 180
+      # Match Docker process IDs; do not use fsGroup or recursively chown data.
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      containers:
+        - name: grafana
+          image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: grafana-env
+          env:
+            - name: GF_ANALYTICS_REPORTING_ENABLED
+              value: "false"
+            - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+              value: "false"
+            - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
+              value: "false"
+            # Plugin already exists on retained volume; never upgrade on startup.
+            - name: GF_PLUGINS_PREINSTALL_DISABLED
+              value: "true"
+            - name: GF_SERVER_ROOT_URL
+              value: https://grafana.vulture-skink.ts.net/
+            - name: GF_SECURITY_COOKIE_SECURE
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 3000
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grafana-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
