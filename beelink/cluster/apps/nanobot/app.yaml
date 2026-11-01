@@ -24,7 +24,7 @@ spec:
       containers:
         - name: nanobot
           # Built from the upstream commit in beelink/images/nanobot/source.json.
-          image: ghcr.io/breuerfelix/nanobot@sha256:8e8c97385ccf9d2b5b3ebfb687ab4699db3c7b1ccba221f761f282bfa11644fd
+          image: ghcr.io/breuerfelix/nanobot@sha256:5d33512ea36a51f917f96c0105115d24e7ccc90de76358b6ce1bea1b17c026ad
           imagePullPolicy: IfNotPresent
           args: [gateway]
           env:
