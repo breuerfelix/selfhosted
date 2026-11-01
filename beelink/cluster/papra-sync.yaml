@@ -4,7 +4,7 @@ metadata:
   name: papra
   namespace: flux-system
 spec:
-  # Docker stopped with restart=no; stopped-writer recovery verified.
+  # Docker writer remains stopped with restart=no.
   suspend: false
   interval: 10m
   dependsOn:

@@ -6,8 +6,7 @@
 # Required Portainer stack environment variable:
 #   AUTH_SECRET  random secret of at least 32 characters
 #
-# The application data is kept on the host at /data/papra so it is included in
-# the host's restic backup set.
+# Application data stays on the host at /data/papra. Backups are disabled.
 services:
   papra:
     image: ghcr.io/papra-hq/papra:26.7.0-rootless

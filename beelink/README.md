@@ -2,7 +2,7 @@
 
 Single-node K3s on `ssh bee`, managed by Flux from this repository. Nanobot gateway/WebUI and Grafana, Loki, and single-node VictoriaMetrics run in K3s. Deferred Docker collectors and Screeps agents remain unchanged.
 
-**Papra migrated on 1 November 2026.** Open [Papra](https://papra.vulture-skink.ts.net/) over Tailscale HTTPS. Original database, five documents, user, and auth secret are preserved at `/data/papra`; the old Docker container stays stopped. The existing Docker Restic job now quiesces the Kubernetes writer. See [verification, backups, and rollback](docs/papra.md).
+**Papra migrated on 1 November 2026.** Open [Papra](https://papra.vulture-skink.ts.net/) over Tailscale HTTPS. Original database, five documents, user, and auth secret are preserved at `/data/papra`; the old Docker container stays stopped. Papra backups are disabled. See [deployment and rollback](docs/papra.md).
 
 **Monitoring migrated on 1 November 2026.** Open [Grafana](https://grafana.vulture-skink.ts.net/) over Tailscale HTTPS with existing credentials. Loki and VictoriaMetrics have internal ClusterIP Services; no monitoring LAN ports are published. Original SSD paths, pinned versions, dashboards, credentials, and history are preserved. Old Docker backends remain stopped with restart disabled, and shared Portainer stack 26 automatic updates stay disabled. See [monitoring verification, backups, and rollback](docs/monitoring.md).
 

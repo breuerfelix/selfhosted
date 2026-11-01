@@ -6,4 +6,3 @@ resources:
   - app.yaml
   - env.sops.yaml
   - ingress.yaml
-  - backup-rbac.yaml

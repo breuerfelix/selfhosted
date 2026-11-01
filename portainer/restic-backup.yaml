@@ -17,16 +17,13 @@ services:
     build:
       context: ./restic-backup
       dockerfile: Dockerfile
-    image: selfhosted-restic-backup:0.19.1-papra-k3s1
+    image: selfhosted-restic-backup:0.19.1-r2
     container_name: restic-backup
     hostname: portainer-host
     restart: unless-stopped
     init: true
     environment:
       TZ: Europe/Berlin
-      # Scoped kubeconfig provisioned after Papra's Flux resources are Ready.
-      PAPRA_RUNTIME: "${PAPRA_RUNTIME:-kubernetes}"
-      PAPRA_KUBECONFIG: /data/restic-backup/papra.kubeconfig
       RESTIC_REPOSITORY: "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY must be set in Portainer}"
       RESTIC_PASSWORD: "${RESTIC_PASSWORD:?RESTIC_PASSWORD must be set in Portainer}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID must be set in Portainer}"

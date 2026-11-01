@@ -5,20 +5,9 @@ set -eu
 
 # These are the only containers intentionally stopped. Monitoring is not
 # touched. The names match the current Portainer deployment.
-PAPRA_RUNTIME=${PAPRA_RUNTIME:-docker}
-case "$PAPRA_RUNTIME" in
-  docker) ;;
-  kubernetes) . /usr/local/lib/papra-kubernetes.sh;;
-  *) printf '%s\n' 'PAPRA_RUNTIME must be docker or kubernetes' >&2; exit 1;;
-esac
 acquire_lock
-if [ "$PAPRA_RUNTIME" = kubernetes ] && [ -e "$PAPRA_STATE_FILE" ]; then
-  printf '%s\n' 'Stale Papra backup state exists; inspect before retrying' >&2
-  release_lock
-  exit 1
-fi
-STOP_ORDER='papra hindsight portainer'
-START_ORDER='portainer hindsight papra'
+STOP_ORDER='hindsight portainer'
+START_ORDER='portainer hindsight'
 RUNNING_FILE=/run/restic-backup.running
 : > "$RUNNING_FILE"
 
@@ -35,13 +24,6 @@ finish() {
       fi
     fi
   done
-
-  if [ "$PAPRA_RUNTIME" = kubernetes ]; then
-    if ! papra_resume; then
-      printf '%s\n' 'failed to restore Papra Kubernetes state' >&2
-      rc=1
-    fi
-  fi
 
   rm -f "$RUNNING_FILE"
   release_lock
@@ -64,10 +46,6 @@ for container in $STOP_ORDER; do
   fi
 done
 
-if [ "$PAPRA_RUNTIME" = kubernetes ]; then
-  papra_quiesce
-fi
-
 for container in $STOP_ORDER; do
   running=$(docker inspect -f '{{.State.Running}}' "$container")
   if [ "$running" = true ]; then
@@ -88,5 +66,4 @@ restic backup \
   --tag nightly \
   /data/portainer \
   /data/hermes-backup \
-  /data/hindsight \
-  /data/papra
+  /data/hindsight
