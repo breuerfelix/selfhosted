@@ -6,7 +6,7 @@
 services:
   # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     container_name: grafana
     restart: unless-stopped
     user: "0"
