@@ -1,0 +1,12 @@
+{
+  "repository": "breuerfelix/screeps-room-planner",
+  "branch": "codex/k3s-room-planner",
+  "sourceCommit": "be8ef67405493a1d1ecdfb9d93cc26eb2db0d7aa",
+  "buildCommit": "520f2c73cb2d94ee6587d0c75cee2779d556d8c8",
+  "baseImage": "node:22.23.2-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436",
+  "lockfileSha256": "496d91be8dfd6ae34cee09ac84d1a75c35eb95e354fd6ad3f28b89262f0675bf",
+  "frontendApiBase": "/plan",
+  "platform": "linux/amd64",
+  "image": "ghcr.io/breuerfelix/screeps-room-planner@sha256:eaf7c898d6dc7bfba9389062490673663e2887ac725e2209672d6d53f7d0b635",
+  "buildRun": "https://github.com/breuerfelix/screeps-room-planner/actions/runs/41329440344"
+}

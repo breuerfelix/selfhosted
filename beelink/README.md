@@ -1,6 +1,6 @@
 # Beelink K3s
 
-Single-node K3s on `ssh bee`, managed by Flux from this repository. Nanobot gateway/WebUI and Grafana, Loki, and single-node VictoriaMetrics run in K3s. Deferred Docker collectors and Screeps agents remain unchanged.
+Single-node K3s on `ssh bee`, managed by Flux from this repository. Nanobot gateway/WebUI and Grafana, Loki, and single-node VictoriaMetrics run in K3s. Deferred Docker collectors remain unchanged. Room Planner and both Screeps agents are staged for migration; their Docker containers remain active until credentials and private-origin HTTPS connectivity are resolved. See [staging, blockers, and rollback](docs/screeps-migration.md).
 
 **Papra migrated on 1 November 2026.** Open [Papra](https://papra.vulture-skink.ts.net/) over Tailscale HTTPS. Original database, five documents, user, and auth secret are preserved at `/data/papra`; the old Docker container stays stopped. Papra backups are disabled. See [deployment and rollback](docs/papra.md).
 

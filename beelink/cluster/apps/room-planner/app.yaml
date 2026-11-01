@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: room-planner
+  namespace: room-planner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: room-planner
+  template:
+    metadata:
+      labels:
+        app: room-planner
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: beelink
+      imagePullSecrets:
+        - name: ghcr
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: room-planner
+          # Verified live source/dependencies, rebuilt by pinned CI; not the newer Compose version.
+          image: ghcr.io/breuerfelix/screeps-room-planner@sha256:eaf7c898d6dc7bfba9389062490673663e2887ac725e2209672d6d53f7d0b635
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "3001"
+            - name: ROOM_PLANNER_PROXY_URL
+              value: http://127.0.0.1:3001
+            - name: SCREEPS_LOCAL_SERVER_URL
+              value: https://screeps.felixbreuer.me
+            # Also baked into frontend assets by the pinned Dockerfile.
+            - name: VITE_ROOM_PLANNER_API_BASE_URL
+              value: /plan
+          ports:
+            - name: http
+              containerPort: 5173
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-planner
+  namespace: room-planner
+spec:
+  type: ClusterIP
+  selector:
+    app: room-planner
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5173

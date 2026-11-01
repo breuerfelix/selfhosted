@@ -1,6 +1,6 @@
 # Room Planner and Screeps agents on Beelink
 
-Migration staged on 1 November 2026. Keep Flux suspended until each old
+Migration staged on 1 November 2026. **Cutover blocked; Docker remains active.** Keep Flux suspended until each old
 Portainer stack has automatic redeployment disabled and the selected Docker
 containers are stopped with restart policy `no`. Retain containers for rollback.
 No persistent mounts exist; this migration creates no PV/PVC and no backups.
@@ -72,6 +72,14 @@ matches all five original base layer diff IDs. The build uses Yarn 1.22.22 with
 conventions, linux/amd64, and an isolated UI/proxy smoke test before publishing.
 The private GHCR package stays private.
 
+[Build 41329440344](https://github.com/breuerfelix/screeps-room-planner/actions/runs/41329440344)
+passed, including frozen installation and isolated UI/same-origin proxy tests.
+Build commit: `520f2c73cb2d94ee6587d0c75cee2779d556d8c8`.
+Published image:
+`ghcr.io/breuerfelix/screeps-room-planner@sha256:eaf7c898d6dc7bfba9389062490673663e2887ac725e2209672d6d53f7d0b635`.
+The new UI uses the same Vite 8.2.2 as the live build. See
+[image provenance and rebuild instructions](../images/room-planner/README.md).
+
 The frontend builds with `VITE_ROOM_PLANNER_API_BASE_URL=/plan`. Its fetch is
 same-origin; Vite preview proxies `/plan`, `/terrain`, and `/room-objects` to
 `ROOM_PLANNER_PROXY_URL=http://127.0.0.1:3001` inside the same container.
@@ -96,7 +104,7 @@ For rollback:
 3. Delete only the Room Planner Ingress while its Flux resource is suspended;
    wait for its Tailscale proxy to disappear.
 4. Start only the three retained Docker containers and restore their original
-   `unless-stopped` restart policies. Keep Portainer automatic updates disabled.
+   `unless-stopped` policy for Room Planner and `always` for both agents. Keep Portainer automatic updates disabled.
    Room Planner's original URL is `http://192.168.178.13:5173/`.
 5. Docker agent monitoring URLs still use retired Docker DNS names; a rollback
    needs reachable monitoring endpoints to restore ingestion. Do not restart
@@ -104,6 +112,54 @@ For rollback:
 
 Recreate prevents rolling-update overlap. Never manually start a second copy,
 force-delete a worker pod, or start a retained Docker agent while K3s owns it.
+
+## Current staging verification and blockers
+
+Both Flux resources are suspended, so no application namespace, worker, or
+Room Planner ingress has been deployed. The proposed
+`https://room-planner.vulture-skink.ts.net/` hostname had no matching tailnet
+device and did not resolve before migration; allocation is still to be verified
+when the operator creates it. No Tailscale device or certificate was created.
+
+Kustomize rendering, server-side schema dry runs, and both agent SOPS roundtrip
+comparisons passed. The registry's agent image config hash equals the live
+Docker image ID. A disposable pod using that pinned image (only an HTTP probe,
+not a worker) pulled successfully and reached VictoriaMetrics `/health`, Loki
+`/ready`, and public Screeps `/api/version`, all HTTP 200. It timed out reaching
+private Screeps HTTPS; the test pod was deleted. Private HTTPS returned 200
+from Hetzner itself, but TCP 443 timed out from Beelink and the Mac. HTTP 80
+responded. Check external firewall/routing; the exact cause is not established.
+No Hetzner application or firewall configuration was changed.
+
+A read-only inspection of Portainer metadata found active polling for stack 17
+(30 minutes), stack 20 (15 minutes), and stack 22 (15 minutes). **Do not stop
+Docker until those jobs are disabled through authenticated Portainer API/UI and
+verified.** No API credential is currently available; no stack settings changed.
+
+The GitHub CLI credential lacks `read:packages`, and neither host Docker config
+nor cluster contains a GHCR pull credential. Anonymous access to Room Planner
+is rejected. Deployment declares `imagePullSecrets: [{name: ghcr}]`; the Secret
+is deliberately absent until a real credential is available. Do not unsuspend.
+Run `beelink/scripts/configure-room-planner-registry.py` with a package-read
+token; it verifies the exact pinned digest, SOPS-encrypts `ghcr.sops.yaml`, and
+adds it to Kustomize. Commit and reconcile that credential while still suspended.
+Agent credentials are already SOPS-encrypted with the existing age key.
+
+Required user inputs/actions:
+
+1. Supply a protected local file containing a Portainer API key with rights to
+   stacks 17/20/22, or disable their automatic Git polling/webhooks in Portainer
+   and provide confirmation for live verification.
+2. Supply a protected local file containing a GHCR credential with
+   `read:packages` and access to the private Room Planner package. Do not paste
+   either credential into chat.
+3. Restore external HTTPS reachability of `screeps.felixbreuer.me` (check Hetzner
+   Cloud firewall TCP 443). Both private-agent ingestion and Room Planner's local
+   server functions require this original origin.
+
+No selected or unrelated Docker container was stopped, restarted, recreated,
+or given a different restart policy during staging. No application storage or
+backup was created or changed.
 
 ## Validation still required before completion
 

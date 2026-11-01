@@ -1,0 +1,22 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: room-planner
+  namespace: flux-system
+spec:
+  # Keep suspended until stack 17 automatic updates and Docker are stopped.
+  suspend: true
+  interval: 10m
+  dependsOn:
+    - name: tailscale
+  path: ./beelink/cluster/apps/room-planner
+  prune: true
+  wait: true
+  timeout: 10m
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
