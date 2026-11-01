@@ -55,4 +55,4 @@ See [the ServiceLB pattern](servicelb-plan.md) for future app ports, conflict ch
 
 ## Pending
 
-Verify the user's ongoing off-host nanobot backup method against the Kubernetes writer. The repository's existing Docker Restic job does not include nanobot. A controlled host reboot/recovery drill and a real provider/tool request remain separate checks.
+K3s application backups are disabled for now. Docker Restic covers only its own Docker applications and has no Kubernetes credentials or lifecycle hooks. A controlled host reboot/recovery drill and a real provider/tool request remain separate checks.

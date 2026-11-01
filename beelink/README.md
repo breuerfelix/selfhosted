@@ -21,6 +21,8 @@ beelink/
   .sops.yaml                  # Same public age recipient as Hetzner
 ```
 
+**Backups:** K3s application backups are disabled for now. Docker/Portainer backups cover only Portainer, Hermes backup archives, and Hindsight. They have no Kubernetes credentials or hooks and do not mount K3s application directories.
+
 All application persistence uses static retained local PVs at each app's existing Docker bind-mount source path. Nanobot keeps `/data/nanobot` mounted at `/home/nanobot/.nanobot`. No copying, formatting, replacement storage tree, or recursive ownership change is part of migration. K3s state and container images use the internal system disk at `/var/lib/rancher/k3s`.
 
 Tailscale provides private HTTPS for the nanobot UI. Pi-hole runs separately and provides tailnet DNS. Flux reads public GitHub over HTTPS; it does not require a GitHub token. The Tailscale operator's OAuth credentials are encrypted with SOPS. GitHub Actions builds/publishes images with its built-in token; the GHCR package is public for anonymous cluster pulls.

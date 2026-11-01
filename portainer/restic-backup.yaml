@@ -9,9 +9,8 @@
 #   AWS_SESSION_TOKEN      temporary-session token
 #   AWS_DEFAULT_REGION     defaults to eu-central-1
 #
-# The backup image deliberately mounts /data read-only, but the backup scripts
-# pass only the explicit application paths to restic, including the staged
-# Hermes backup archive path.
+# Mount only the Docker application paths listed by the backup script.
+# K3s application data and credentials are outside this stack.
 services:
   restic-backup:
     build:
@@ -32,7 +31,9 @@ services:
       AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-eu-central-1}"
       RESTIC_CACHE_DIR: /tmp/restic-cache
     volumes:
-      - /data:/data:ro
+      - /data/portainer:/data/portainer:ro
+      - /data/hermes-backup:/data/hermes-backup:ro
+      - /data/hindsight:/data/hindsight:ro
       - /var/run/docker.sock:/var/run/docker.sock
     read_only: true
     tmpfs:

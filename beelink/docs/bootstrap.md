@@ -142,7 +142,7 @@ Use the actual address reported by `kubectl -n nanobot get ingress nanobot` with
 
 Verify UI login, existing sessions/workspace, WebSocket chat and a real provider/tool request. Test on home Wi-Fi and cellular with Tailscale enabled; verify HTTPS and absence of Funnel/public access. Check pod logs locally, avoiding copied provider tokens. Confirm only the Kubernetes process now writes `/data/nanobot` and other Docker apps still work.
 
-Keep stopped containers for initial rollback. Their restart policies and Portainer GitOps updates must stay disabled; do not manually redeploy the old stack while Kubernetes owns the mount. Verify the existing nanobot backup procedure against the Kubernetes workload before the next backup run. Schedule a controlled reboot later to check SSD-before-K3s startup and app recovery.
+Keep stopped containers for initial rollback. Their restart policies and Portainer GitOps updates must stay disabled; do not manually redeploy the old stack while Kubernetes owns the mount. K3s application backups are disabled for now; Docker backups do not manage Kubernetes workloads. Schedule a controlled reboot later to check SSD-before-K3s startup and app recovery.
 
 ## 6. Rollback
 

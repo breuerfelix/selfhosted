@@ -5,8 +5,7 @@ Portainer GitOps from `portainer/restic-backup.yaml`.
 
 ## Scope
 
-The container mounts `/data` read-only, but restic is passed exactly these
-three paths:
+The container mounts and backs up only these three Docker paths, read-only:
 
 ```text
 /data/portainer
@@ -38,8 +37,8 @@ hindsight
 portainer
 ```
 
-The monitoring stack is not stopped and none of its data paths are passed to
-restic.
+K3s applications are excluded. This stack has no K3s data mounts, Kubernetes
+credentials, or Kubernetes lifecycle hooks.
 
 ## Portainer environment variables
 
@@ -100,7 +99,6 @@ docker exec restic-backup \
   restic restore latest --target /var/tmp/restic-restore-test
 ```
 
-The restic container mounts `/data` read-only and does not back up the Docker
-socket, credentials, images, host OS, Docker engine configuration, or
-monitoring data. Papra is excluded from this backup job; its backups are
-disabled.
+The restic container does not back up the Docker socket, credentials, images,
+host OS, Docker engine configuration, or K3s applications. K3s application
+backups are disabled for now.
