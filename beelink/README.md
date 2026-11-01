@@ -1,6 +1,8 @@
 # Beelink K3s
 
-Single-node K3s on `ssh bee`, managed by Flux from this repository. First app: nanobot gateway plus its built-in web UI. The separate nanobot API is retired at cutover. Other Docker workloads stay running.
+Single-node K3s on `ssh bee`, managed by Flux from this repository. Nanobot gateway/WebUI and Grafana, Loki, and single-node VictoriaMetrics run in K3s. Deferred Docker collectors and Screeps agents remain unchanged.
+
+**Monitoring migrated on 1 November 2026.** Open [Grafana](https://grafana.vulture-skink.ts.net/) over Tailscale HTTPS with existing credentials. Loki and VictoriaMetrics have internal ClusterIP Services; no monitoring LAN ports are published. Original SSD paths, pinned versions, dashboards, credentials, and history are preserved. Old Docker backends remain stopped with restart disabled, and shared Portainer stack 26 automatic updates stay disabled. See [monitoring verification, backups, and rollback](docs/monitoring.md).
 
 **Nanobot migrated on 31 October 2026.** K3s, Flux, and the Tailscale operator are Ready. Nanobot runs from a tested GitHub Actions build of pinned upstream sources, using its original SSD mount. Open [nanobot](https://nanobot.vulture-skink.ts.net/) with Tailscale connected and use the existing WebUI password. Both old Docker nanobot containers are stopped with restart disabled. The old Docker subnet router was also stopped on 1 November after Pi-hole joined Tailscale directly; unrelated Docker apps remain running. See [verified status](docs/status.md), [image build](images/nanobot/README.md), [authentication steps](docs/tailscale.md), and [the bootstrap and cutover runbook](docs/bootstrap.md).
 
@@ -9,7 +11,7 @@ beelink/
   ansible/                    # Host-specific configuration, SSD checks, shared-role wrappers
   cluster/flux-system/        # Independent Git source; shared Flux components
   cluster/infrastructure/     # Tailscale Helm release; encrypted OAuth Secret added at setup
-  cluster/apps/nanobot/       # Deployment, Service, retained local PV/PVC, private ingress
+  cluster/apps/               # Nanobot and monitoring; retained storage and private ingress
   cluster/*-sync.yaml         # Staged Flux reconciliation
   images/nanobot/             # Upstream source pin, image smoke test, digest update helper
   scripts/                    # Local SOPS credential helper

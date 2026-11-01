@@ -1,6 +1,6 @@
 # Monitoring on Beelink
 
-Migration staged on 1 November 2026. Only Grafana, Loki, and single-node VictoriaMetrics move from Docker stack 26 into namespace `monitoring`; Flux manages plain manifests under `cluster/apps/monitoring`.
+Migration executed on 1 November 2026. Only Grafana, Loki, and single-node VictoriaMetrics move from Docker stack 26 into namespace `monitoring`; Flux manages plain manifests under `cluster/apps/monitoring`.
 
 ## Ownership and access
 
@@ -20,7 +20,35 @@ Portainer automatic updates for shared stack 26 were disabled by the user withou
 
 ## Validation and recovery
 
-Deployment and backup verification results will be recorded after cutover. Keep monitoring suspended until Docker writers have stopped and the stopped-writer recovery point is verified. Do not apply child workload manifests manually.
+Flux `monitoring` is enabled and Ready. All three applications run with one Ready pod and zero restarts. Original Docker containers `grafana`, `loki`, and `victoriametrics` exited cleanly with code 0 and remain stopped with `restart=no`. No Kubernetes writer started before backup verification; recovery-test containers used separate restored directories and were removed afterward.
+
+Verified on 1 November 2026:
+
+- All three retained PVs/PVCs are Bound. Runtime mount information confirms ext4 `/dev/nvme0n1` subdirectories `/grafana`, `/loki`, and `/victoriametrics` at the required container paths. Actual process UID/GID and host directory ownership match the table above.
+- Loki WAL checkpoint/segment recovery completed with `errors=false`. Historical metrics from the previous day and five historical log entries match the pre-cutover API responses exactly, both in independent recovery copies and in the deployed applications.
+- All five Grafana dashboard JSON definitions and both complete data-source API definitions match baseline. Database comparisons confirm user/password records and encrypted data-source credential records are unchanged. Both data-source health APIs report `OK`; clock plugin 2.1.9 is registered.
+- From the Mac, HTTPS certificate verification passed, unauthenticated access redirected to login, existing credentials authenticated successfully, the authenticated page returned 200, and the session cookie had Secure/HttpOnly attributes. Grafana Live completed an authenticated same-origin WebSocket upgrade with HTTP 101. The explicit HTTPS root URL supplies the origin expected by [Grafana Live](https://grafana.com/docs/grafana/latest/setup-grafana/set-up-grafana-live/).
+- A temporary unprivileged client in namespace `default` resolved both fully qualified backend Service names, sent a real Snappy/protobuf Prometheus remote-write request and Loki JSON push (both HTTP 204), and read both records back. Its synthetic labels include `migration_id="monitoring-migration-20261101"` and `source_namespace="default"`. The test pod was deleted. The first attempt preceded Loki readiness; it was repeated successfully after all pods became Ready.
+- No listeners remain on host ports 3000, 3001, 3100, or 8428. The former published LAN ports 3001/3100/8428 were unreachable from the Mac. Monitoring Services are ClusterIP only; only Grafana has an Ingress/Tailscale proxy.
+- cAdvisor, vmagent, both Screeps agents, and every other retained Docker container have unchanged IDs, start times, running states, and restart policies. Nanobot HTTPS returned 200 with certificate verification and its pod remained Ready. The user intentionally removed unrelated `cloudflared` and the previously stopped Docker `tailscale` container during this work; this migration did not operate on them.
+
+Recovery artifacts on `ssh bee`:
+
+```text
+/var/backups/monitoring-migration-20261101/
+  data.tar                          # 79,739,463,680 bytes; all three data trees
+  data.tar.sha256
+  docker-original.json              # original images, settings, mounts, environment
+  loki-config.yaml
+  baseline.json
+  backup-verified.json
+  restore-verified.json
+  grafana-preservation-sha256.json
+```
+
+The directory is root-only (0700); archive, metadata, and credential-bearing records are 0600. Non-secret Loki config is 0644 inside that protected directory. Archive SHA-256 is `a2f59b250a7097dc4977f9151f1a9e5157dd66baca6d6e81205b20632c380d19`. All writers were stopped before archiving. Full archive/source byte comparison passed; full extraction passed; recovered Grafana SQLite `integrity_check` returned `ok`; all three recovered applications started with the original immutable Docker images in isolated network namespaces. Recovered historical metric/log responses matched baseline exactly. Generated 74 GiB recovery-test copies were removed after success; the archive remains on the internal system disk, separate from the data SSD.
+
+For restore, first stop both runtimes, verify `sha256sum -c data.tar.sha256`, and extract into clean application paths using GNU tar with `--acls --xattrs --numeric-owner -xpf data.tar -C /data`. Preserve existing directories separately until recovery succeeds; do not overlay a running or populated dataset. Normal rollback reuses current data and requires no restore. Never apply child workload manifests manually while suspended.
 
 The existing Docker Restic include list excludes all three monitoring directories. This migration does not modify that backup job or establish ongoing monitoring backup coverage. Keep local recovery archives protected: Grafana state and container metadata contain credentials. A local backup is not protection against loss of the host.
 
