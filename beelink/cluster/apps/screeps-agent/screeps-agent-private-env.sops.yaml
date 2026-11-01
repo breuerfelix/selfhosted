@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: screeps-agent-private-env
+    namespace: screeps-agent
+type: Opaque
+stringData:
+    TEST_MODE: ENC[AES256_GCM,data:H7U1JhA=,iv:8K9QALkcs8gQB7RsMdNDMdtOM89Pck0qdywmq/Y2QRg=,tag:S8b8DK3V4HdVLzvgJZ/8Sw==,type:str]
+    SCREEPS_TOKEN: ENC[AES256_GCM,data:7K7DZoxyVBZeEWDXmDCQ05Nxi0RxrQrAiJI9+wH6G91DJEUZ,iv:Feyluxc/u1gvKOI4u8B0D4QqOY8men64+UfjKl8fZBA=,tag:bLYOHggvK2e/c/Ni55XMKg==,type:str]
+    SCREEPS_BASE_URL: ENC[AES256_GCM,data:JQ3IRGlYrbWy+ixh6tdIp0QoXC9xxv+0qQASPm9K,iv:lDNMOMegczai2NrjHg/MlwWReIMpZSn0H16P6xWGV6o=,tag:ISmTmMBX/0TWDZZe0TspQw==,type:str]
+    SCREEPS_SHARDS: ENC[AES256_GCM,data:5MVPusJpSQ==,iv:D6mojODPo5eR5dQlyzt2GMaLQjmBFFVwxugZDy6U6W8=,tag:1norWWy5CpuveMf1d/fCrA==,type:str]
+    NODE_ENV: ENC[AES256_GCM,data:JtllxlB+NUAPqA==,iv:SV8s31yVqnDNZ+GkWB3CY6HrRgKDhYWPU3F8ND+H+dI=,tag:gT82N/hzPx8JQx3q/an1Ag==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBUUms4V3ZzTDEwVnh3LzFZ
+            U1VEeWF1Yi9QT1g1NzN1WEpCbTR4OUdGZWlRClJMMlFMYTJUeVA2UGhvZTNQNlMv
+            ZkFkY0lHMXhYa3l2V0xPZ1p1YXpEWVEKLS0tIE9sbzJ5aXhBR3dxdk11elBxUmdy
+            ZnJiT2NaRTBRdDUvQnIzTld4V05iK0UKGXmDypd2lckED/j3ReyqtfKx8GA5yP4I
+            exr9IR+Ty1jgXvTJBd2joc7R2AkNNONrjEcth8IJd977bcuTRixwZg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age17vfeatyacqy9ya9symdcxna5auw78atyw424lfgws6zyf2js4dwqpdmc9w
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-01T17:04:18Z"
+    mac: ENC[AES256_GCM,data:yrk6tgFqC5XB3A7LwZNwxcfau9CzQhqLey1zSX5yxsH1b/BTTMN7PZBky9xEBWDf5VMnhhnm4ljfbXHePIb/rgjQp8kn1DD+CSyCVOiHs2nQ9LAXmb6ogRWDFIOkH1g/YhALUjV/oshFI+1amKnLBS2ajydXIp3tYmD4u4rlpnA=,iv:qyXB+7jFs6/uT8U85dDjlWf71VNYuFh7UdrfgLcvx6s=,tag:6srWlQUQ4EJZLdJSfRxHYQ==,type:str]
+    version: 3.13.3

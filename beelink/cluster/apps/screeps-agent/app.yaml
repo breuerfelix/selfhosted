@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: screeps-agent
+  namespace: screeps-agent
+spec:
+  replicas: 1
+  # Stop the previous worker before starting its replacement.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: screeps-agent
+  template:
+    metadata:
+      labels:
+        app: screeps-agent
+        app.kubernetes.io/name: screeps-agent
+        app.kubernetes.io/instance: screeps-agent
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: beelink
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: agent
+          # Same registry index/config as the original Docker container.
+          image: ghcr.io/breuerfelix/screeps-agent@sha256:bb04e32ca6aedc447f9c85a360174024b3499d22f807e6fe16b8c19527a649fe
+          imagePullPolicy: IfNotPresent
+          command: [node, agent.js]
+          envFrom:
+            - secretRef:
+                name: screeps-agent-env
+          env:
+            # The application appends /api/v1/import and /loki/api/v1/push.
+            - name: VICTORIA_METRICS_URL
+              value: http://victoriametrics.monitoring.svc.cluster.local:8428
+            - name: LOKI_URL
+              value: http://loki.monitoring.svc.cluster.local:3100
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: screeps-agent-private
+  namespace: screeps-agent
+spec:
+  replicas: 1
+  # Stop the previous worker before starting its replacement.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: screeps-agent-private
+  template:
+    metadata:
+      labels:
+        app: screeps-agent-private
+        app.kubernetes.io/name: screeps-agent
+        app.kubernetes.io/instance: screeps-agent-private
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: beelink
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: agent
+          # Same registry index/config as the original Docker container.
+          image: ghcr.io/breuerfelix/screeps-agent@sha256:bb04e32ca6aedc447f9c85a360174024b3499d22f807e6fe16b8c19527a649fe
+          imagePullPolicy: IfNotPresent
+          command: [node, agent.js]
+          envFrom:
+            - secretRef:
+                name: screeps-agent-private-env
+          env:
+            # The application appends /api/v1/import and /loki/api/v1/push.
+            - name: VICTORIA_METRICS_URL
+              value: http://victoriametrics.monitoring.svc.cluster.local:8428
+            - name: LOKI_URL
+              value: http://loki.monitoring.svc.cluster.local:3100

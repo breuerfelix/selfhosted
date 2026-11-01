@@ -6,5 +6,6 @@ resources:
   - ./nanobot-sync.yaml
   - ./monitoring-sync.yaml
   - ./papra-sync.yaml
+  - ./screeps-agent-sync.yaml
   - ../../shared/cluster/system-upgrade-controller
   - ./infrastructure/k3s-upgrade-sync.yaml
