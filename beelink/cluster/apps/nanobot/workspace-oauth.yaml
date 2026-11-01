@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nanobot-workspace
+  namespace: nanobot
+spec:
+  selector:
+    app: nanobot
+  ports:
+    - name: oauth
+      port: 8000
+      targetPort: workspace-oauth
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nanobot-workspace
+  namespace: nanobot
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - nanobot-workspace
+  rules:
+    - http:
+        paths:
+          - path: /oauth2callback
+            pathType: Prefix
+            backend:
+              service:
+                name: nanobot-workspace
+                port:
+                  name: oauth

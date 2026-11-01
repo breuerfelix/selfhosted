@@ -32,11 +32,21 @@ spec:
               value: "1"
             - name: XDG_DATA_HOME
               value: /home/nanobot/.nanobot/data
+            - name: WORKSPACE_MCP_BASE_URI
+              value: http://0.0.0.0
+            - name: WORKSPACE_MCP_PORT
+              value: "8000"
+            - name: GOOGLE_OAUTH_REDIRECT_URI
+              value: https://nanobot-workspace.vulture-skink.ts.net/oauth2callback
+            - name: WORKSPACE_MCP_CREDENTIALS_DIR
+              value: /home/nanobot/.nanobot/auth/google-workspace
           ports:
             - name: http
               containerPort: 8765
             - name: health
               containerPort: 18790
+            - name: workspace-oauth
+              containerPort: 8000
           startupProbe:
             exec:
               command:

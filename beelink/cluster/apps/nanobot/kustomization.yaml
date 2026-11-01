@@ -5,4 +5,5 @@ resources:
   - storage.yaml
   - app.yaml
   - ingress.yaml
+  - workspace-oauth.yaml
   - lan.yaml
