@@ -4,8 +4,8 @@ metadata:
   name: screeps-agent
   namespace: flux-system
 spec:
-  # Keep suspended until Portainer updates and both Docker workers are stopped.
-  suspend: true
+  # Portainer polling is disabled; both retained Docker workers are stopped with restart=no.
+  suspend: false
   interval: 10m
   dependsOn:
     - name: monitoring
