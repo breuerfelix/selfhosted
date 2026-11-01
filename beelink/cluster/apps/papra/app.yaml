@@ -19,7 +19,7 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: beelink
       terminationGracePeriodSeconds: 180
-      # Preserve Docker identity. No fsGroup or recursive ownership changes.
+      # Match data ownership without recursive changes.
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -34,7 +34,7 @@ spec:
           env:
             - name: APP_BASE_URL
               value: https://papra.vulture-skink.ts.net
-            # Explicit effective paths from the existing immutable Docker image.
+            # Persistent application paths.
             - name: DATABASE_URL
               value: file:/app/app-data/db/db.sqlite
             - name: DOCUMENT_STORAGE_FILESYSTEM_ROOT

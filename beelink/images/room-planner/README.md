@@ -1,6 +1,6 @@
-# Preserved Room Planner image
+# Room Planner image
 
-`source.json` records the verified Docker source revision, original Node base,
+`source.json` records the pinned source revision, original Node base,
 live generated lockfile hash, immutable build commit, image digest, and CI run.
 The source repository is private; the image remains private.
 
@@ -14,7 +14,7 @@ old application branch over current upstream main.
 
 Build tags are `k3s-<full-build-commit>`; deployment always pins the tested digest.
 A future rebuild must pass smoke tests and receive an explicit digest update.
-Never resolve newer dependencies or change frontend API URL during migration.
+Review dependency and frontend API URL changes before updating the build.
 
 Configure private registry access using a token with `read:packages` and access
 to this package:
@@ -29,4 +29,4 @@ and adds it to Kustomize. It does not change Flux suspension or the cluster.
 A token already stored in a protected local file can be passed through
 `--token-file /absolute/path`. Never pass the token itself as an argument.
 
-See [migration and rollback](../../docs/screeps-migration.md).
+The Flux sync remains suspended. Application fixes and registry access are required before enabling it.

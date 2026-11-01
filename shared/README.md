@@ -1,6 +1,6 @@
 # Shared host and cluster maintenance
 
-Hetzner and Beelink use the same Ubuntu update policy, K3s bootstrap tasks, Flux components, and K3s upgrade resources. Inventories, K3s configuration, storage checks, applications, and Flux sync definitions remain in each host directory.
+Hetzner and Beelink use the same Ubuntu update policy, K3s bootstrap tasks, Flux components, and K3s upgrade resources. Inventories, K3s configuration, storage checks, applications, and app sync definitions remain in each host directory. The Git source and upgrade sync are shared; repository-root `.sops.yaml` owns encryption rules for both hosts.
 
 ## Ubuntu updates
 
@@ -17,8 +17,6 @@ The shared `ubuntu_updates` role owns the complete allowed-origins list: Ubuntu 
 
 APT timers have no randomized delay and do not catch up missed runs. The spring daylight-saving transition skips the 02:00 run. Updates can restart services, and a long package upgrade or reboot can extend beyond its intended window. These windows do not enforce mutual exclusion between APT and Kubernetes upgrades. Ubuntu release upgrades and Docker application image updates are not included.
 
-The role migrates Beelink's legacy `52unattended-upgrades-local`, APT `schedule.conf` drop-ins, and `nightly-reboot` timer/service to the shared configuration. Automatic reboot is then owned by unattended-upgrades. Existing unrelated timers and configuration files remain intact.
-
 From the repository root:
 
 ```bash
@@ -32,9 +30,9 @@ Remove `--check --diff` to apply. Each host's `ubuntu-updates.yml` can also be r
 
 ## K3s bootstrap and upgrades
 
-The shared `k3s` role installs the bootstrap version only when the binary is absent. It repairs a missing service unit without replacing an existing binary, applies host-specific configuration, reloads systemd, and checks API/node readiness. Configuration changes restart K3s. The host playbooks supply the exact configuration content. Beelink retains its SSD UUID checks, `/data` startup dependency, explicit node/network settings, swap setting, and disabled Traefik/local-storage components; ServiceLB remains enabled.
+The shared `k3s` role installs the bootstrap version only when the binary is absent. It repairs a missing service unit without replacing an existing binary, applies host-specific configuration, reloads systemd, and checks API/node readiness. Configuration changes restart K3s. The host playbooks supply the exact configuration content. Beelink supplies its SSD UUID checks, `/data` startup dependency, explicit node/network settings, swap setting, and disabled Traefik/local-storage components; ServiceLB remains enabled. Host bootstrap does not require an application's config file.
 
-The shared server Plan tracks a single minor-version channel with concurrency one and no drain or cordon on these single-node clusters. A Job started in its window can finish later. Each cluster keeps its existing Flux owners: root `flux-system` owns the controller/CRD, and `k3s-upgrade-plan` owns the Plan and depends on root readiness. Directory reuse does not transfer live resource ownership. Root manifests must not include the Plan directly, because fresh clusters need the CRD installed first.
+The shared server Plan tracks a single minor-version channel with concurrency one and no drain or cordon on these single-node clusters. A Job started in its window can finish later. Each cluster keeps its existing Flux owners: root `flux-system` owns the controller/CRD, and `k3s-upgrade-plan` owns the Plan and depends on root readiness. `cluster/system-upgrade-controller/plan-sync.yaml` points both clusters directly at the shared Plan directory. Root manifests must not include the Plan directly, because fresh clusters need the CRD installed first.
 
 For a new K3s minor, review compatibility, advance one minor at a time, and update the shared Plan channel, controller kubectl helper, and Ansible bootstrap version together. Shared changes on `main` reach both clusters independently; there is no cross-cluster rollout ordering or automatic rollback.
 
@@ -51,21 +49,20 @@ Upgrade Jobs expire after their configured TTL. Inspect Plan status and events i
 
 ## Flux components
 
-Both clusters consume `cluster/flux-system/gotk-components.yaml`. Git sources and sync definitions remain host-specific. Regenerate the shared file with the intended Flux CLI version and the same three components:
+Both clusters consume `cluster/flux-system/gotk-components.yaml` and the Git source in `cluster/flux-system/source.yaml`. Each host keeps its root sync with its own repository path and health checks. Regenerate the shared file with the intended Flux CLI version and the same three components:
 
 ```bash
 flux install --export --components=source-controller,kustomize-controller,helm-controller > shared/cluster/flux-system/gotk-components.yaml
 ```
 
-New-cluster bootstrap uses `kubectl apply -k shared/cluster/flux-system` before applying that host's `gotk-sync.yaml`. Both Git sources must retain `shared/` in their source artifacts.
+New-cluster bootstrap applies `shared/cluster/flux-system/gotk-components.yaml` first and waits for its CRDs and controllers. Restore data and install `flux-system/sops-age`, then apply `shared/cluster/flux-system/source.yaml` together with the host's `gotk-sync.yaml`. The source only fetches Git; the host root enables reconciliation. The Git source must retain `shared/` in its source artifact.
 
 ## Validation and routine checks
 
 ```bash
 kubectl kustomize hetzner/cluster > /dev/null
 kubectl kustomize beelink/cluster > /dev/null
-kubectl kustomize hetzner/cluster/infrastructure/k3s-upgrade-plan > /dev/null
-kubectl kustomize beelink/cluster/infrastructure/k3s-upgrade-plan > /dev/null
+kubectl kustomize shared/cluster/k3s-upgrade-plan > /dev/null
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml --syntax-check
 temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml --syntax-check
 ```
@@ -86,4 +83,4 @@ For each SSH alias (`cool` and `bee`):
 ssh bee 'timedatectl show -p Timezone --value; systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager; apt-config dump'
 ```
 
-A required reboot interrupts every workload on that host, including Beelink's remaining Docker apps. Verify node readiness, SSD mounting, app recovery, and retired Docker containers remaining stopped after the next required reboot. A healthy live check does not prove reboot recovery or a future upgrade Job.
+A required reboot interrupts every workload on that host, including Beelink's remaining Docker apps. Verify node readiness, SSD mounting, app recovery, and other host services after the next required reboot. A healthy live check does not prove reboot recovery or a future upgrade Job.

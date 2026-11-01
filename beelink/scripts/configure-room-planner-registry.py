@@ -48,7 +48,7 @@ def main():
     }
     relative = 'beelink/cluster/apps/room-planner/ghcr.sops.yaml'
     result = subprocess.run(
-        ['sops', '--encrypt', '--config', 'beelink/.sops.yaml', '--input-type', 'json', '--output-type', 'yaml', '--filename-override', relative, '/dev/stdin'],
+        ['sops', '--encrypt', '--config', '.sops.yaml', '--input-type', 'json', '--output-type', 'yaml', '--filename-override', relative, '/dev/stdin'],
         cwd=root, input=json.dumps(secret), text=True, capture_output=True,
     )
     if result.returncode:

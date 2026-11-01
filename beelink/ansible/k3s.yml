@@ -35,15 +35,6 @@
       ansible.builtin.assert:
         that: data_mount.stdout | trim == data_uuid
         fail_msg: The expected SSD must already be mounted at /data. Do not create replacement directories.
-    - name: Inspect existing nanobot storage without changing ownership
-      ansible.builtin.stat:
-        path: /data/nanobot/config.json
-      register: nanobot_config
-    - name: Require existing nanobot data
-      ansible.builtin.assert:
-        that:
-          - nanobot_config.stat.exists
-          - nanobot_config.stat.isreg
     - name: Create service override directory
       ansible.builtin.file:
         path: /etc/systemd/system/k3s.service.d

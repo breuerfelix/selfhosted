@@ -24,7 +24,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: agent
-          # Same registry index/config as the original Docker container.
+          # Pinned application image.
           image: ghcr.io/breuerfelix/screeps-agent@sha256:bb04e32ca6aedc447f9c85a360174024b3499d22f807e6fe16b8c19527a649fe
           imagePullPolicy: IfNotPresent
           command: [node, agent.js]
@@ -64,7 +64,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: agent
-          # Same registry index/config as the original Docker container.
+          # Pinned application image.
           image: ghcr.io/breuerfelix/screeps-agent@sha256:bb04e32ca6aedc447f9c85a360174024b3499d22f807e6fe16b8c19527a649fe
           imagePullPolicy: IfNotPresent
           command: [node, agent.js]

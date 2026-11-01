@@ -5,5 +5,4 @@ resources:
   - ./infrastructure/cert-manager
   - ./infrastructure/traefik
   - ../../shared/cluster/system-upgrade-controller
-  - ./infrastructure/k3s-upgrade-sync.yaml
   - ./apps-sync.yaml

@@ -14,17 +14,25 @@
   },
   "kubernetes": {
     "managerFilePatterns": [
-      "/^hetzner\\/cluster\\/apps\\/.*\\.ya?ml$/",
+      "/^(beelink|hetzner)\\/cluster\\/apps\\/.*\\.ya?ml$/",
       "/^shared\\/cluster\\/system-upgrade-controller\\/controller\\.yaml$/"
     ]
   },
   "flux": {
     "managerFilePatterns": [
       "/^shared\\/cluster\\/flux-system\\/gotk-components\\.ya?ml$/",
-      "/^hetzner\\/cluster\\/infrastructure\\/cert-manager\\/.*\\.ya?ml$/"
+      "/^(beelink|hetzner)\\/cluster\\/infrastructure\\/.*\\.ya?ml$/"
     ]
   },
   "packageRules": [
+    {
+      "matchManagers": ["kubernetes"],
+      "matchPackageNames": [
+        "ghcr.io/breuerfelix/nanobot",
+        "ghcr.io/breuerfelix/screeps-room-planner"
+      ],
+      "enabled": false
+    },
     {
       "matchDatasources": ["docker"],
       "matchPackageNames": ["usefathom/fathom"],

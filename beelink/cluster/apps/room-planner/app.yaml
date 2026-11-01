@@ -23,7 +23,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: room-planner
-          # Verified live source/dependencies, rebuilt by pinned CI; not the newer Compose version.
+          # Pinned application build.
           image: ghcr.io/breuerfelix/screeps-room-planner@sha256:eaf7c898d6dc7bfba9389062490673663e2887ac725e2209672d6d53f7d0b635
           imagePullPolicy: IfNotPresent
           env:

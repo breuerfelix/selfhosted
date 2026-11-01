@@ -46,10 +46,10 @@ Disposable PVCs are created by K3s's local-path provisioner. Stateless apps need
 
 ## 4. Bootstrap Flux
 
-Ensure the desired revision is pushed to `main`. Apply the committed Flux components and wait for their controllers:
+Ensure the desired revision is pushed to `main`. Apply the shared Flux components and wait for their controllers and CRDs:
 
 ```bash
-kubectl apply -k shared/cluster/flux-system
+kubectl apply -f shared/cluster/flux-system/gotk-components.yaml
 kubectl wait --for=condition=Established --timeout=120s crd/gitrepositories.source.toolkit.fluxcd.io crd/kustomizations.kustomize.toolkit.fluxcd.io crd/ocirepositories.source.toolkit.fluxcd.io crd/helmreleases.helm.toolkit.fluxcd.io
 kubectl -n flux-system rollout status deployment/source-controller --timeout=180s
 kubectl -n flux-system rollout status deployment/kustomize-controller --timeout=180s
@@ -63,7 +63,7 @@ chmod 600 temp/hetzner-sops-age.key
 kubectl -n flux-system create secret generic sops-age \
   --from-file=age.agekey=temp/hetzner-sops-age.key \
   --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f hetzner/cluster/flux-system/gotk-sync.yaml
+kubectl apply -f shared/cluster/flux-system/source.yaml -f hetzner/cluster/flux-system/gotk-sync.yaml
 flux reconcile kustomization flux-system --with-source --timeout=10m
 flux reconcile kustomization apps --timeout=10m
 flux reconcile kustomization k3s-upgrade-plan --timeout=5m

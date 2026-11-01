@@ -120,4 +120,4 @@ jobs:
 
             Image: `${{ needs.build.outputs.image }}`
 
-            Validation: isolated non-root gateway, WebUI, and GitHub CLI smoke test passed. Existing host storage and the Flux suspension setting are unchanged.
+            Validation: isolated non-root gateway, WebUI, and GitHub CLI smoke test passed. The deployment pins the tested registry digest.

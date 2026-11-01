@@ -16,6 +16,5 @@ Portainer automation without reviewing active Kubernetes ownership first.
 Screeps collectors run separately in K3s and write to internal monitoring
 Services.
 
-See [current monitoring](../beelink/docs/monitoring.md),
-[Screeps agents](../beelink/docs/screeps-migration.md), and
-[Docker retirement](../beelink/docs/docker-retirement.md).
+See [current applications](../beelink/README.md) and
+[monitoring and Screeps operations](../beelink/docs/maintenance.md#monitoring-and-screeps).

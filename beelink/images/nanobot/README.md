@@ -8,7 +8,7 @@ The upstream build uses the cached Buildx container builder and loads an interme
 
 Before publication, `smoke-test.sh` starts the final image as UID:GID `1000:1000` with a disposable tmpfs and no network. It verifies GitHub CLI runs without root, the gateway health endpoint, WebUI HTML, and built frontend assets. CI never mounts `/data/nanobot` or receives application/SOPS/Tailscale credentials.
 
-Each successful run publishes a unique tag and records its registry digest. A second job opens/updates `codex/nanobot-image`, changing only the Deployment image and pull policy. It does not change the nanobot suspension setting. Merge that PR to deploy the digest through Flux. Keep nanobot suspended until the first Docker-to-Kubernetes cutover is ready.
+Each successful run publishes a unique tag and records its registry digest. A second job opens/updates `codex/nanobot-image`, changing only the Deployment image. Merge that PR to deploy the tested digest through Flux.
 
 GitHub Actions uses its built-in `GITHUB_TOKEN`; no personal publishing token is required in repository secrets. Repository Actions settings must allow Actions to create pull requests. Set the new GHCR package to public for anonymous cluster pulls; a new package starts private. These are one-time GitHub settings.
 
@@ -30,4 +30,4 @@ bash beelink/images/nanobot/smoke-test.sh nanobot-custom:local
 
 Pass the channels/extras from `source.json` if they are nonempty. Debian package versions, including `gh`, resolve at build time; the Deployment digest pins the result.
 
-Do not mount the production SSD for this smoke check. Live migration and rollback remain in `beelink/docs/bootstrap.md`.
+Do not mount the production SSD for this smoke check. See [maintenance](../../docs/maintenance.md) for deployment operations and [rebuild](../../docs/rebuild.md) for recovery.

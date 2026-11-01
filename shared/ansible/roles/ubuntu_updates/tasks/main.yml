@@ -25,30 +25,6 @@
   when: current_timezone.stdout != maintenance_timezone
   notify: Restart APT timers
 
-- name: Inspect legacy reboot timer
-  ansible.builtin.stat:
-    path: /etc/systemd/system/nightly-reboot.timer
-  register: legacy_reboot_timer
-
-- name: Disable legacy reboot timer
-  ansible.builtin.systemd_service:
-    name: nightly-reboot.timer
-    enabled: false
-    state: stopped
-  when: legacy_reboot_timer.stat.exists
-
-- name: Remove superseded local update policy and timer units
-  ansible.builtin.file:
-    path: '{{ item }}'
-    state: absent
-  loop:
-    - /etc/apt/apt.conf.d/52unattended-upgrades-local
-    - /etc/systemd/system/apt-daily.timer.d/schedule.conf
-    - /etc/systemd/system/apt-daily-upgrade.timer.d/schedule.conf
-    - /etc/systemd/system/nightly-reboot.timer
-    - /etc/systemd/system/nightly-reboot.service
-  notify: Restart APT timers
-
 - name: Create APT timer override directories
   ansible.builtin.file:
     path: '/etc/systemd/system/{{ item }}.timer.d'

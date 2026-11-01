@@ -20,16 +20,16 @@ Removing a resource from Git lets Flux prune it. Deleting a local-path PVC can d
 
 ## Secrets
 
-Back up `temp/hetzner-sops-age.key` in a password manager. The same identity is installed in `flux-system/sops-age`; losing both copies makes committed secrets unreadable. The recipient in `cluster/apps/.sops.yaml` is public.
+Back up `temp/hetzner-sops-age.key` in a password manager. The same identity is installed in `flux-system/sops-age`; losing both copies makes committed secrets unreadable. The recipient in repository-root `.sops.yaml` is public and shared with Beelink.
 
 Screeps stores its application config directly as SOPS-encrypted YAML, consumed by Kustomize `secretGenerator`. Edit it with:
 
 ```bash
 export SOPS_AGE_KEY_FILE="$PWD/temp/hetzner-sops-age.key"
-sops --config hetzner/cluster/apps/.sops.yaml hetzner/cluster/apps/screeps/config.sops.yaml
+sops hetzner/cluster/apps/screeps/config.sops.yaml
 ```
 
-Use the explicit `--config` when creating another app's encrypted config or running `sops updatekeys` too: SOPS searches the working directory and its parents, not the target file's directory. Existing encrypted files carry their recipients, but new files need the creation rules.
+Run SOPS commands from the repository root so new files and `sops updatekeys` use the shared root creation rules. Existing encrypted files also carry their recipients.
 
 The generated Secret name changes when config changes. Kustomize updates the Deployment reference, causing a restart and a fresh `subPath` mount. No manual version annotation or restart is needed. Every app can use the same `config.sops.yaml` naming convention: `.sops.yaml` encrypts these files completely. Other `*.sops.yaml` files use the fallback Kubernetes Secret rule, which encrypts only `data` and `stringData`. Keep the generator's default name hash enabled.
 
@@ -65,7 +65,7 @@ No scheduled backup runs. Maintain current off-server backups of required data b
 ```bash
 kubectl kustomize hetzner/cluster > /dev/null
 kubectl kustomize hetzner/cluster/apps > /dev/null
-kubectl kustomize hetzner/cluster/infrastructure/k3s-upgrade-plan > /dev/null
+kubectl kustomize shared/cluster/k3s-upgrade-plan > /dev/null
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml --syntax-check
 ```
 

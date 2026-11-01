@@ -4,8 +4,6 @@ metadata:
   name: tailscale
   namespace: flux-system
 spec:
-  # The operator waits for operator-oauth until authentication is configured.
-  suspend: false
   interval: 10m
   path: ./beelink/cluster/infrastructure/tailscale
   prune: true

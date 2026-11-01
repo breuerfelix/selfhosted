@@ -7,7 +7,7 @@ spec:
   interval: 10m
   dependsOn:
     - name: flux-system
-  path: ./hetzner/cluster/infrastructure/k3s-upgrade-plan
+  path: ./shared/cluster/k3s-upgrade-plan
   prune: true
   sourceRef:
     kind: GitRepository

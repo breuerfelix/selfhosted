@@ -13,7 +13,7 @@ hetzner/
   ansible/                 # Host setup; site.yml runs all playbooks
   cluster/
     flux-system/          # Git sync and shared Flux component reference
-    infrastructure/       # cert-manager, Traefik config, shared K3s update references
+    infrastructure/       # cert-manager and Traefik config
     apps/                 # Shared namespace/issuer and app directories
   docs/
 ```
@@ -23,7 +23,7 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 ## Components
 
 - **K3s:** single server with SQLite, bundled containerd, Traefik, ServiceLB, CoreDNS, and local-path storage. Ansible installs the initial version; the Flux-managed upgrade Plan handles later patches.
-- **Flux:** source, Kustomize, and Helm controllers. Reads this public GitHub repository over HTTPS without Git credentials. The root sync installs infrastructure and waits for cert-manager. The `apps` and `k3s-upgrade-plan` syncs depend on root readiness; upgrade-controller rollout health does not block app reconciliation. Apps have their own rollout health checks.
+- **Flux:** source, Kustomize, and Helm controllers. Uses the shared Git source to read this public GitHub repository over HTTPS without Git credentials. The root sync installs infrastructure and waits for cert-manager. The `apps` and `k3s-upgrade-plan` syncs depend on root readiness; upgrade-controller rollout health does not block app reconciliation. Apps have their own rollout health checks.
 - **TLS:** cert-manager issues and renews Let's Encrypt certificates through HTTP-01. Traefik redirects HTTP to HTTPS globally, allows ACME challenges, and preserves the direct domain redirect.
 - **Secrets:** SOPS with age. Encrypted config stays in Git; the private key belongs in a password manager and `flux-system/sops-age`.
 - **Storage:** retained local PVs for data that must survive claim deletion; local-path PVCs for disposable data. Capacity declarations do not enforce disk quotas. All data shares the server disk.
