@@ -1,0 +1,46 @@
+# Existing Docker Restic job can quiesce only Papra, never read app Secrets.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: restic-backup
+  namespace: papra
+automountServiceAccountToken: false
+---
+# External Docker client; bootstrap copies this scoped token to a root-only
+# kubeconfig outside the backup include list. Revoke by deleting this Secret.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: restic-backup-token
+  namespace: papra
+  annotations:
+    kubernetes.io/service-account.name: restic-backup
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: restic-backup
+  namespace: papra
+rules:
+  - apiGroups: [apps]
+    resources: [deployments]
+    resourceNames: [papra]
+    verbs: [get, patch]
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: restic-backup
+  namespace: papra
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: restic-backup
+subjects:
+  - kind: ServiceAccount
+    name: restic-backup
+    namespace: papra

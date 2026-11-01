@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: papra
+  namespace: papra
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: papra
+  template:
+    metadata:
+      labels:
+        app: papra
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: beelink
+      terminationGracePeriodSeconds: 180
+      # Preserve Docker identity. No fsGroup or recursive ownership changes.
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+      containers:
+        - name: papra
+          image: ghcr.io/papra-hq/papra:26.7.0-rootless@sha256:bf4a66e776d0a40d71543747a2e17af800204b4a81d19f7951b8552c8032dbeb
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: papra-env
+          env:
+            - name: APP_BASE_URL
+              value: https://papra.vulture-skink.ts.net
+            # Explicit effective paths from the existing immutable Docker image.
+            - name: DATABASE_URL
+              value: file:/app/app-data/db/db.sqlite
+            - name: DOCUMENT_STORAGE_FILESYSTEM_ROOT
+              value: /app/app-data/documents
+            - name: PAPRA_CONFIG_DIR
+              value: /app/app-data
+          ports:
+            - name: http
+              containerPort: 1221
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 120
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /app/app-data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: papra-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: papra
+  namespace: papra
+spec:
+  type: ClusterIP
+  selector:
+    app: papra
+  ports:
+    - name: http
+      port: 80
+      targetPort: 1221

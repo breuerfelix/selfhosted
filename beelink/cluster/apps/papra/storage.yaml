@@ -1,0 +1,42 @@
+# Capacity is a binding declaration, not a quota on this shared SSD.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: papra-data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: papra
+    name: papra-data
+  local:
+    path: /data/papra
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values: [beelink]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: papra-data
+  namespace: papra
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes: [ReadWriteOnce]
+  volumeMode: Filesystem
+  storageClassName: ""
+  volumeName: papra-data
+  resources:
+    requests:
+      storage: 10Gi
