@@ -72,3 +72,14 @@ credentials and post-restart ingestion verification remain required. Room
 Planner was explicitly deferred and remains running on Docker, with its Flux
 staging suspended. cAdvisor, vmagent, and unrelated applications are unchanged.
 See [full evidence and rollback](screeps-migration.md).
+
+## Docker retirement
+
+1 November 2026: only Hermes and Hindsight remain running on Docker. Portainer
+and Room Planner were stopped and all retained non-Hermes/Hindsight containers
+have restart policy `no`. vmagent, cAdvisor, Restic and both old Nanobot
+containers were removed, along with their cached named images. Restic build
+code/schedule and collector Compose definitions were removed from Git. Data
+directories, existing backup archives and repositories remain intact. K3s
+workloads, including Nanobot and both Screeps agents, were unchanged. See
+[current inventory and recovery implications](docker-retirement.md).

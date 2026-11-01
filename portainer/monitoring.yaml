@@ -2,7 +2,7 @@
 # Keep stack 26 GitOps updates DISABLED. Do not redeploy this shared stack.
 # Backend definitions are rollback references only: never start them while K3s
 # owns /data/grafana, /data/loki, or /data/victoriametrics.
-# cAdvisor and vmagent remain active and unchanged; telemetry migration is deferred.
+# cAdvisor and vmagent were removed on 2026-11-01; no collector is deployed here.
 services:
   # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   grafana:
@@ -40,42 +40,6 @@ services:
     networks:
       - monitoring
 
-  cadvisor:
-    # cAdvisor v0.56.0+ avoids the unconditional containerd probe on overlay2.
-    # The Beelink dashboard depends on Docker container name labels.
-    image: ghcr.io/google/cadvisor:v0.60.6
-    container_name: cadvisor
-    restart: unless-stopped
-    command:
-      - --housekeeping_interval=15s
-    volumes:
-      # Read-only host views required for machine and container metrics.
-      - /:/rootfs:ro
-      - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
-      # cAdvisor needs Docker metadata; it never writes to the socket.
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /dev/disk:/dev/disk:ro
-    networks:
-      - monitoring
-
-  vmagent:
-    image: victoriametrics/vmagent:v1.154.0
-    container_name: vmagent
-    restart: unless-stopped
-    command:
-      - -promscrape.config=/etc/vmagent/prometheus.yml
-      - -remoteWrite.url=http://victoriametrics:8428/api/v1/write
-      - -remoteWrite.tmpDataPath=/vmagentdata
-    configs:
-      - source: vmagent-scrape-config
-        target: /etc/vmagent/prometheus.yml
-    depends_on:
-      - victoriametrics
-      - cadvisor
-    networks:
-      - monitoring
-
   # RETIRED: rollback only; stop Kubernetes writers before starting Docker.
   loki:
     image: grafana/loki:3.7.8
@@ -90,31 +54,7 @@ services:
     networks:
       - monitoring
 
-configs:
-  vmagent-scrape-config:
-    # Portainer Git stacks do not materialize relative Compose config files.
-    # Keep this small scrape configuration inline so the stack is deployable
-    # directly from the repository's configured Compose path.
-    content: |
-      global:
-        scrape_interval: 15s
-        scrape_timeout: 10s
-
-      scrape_configs:
-        - job_name: beelink-cadvisor
-          static_configs:
-            - targets:
-                - cadvisor:8080
-              labels:
-                host: beelink
-                service: cadvisor
-
-        - job_name: victoriametrics
-          static_configs:
-            - targets:
-                - victoriametrics:8428
-
 networks:
   monitoring:
-    # Keep existing network name for the monitoring agents.
+    # Preserve the old network name for an explicitly coordinated backend rollback.
     name: monitoring_monitoring

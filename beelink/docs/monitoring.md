@@ -16,7 +16,7 @@ Grafana has only Tailscale HTTPS ingress and a ClusterIP Service. Backends have 
 
 Live inventory found five dashboards (`assets`, `beelink-cadvisor`, `google-health-overview`, `overview`, `victoriametrics-ops`), rather than the plan's older count of two. Data sources remain `loki` and `eezqmkxdueww0e` with their original short Service URLs. The retained plugin is `grafana-clock-panel` 2.1.9; startup plugin preinstallation is disabled. Grafana initialization credentials are SOPS-encrypted using the existing shared age recipient. The same immutable image and its unmodified default configuration preserve the existing encryption key; no custom security-key override was present. HTTPS root URL and secure session cookies are explicit.
 
-Portainer automatic updates for shared stack 26 were disabled by the user without redeploying. Previous polling interval was 15 minutes, with no webhook. Keep them disabled. Never stop or redeploy the entire shared stack: cAdvisor and vmagent remain there. Both Screeps agents also remain unchanged. Their missing production telemetry is accepted until later migrations.
+Portainer automatic updates for shared stack 26 were disabled by the user without redeploying. Previous polling interval was 15 minutes, with no webhook. Keep them disabled. cAdvisor and vmagent were subsequently removed at the user's request; they have no replacement collector. Both Screeps agents now run separately in K3s. Portainer is stopped with restart disabled; see [Docker retirement](docker-retirement.md).
 
 ## Validation and recovery
 
@@ -50,7 +50,7 @@ The directory is root-only (0700); archive, metadata, and credential-bearing rec
 
 For restore, first stop both runtimes, verify `sha256sum -c data.tar.sha256`, and extract into clean application paths using GNU tar with `--acls --xattrs --numeric-owner -xpf data.tar -C /data`. Preserve existing directories separately until recovery succeeds; do not overlay a running or populated dataset. Normal rollback reuses current data and requires no restore. Never apply child workload manifests manually while suspended.
 
-The existing Docker Restic include list excludes all three monitoring directories. This migration does not modify that backup job or establish ongoing monitoring backup coverage. Keep local recovery archives protected: Grafana state and container metadata contain credentials. A local backup is not protection against loss of the host.
+The migration did not establish ongoing monitoring backup coverage. The Docker Restic job was subsequently removed at the user's request. Keep local recovery archives protected: Grafana state and container metadata contain credentials. A local backup is not protection against loss of the host.
 
 ## Rollback
 
@@ -60,4 +60,4 @@ The existing Docker Restic include list excludes all three monitoring directorie
 4. Start only original Docker containers `victoriametrics`, `loki`, and `grafana`. Their immutable versions and original settings remain available. Restore their previous `unless-stopped` restart policies if Docker remains active owner. Keep Portainer updates disabled.
 5. Verify historical backend queries and Grafana dashboards/credentials. Record active data ownership in Git before any future unsuspend. Restore the protected stopped-writer backup only if needed, with both runtimes stopped, preserving numeric ownership. Do not extract backups over a running application.
 
-Interactive browser validation is a user step: sign in with existing credentials, open all five dashboards over Tailscale HTTPS, check data-source connections and Grafana Live/WebSocket behavior. Deferred-collector panels may have stale values.
+Interactive browser validation is a user step: sign in with existing credentials, open all five dashboards over Tailscale HTTPS, check data-source connections and Grafana Live/WebSocket behavior. Retired-collector panels show historical data only.

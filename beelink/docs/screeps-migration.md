@@ -4,7 +4,7 @@ Both agents moved from Docker/Portainer to Beelink K3s on 1 November 2026.
 The public agent's real metrics and console logs are verified. The private
 agent runs its preserved configuration but its original token is rejected with
 HTTP 401; a valid private-server token is needed before ingestion can succeed.
-Room Planner was explicitly deferred by the user and remains on Docker.
+Room Planner was explicitly deferred by the user; it was subsequently stopped during [Docker retirement](docker-retirement.md).
 
 ## Deployment
 
@@ -151,8 +151,9 @@ ingestion verified based only on pod readiness.
 
 ## Deferred Room Planner staging
 
-Room Planner remains running on Docker at <http://192.168.178.13:5173/>. Its
-Docker lifecycle and restart policy are unchanged. Its Flux Kustomization stays
+Room Planner was subsequently stopped on Docker with restart policy `no` during
+[Docker retirement](docker-retirement.md). Its former LAN URL
+<http://192.168.178.13:5173/> is unavailable. Its Flux Kustomization stays
 suspended; no Room Planner namespace, pod, Service, Ingress, PV/PVC, tailnet
 device, or certificate was created. Do not unsuspend it as part of agent work.
 The proposed <https://room-planner.vulture-skink.ts.net/> is not active.

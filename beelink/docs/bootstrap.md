@@ -4,6 +4,8 @@ All local commands run from the repository root. See the current state below for
 
 **Current state:** K3s, Flux, the Tailscale operator, and nanobot are running. Image build and cutover completed; see [status](status.md). The procedure below is retained for rebuilds, migration, and rollback. During recovery, stop all writers and restore/verify SSD data before allowing the enabled nanobot sync to run.
 
+**Later retirement:** On 1 November 2026, old Docker Nanobot containers and their local image were removed. Historical `docker start nanobot` steps below no longer work; Docker recovery requires reconstructing reviewed containers after stopping Kubernetes writers. Restic scheduled backups were also removed. See [current Docker inventory and recovery implications](docker-retirement.md).
+
 ## 1. Final preflight and Git preparation
 
 - Review the files and current `ssh bee` inventory again; confirm `/data` still has the UUID in `ansible/k3s.yml`.

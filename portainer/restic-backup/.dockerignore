@@ -1,8 +1,0 @@
-*
-!Dockerfile
-!entrypoint.sh
-!common.sh
-!backup.sh
-!prune.sh
-!check.sh
-!crontab

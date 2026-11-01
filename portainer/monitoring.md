@@ -1,150 +1,21 @@
-# Migration status — 1 November 2026
+# Retired Docker monitoring
 
-Grafana, Loki, and VictoriaMetrics moved to Flux-managed Beelink K3s. See the
-[current monitoring runbook](../beelink/docs/monitoring.md) for access, verification,
-backups, and rollback. Their original Docker containers remain stopped with
-restart disabled. Stack 26 automatic updates must stay disabled. Do not redeploy
-or stop the shared stack: cAdvisor and vmagent remain active and unchanged.
-The backend entries in `monitoring.yaml` are retained only as rollback references.
-Historical procedures below describe the former Docker deployment and must not
-be run while Kubernetes owns the persistent paths. Deferred collectors may fail
-to deliver telemetry until their separate migration.
+Grafana, Loki, and VictoriaMetrics run in Beelink K3s. Their original Docker
+containers remain stopped with restart policy `no` for coordinated rollback.
+Do not start them while Kubernetes owns `/data/grafana`, `/data/loki`, or
+`/data/victoriametrics`.
 
----
+On 1 November 2026, the user retired Docker cAdvisor and vmagent completely.
+Their containers, cached named images, and Compose/config definitions were
+removed. They were not migrated to Kubernetes. Container/host telemetry panels
+may show only historical data; no replacement collector was installed.
 
-# Monitoring stack
+`monitoring.yaml` retains only backend rollback definitions. Portainer itself
+is stopped with restart policy `no`. Do not redeploy stack 26 or re-enable
+Portainer automation without reviewing active Kubernetes ownership first.
+Screeps collectors run separately in K3s and write to internal monitoring
+Services.
 
-`monitoring.yaml` runs Grafana, VictoriaMetrics, Loki, and the Beelink host collector.
-The collector path is:
-
-```text
-cAdvisor -> vmagent -> VictoriaMetrics <- Grafana
-```
-
-## Deployment inputs
-
-The Portainer stack uses the Git repository's `portainer/monitoring.yaml` file.
-The vmagent scrape configuration is inlined in its Compose `configs` entry because
-Portainer Git stacks do not materialize relative `configs.file` paths. The Grafana
-dashboard is managed directly in Grafana and is intentionally not provisioned
-from this repository.
-
-Set the existing Grafana secret before deploying or updating the stack:
-
-```text
-GF_SECURITY_ADMIN_PASSWORD=<value>
-```
-
-The stack creates or uses these host directories for persistent data:
-
-- `/data/grafana`
-- `/data/victoriametrics`
-- `/data/loki`
-
-The Docker host running Portainer (the Beelink) must allow the cAdvisor mounts in
-`monitoring.yaml`. The cAdvisor mounts are read-only. vmagent's retry buffer is
-ephemeral inside the container; the Grafana, VictoriaMetrics, and Loki data
-directories remain persistent. The Docker socket is mounted read-only; cAdvisor
-and vmagent are not exposed on host ports.
-
-## Metrics
-
-The `beelink-cadvisor` scrape job targets `cadvisor:8080` on the private
-`monitoring_monitoring` network and adds the stable labels `host="beelink"` and
-`service="cadvisor"`. vmagent forwards the Prometheus-format metrics to
-`http://victoriametrics:8428/api/v1/write` and may buffer unsent samples in its
-ephemeral container filesystem while VictoriaMetrics is unavailable. Queued
-samples are intentionally lost if vmagent is recreated.
-
-cAdvisor supplies both Docker container statistics and machine/filesystem
-metrics from the Beelink. A separate node-exporter is intentionally not included:
-the current stack has no host-exporter convention, and cAdvisor covers the host
-and container metrics required here without another privileged collector.
-
-## Verification
-
-After the stack is running, verify the collector path from the host or Portainer:
-
-1. Check that `cadvisor`, `vmagent`, and `victoriametrics` are running.
-2. From the monitoring network, confirm cAdvisor responds at `http://cadvisor:8080/metrics`.
-3. Confirm vmagent's target for job `beelink-cadvisor` is up and its remote-write queue is healthy.
-4. Query VictoriaMetrics for a non-empty host series, for example
-   `machine_memory_bytes{host="beelink"}`, and a container series such as
-   `container_cpu_usage_seconds_total{host="beelink"}`.
-5. For a concrete scrape-health check, query these PromQL expressions through the
-   configured VictoriaMetrics datasource:
-
-   ```promql
-   up{job="beelink-cadvisor",host="beelink",instance="cadvisor:8080",service="cadvisor"}
-   machine_scrape_error{host="beelink"}
-   container_scrape_error{host="beelink"}
-   machine_memory_bytes{host="beelink"}
-   machine_cpu_cores{host="beelink"}
-   count(container_cpu_usage_seconds_total{host="beelink"})
-   ```
-
-   Expected results are `up = 1`, both scrape-error gauges `= 0`, non-zero
-   machine memory and CPU-core values, and a positive container-series count.
-   A range query such as
-   `up{job="beelink-cadvisor"}[30m]` should contain repeated samples, all `1`;
-   this catches intermittent target failures that an instant query can miss.
-6. Redeploy or restart the stack and repeat the checks; `/data/victoriametrics`
-   must remain intact. vmagent's retry queue is ephemeral by design.
-
-## Restart and persistence procedure
-
-Use Portainer on the Docker host (`local`, environment ID `3`) for the
-restart exercise. Do not enter the Grafana password in shell history or task
-comments.
-
-1. Before starting stack `monitoring` (stack `26`), set its existing
-   `GF_SECURITY_ADMIN_PASSWORD` environment value in Portainer. The Compose
-   expression is required and intentionally fails closed when this value is
-   absent.
-2. Deploy the repository revision containing the inline
-   `vmagent-scrape-config` (`configs.content`). Portainer Git stacks do not
-   materialize the relative `configs.file` form. Until that revision is on
-   the configured Git ref, keep stack `monitoring-collector` (`36`) running as
-   the persistent vmagent workaround.
-3. Do not run both stacks with a `vmagent` service at once: both use the
-   container name `vmagent`. For the final single-stack deployment, stop
-   stack `36`, then redeploy/start stack `26`. For the interim workaround,
-   restart stack `36` through Portainer and leave stack `26`'s collector
-   service disabled until the inline-config revision is deployed.
-4. Wait at least 30 seconds (two 15-second scrape intervals) after the
-   containers report running before judging the result. Confirm the three
-   persistent bind paths `/data/grafana`, `/data/victoriametrics`, and
-   `/data/loki` are still attached. Do not expect a persistent `/data/vmagent`
-   mount; vmagent's retry queue is intentionally ephemeral.
-5. Repeat the health and PromQL checks above, including a range query over at
-   least five minutes. In Grafana, open dashboard `beelink-cadvisor`
-   (`Beelink Host & Containers`), select host `beelink`, and verify its seven
-   panels have current values. The expected current checks are `up = 1`, both
-   scrape-error gauges `= 0`, four CPU cores, non-zero memory, and positive
-   named container CPU/memory series.
-
-### Restart result (2026-08-24)
-
-The externally supplied Grafana secret was restored and the stopped monitoring
-services were brought back without deleting any data directories. Starting the
-Git stack from the current `main` ref pulled cAdvisor `v0.55.1`; on this Docker
-host that version emitted raw cgroup series without Docker `name` labels, so
-three container dashboard queries were empty even though `up = 1`. The
-repository configuration therefore pins cAdvisor to the previously verified
-`v0.52.1`; after restarting that collector and allowing fresh scrapes, the
-checks returned `up = 1`, `machine_scrape_error = 0`,
-`container_scrape_error = 0`, `machine_cpu_cores = 4`,
-`machine_memory_bytes = 16534200320`, and 13 named container series. All seven
-Grafana panel queries returned non-empty current data and the host variable
-resolved to `beelink`.
-
-vmagent's remote-write retry queue is intentionally ephemeral; losing queued
-samples during a vmagent recreation is acceptable. The Grafana datasource and
-dashboard are persistent runtime state, not
-provisioned from this repository. PNG snapshot rendering remains unavailable
-unless the Grafana Image Renderer service is installed; this does not prevent
-normal in-browser dashboard panels from executing their queries. The final
-clean Portainer Git redeploy still requires the inline-config commit to be
-merged/pushed to the stack's configured Git ref; the direct cAdvisor rollback
-above was a live validation recovery, not a replacement for that documented
-redeploy.
+See [current monitoring](../beelink/docs/monitoring.md),
+[Screeps agents](../beelink/docs/screeps-migration.md), and
+[Docker retirement](../beelink/docs/docker-retirement.md).

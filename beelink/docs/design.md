@@ -73,8 +73,8 @@ Allow intended users/devices to reach `tag:k8s` on TCP 443 under the existing ac
 
 Both PV and PVC opt out of Flux pruning, and the PV has `Retain`. This preserves object/data identity during ordinary manifest removal; deleting a namespace still deletes its namespaced PVC. A retained PV can become `Released` after claim deletion and needs deliberate rebinding. Never delete SSD files to fix a claim.
 
-Before rolling back, suspend nanobot reconciliation and scale its deployment to zero; verify all nanobot pods have stopped before starting Docker against the same mount. Keep the old API stopped unless it is specifically needed again. The first migration uses identical app code, minimizing schema drift; later upgrades might require restoring a pre-upgrade backup.
+Before rolling back, suspend nanobot reconciliation and scale its deployment to zero; verify all nanobot pods have stopped before starting Docker against the same mount. The old Docker gateway/API containers have since been removed; Docker rollback requires recreating a reviewed image/container after Kubernetes writers stop. The first migration uses identical app code, minimizing schema drift; later upgrades might require restoring a pre-upgrade backup.
 
-K3s application backups are disabled for now. Docker Restic covers only Portainer, Hermes backup archives, and Hindsight, with explicit mounts for those Docker paths. It has no Kubernetes credentials, lifecycle hooks, or K3s application data mounts. Docker and Flux manage their own applications independently.
+K3s application backups are disabled for now. Docker Restic was removed on 1 November 2026; its scheduled backups no longer run. Existing backup repositories and Hermes native archives remain intact. See [Docker retirement](docker-retirement.md).
 
 For every later app, first inspect its live Docker mounts, users, command, environment, ports, and dependencies. Preserve every required mount at its current SSD path, including multiple paths when present. Do not add obsolete apps to Flux. No Longhorn, NFS, distributed storage, shared proxy fleet, or monitoring migration is included.

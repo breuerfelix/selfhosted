@@ -21,7 +21,7 @@ services:
     volumes:
       - /data/hermes:/opt/data
       # Keep native Hermes backup archives outside the main Hermes state tree.
-      # The restic stack includes this host path explicitly.
+      # Native Hermes archives remain; the Docker Restic service was retired.
       - /data/hermes-backup:/opt/data/backups
 
   hindsight:
