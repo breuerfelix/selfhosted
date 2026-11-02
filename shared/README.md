@@ -1,6 +1,6 @@
 # Shared host and cluster maintenance
 
-Hetzner and Beelink use the same Ubuntu update policy, K3s bootstrap tasks, Flux components, and K3s upgrade resources. Inventories, K3s configuration, storage checks, applications, and app sync definitions remain in each host directory. The Git source and upgrade sync are shared; repository-root `.sops.yaml` owns encryption rules for both hosts.
+Hetzner and Beelink use the same Ubuntu update policy, K3s bootstrap tasks, Flux components, and K3s upgrade resources. Inventories, K3s configuration, storage checks, applications, and app sync definitions remain in each host directory. The Git source and shared component syncs are shared; repository-root `.sops.yaml` owns encryption rules for both hosts.
 
 ## Ubuntu updates
 
@@ -32,7 +32,7 @@ Remove `--check --diff` to apply. Each host's `ubuntu-updates.yml` can also be r
 
 The shared `k3s` role installs the bootstrap version only when the binary is absent. It repairs a missing service unit without replacing an existing binary, applies host-specific configuration, reloads systemd, and checks API/node readiness. Configuration changes restart K3s. The host playbooks supply the exact configuration content. Beelink supplies its SSD UUID checks, `/data` startup dependency, explicit node/network settings, swap setting, and disabled Traefik/local-storage components; ServiceLB remains enabled. Host bootstrap does not require an application's config file.
 
-The shared server Plan tracks a single minor-version channel with concurrency one and no drain or cordon on these single-node clusters. A Job started in its window can finish later. Each cluster keeps its existing Flux owners: root `flux-system` owns the controller/CRD, and `k3s-upgrade-plan` owns the Plan and depends on root readiness. `cluster/system-upgrade-controller/plan-sync.yaml` points both clusters directly at the shared Plan directory. Root manifests must not include the Plan directly, because fresh clusters need the CRD installed first.
+The shared server Plan tracks a single minor-version channel with concurrency one and no drain or cordon on these single-node clusters. A Job started in its window can finish later. Each cluster root includes one local `shared-sync.yaml` pointing to `shared/cluster`. The shared parent creates `flux-controllers`, `system-upgrade-controller`, and `k3s-upgrade-plan` Flux Kustomizations. The upgrade controller depends on `flux-controllers`; both controller syncs wait for resource health. The Plan depends on upgrade-controller readiness so its CRD and controller exist first. The shared parent includes only sync definitions, not their workloads, and does not wait for child readiness.
 
 For a new K3s minor, review compatibility, advance one minor at a time, and update the shared Plan channel, controller kubectl helper, and Ansible bootstrap version together. Shared changes on `main` reach both clusters independently; there is no cross-cluster rollout ordering or automatic rollback.
 
@@ -40,7 +40,7 @@ Controller CRD and controller YAML are vendored upstream release files with pinn
 
 ```bash
 # Select temp/hetzner-kubeconfig or temp/beelink-kubeconfig first.
-flux reconcile kustomization flux-system --with-source --timeout=10m
+flux reconcile kustomization system-upgrade-controller --with-source --timeout=5m
 kubectl -n system-upgrade rollout restart deployment/system-upgrade-controller
 kubectl -n system-upgrade rollout status deployment/system-upgrade-controller --timeout=180s
 ```
@@ -49,7 +49,11 @@ Upgrade Jobs expire after their configured TTL. Inspect Plan status and events i
 
 ## Flux components
 
-Both clusters consume `cluster/flux-system/gotk-components.yaml` and the Git source in `cluster/flux-system/source.yaml`. Each host keeps its root sync with its own repository path and health checks. Regenerate the shared file with the intended Flux CLI version and the same three components:
+The shared `flux-controllers` sync manages `cluster/flux-system/gotk-components.yaml` and the Git source in `cluster/flux-system/source.yaml`, including the controllers that reconcile Flux itself. Each host keeps its root sync with its own repository path and health checks. Its `cluster/flux-system/kustomization.yaml` includes only that local root sync.
+
+To add another component used by both clusters, create its plain Kustomize directory under `shared/cluster`, add a sibling `*-sync.yaml` pointing to that directory, and list the sync in `shared/cluster/kustomization.yaml`. Define dependencies between child syncs. Neither cluster needs another entry. Keep `wait` disabled on the shared parent and avoid child dependencies on that parent, so readiness cannot form a cycle.
+
+Regenerate the shared Flux file with the intended Flux CLI version and the same three components:
 
 ```bash
 flux install --export --components=source-controller,kustomize-controller,helm-controller > shared/cluster/flux-system/gotk-components.yaml
@@ -62,12 +66,24 @@ New-cluster bootstrap applies `shared/cluster/flux-system/gotk-components.yaml` 
 ```bash
 kubectl kustomize hetzner/cluster > /dev/null
 kubectl kustomize beelink/cluster > /dev/null
+kubectl kustomize shared/cluster > /dev/null
+kubectl kustomize shared/cluster/flux-system > /dev/null
+kubectl kustomize shared/cluster/system-upgrade-controller > /dev/null
 kubectl kustomize shared/cluster/k3s-upgrade-plan > /dev/null
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml --syntax-check
 temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml --syntax-check
 ```
 
-For each cluster, select its kubeconfig, reconcile `flux-system` with its source, then reconcile `k3s-upgrade-plan`. Check Flux readiness, nodes, pods, Helm releases, PVCs, certificates, and application routes:
+For each cluster, select its kubeconfig and reconcile in dependency order:
+
+```bash
+flux reconcile kustomization flux-system --with-source --timeout=10m
+for sync in shared flux-controllers system-upgrade-controller k3s-upgrade-plan; do
+  flux reconcile kustomization "$sync" --timeout=5m || break
+done
+```
+
+Check Flux readiness, nodes, pods, Helm releases, PVCs, certificates, and application routes:
 
 ```bash
 flux get kustomizations -A

@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - ./crd.yaml
   - ./controller.yaml
-  - ./plan-sync.yaml

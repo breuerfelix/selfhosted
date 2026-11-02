@@ -1,0 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./flux-controllers-sync.yaml
+  - ./system-upgrade-controller-sync.yaml
+  - ./k3s-upgrade-plan-sync.yaml

@@ -84,14 +84,16 @@ Applying the host root sync enables every unsuspended application. All data and 
 ```bash
 kubectl apply -f shared/cluster/flux-system/source.yaml -f beelink/cluster/flux-system/gotk-sync.yaml
 flux reconcile kustomization flux-system --with-source --timeout=10m
+for sync in shared flux-controllers system-upgrade-controller k3s-upgrade-plan; do
+  flux reconcile kustomization "$sync" --timeout=5m || break
+done
 flux reconcile kustomization tailscale --timeout=10m
 for app in nanobot papra monitoring screeps-agent; do
   flux reconcile kustomization "$app" --timeout=15m || break
 done
-flux reconcile kustomization k3s-upgrade-plan --timeout=5m
 ```
 
-Tailscale readiness gates Nanobot, Papra, and monitoring. Monitoring readiness gates Screeps agents. Room Planner remains suspended. The shared upgrade sync applies its Plan after root reconciliation installs the controller and CRD.
+Tailscale readiness gates Nanobot, Papra, and monitoring. Monitoring readiness gates Screeps agents. Room Planner remains suspended. The shared upgrade Plan waits for the separate system-upgrade-controller sync to install its CRD and pass health checks.
 
 ## 6. Verify
 

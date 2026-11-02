@@ -4,5 +4,5 @@ resources:
   - ./flux-system
   - ./infrastructure/cert-manager
   - ./infrastructure/traefik
-  - ../../shared/cluster/system-upgrade-controller
+  - ./shared-sync.yaml
   - ./apps-sync.yaml

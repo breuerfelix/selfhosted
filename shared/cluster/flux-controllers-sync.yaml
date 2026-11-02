@@ -1,14 +1,14 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: k3s-upgrade-plan
+  name: flux-controllers
   namespace: flux-system
 spec:
   interval: 10m
-  dependsOn:
-    - name: flux-system
-  path: ./shared/cluster/k3s-upgrade-plan
+  path: ./shared/cluster/flux-system
   prune: true
+  wait: true
+  timeout: 5m
   sourceRef:
     kind: GitRepository
     name: flux-system

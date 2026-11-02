@@ -5,4 +5,4 @@ resources:
   - ./tailscale-sync.yaml
   - ./apps-sync.yaml
   - ./room-planner-sync.yaml
-  - ../../shared/cluster/system-upgrade-controller
+  - ./shared-sync.yaml

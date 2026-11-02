@@ -92,6 +92,9 @@ for app in nanobot papra monitoring screeps-agent room-planner; do
   kubectl kustomize "beelink/cluster/apps/$app" > /dev/null || break
 done
 kubectl kustomize beelink/cluster/infrastructure/tailscale > /dev/null
+kubectl kustomize shared/cluster > /dev/null
+kubectl kustomize shared/cluster/flux-system > /dev/null
+kubectl kustomize shared/cluster/system-upgrade-controller > /dev/null
 kubectl kustomize shared/cluster/k3s-upgrade-plan > /dev/null
 temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml --syntax-check
 ```

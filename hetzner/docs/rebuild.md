@@ -65,8 +65,10 @@ kubectl -n flux-system create secret generic sops-age \
   --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f shared/cluster/flux-system/source.yaml -f hetzner/cluster/flux-system/gotk-sync.yaml
 flux reconcile kustomization flux-system --with-source --timeout=10m
+for sync in shared flux-controllers system-upgrade-controller k3s-upgrade-plan; do
+  flux reconcile kustomization "$sync" --timeout=5m || break
+done
 flux reconcile kustomization apps --timeout=10m
-flux reconcile kustomization k3s-upgrade-plan --timeout=5m
 ```
 
 The root sync installs cert-manager and waits for its HelmRelease before apps apply the ClusterIssuer and certificates. No manual cert-manager installation is needed. Traefik is supplied by K3s. DNS A/AAAA records must point to working server addresses, and public port 80 must reach Traefik for HTTP-01 issuance. New clusters obtain certificates from Let's Encrypt, subject to issuance limits.

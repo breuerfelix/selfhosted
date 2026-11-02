@@ -17,7 +17,8 @@ Persistent applications use one replica, `Recreate`, and retained static local P
 beelink/
   ansible/                 # Host configuration and SSD guard
   cluster/
-    flux-system/           # Host root sync; shared controllers and Git source
+    flux-system/           # Cluster root sync
+    shared-sync.yaml       # Entry point for shared component syncs
     apps-sync.yaml         # App reconciliation and dependency order
     tailscale-sync.yaml
     room-planner-sync.yaml # Suspended

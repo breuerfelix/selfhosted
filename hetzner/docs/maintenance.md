@@ -65,6 +65,9 @@ No scheduled backup runs. Maintain current off-server backups of required data b
 ```bash
 kubectl kustomize hetzner/cluster > /dev/null
 kubectl kustomize hetzner/cluster/apps > /dev/null
+kubectl kustomize shared/cluster > /dev/null
+kubectl kustomize shared/cluster/flux-system > /dev/null
+kubectl kustomize shared/cluster/system-upgrade-controller > /dev/null
 kubectl kustomize shared/cluster/k3s-upgrade-plan > /dev/null
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml --syntax-check
 ```
