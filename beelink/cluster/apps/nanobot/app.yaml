@@ -28,6 +28,11 @@ spec:
           imagePullPolicy: IfNotPresent
           args: [gateway]
           env:
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: nanobot-github
+                  key: GH_TOKEN
             - name: NANOBOT_DOCKER_BOOTSTRAP
               value: "1"
             - name: XDG_DATA_HOME

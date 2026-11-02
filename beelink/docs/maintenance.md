@@ -79,6 +79,18 @@ kubectl -n papra rollout status deployment/papra --timeout=300s
 
 For operator credentials, follow [tailscale.md](tailscale.md). Nanobot's mutable credentials and MCP settings live on its PVC; [Google Workspace OAuth](google-workspace.md) documents callback configuration.
 
+### Nanobot GitHub token
+
+Run from an interactive terminal with Python 3 and `sops` installed:
+
+```bash
+python3 beelink/scripts/configure-nanobot-gh-token.py
+```
+
+Paste the token at the hidden prompt. The script encrypts a dedicated `nanobot-github` Secret using the root SOPS rules, adds `gh-token.sops.yaml` to Nanobot's Kustomization, and wires its `GH_TOKEN` key into the container environment. Plaintext stays in memory; encryption needs only the configured public age recipient.
+
+Review, commit, and push the three generated/updated manifests to `main`. Flux decrypts and applies them; the initial environment change triggers a rollout. Rerun the script to rotate the token, then restart Nanobot after Flux reconciles, using the environment Secret commands above with namespace and Deployment `nanobot`.
+
 ## Monitoring and Screeps
 
 Grafana and the Screeps agents use these internal backends; neither has LAN or Tailscale ingress:

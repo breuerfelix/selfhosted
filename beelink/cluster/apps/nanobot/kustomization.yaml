@@ -7,3 +7,4 @@ resources:
   - ingress.yaml
   - workspace-oauth.yaml
   - lan.yaml
+  - gh-token.sops.yaml

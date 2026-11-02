@@ -26,7 +26,7 @@ beelink/
     apps/                  # Manifests, storage, encrypted secrets
   docs/                    # Rebuild, maintenance, Tailscale, Google OAuth
   images/                  # Custom image sources and builds
-  scripts/                 # Room Planner registry helper
+  scripts/                 # Nanobot token and Room Planner registry helpers
 ```
 
 `apps-sync.yaml` reconciles Nanobot, Papra, monitoring, and Screeps agents together through `apps/kustomization.yaml`, matching Hetzner's layout. Tailscale readiness gates the whole group; application health is checked together with a 15-minute timeout. Monitoring and Screeps agents can start concurrently, so initial collection attempts can fail while backends start. Room Planner stays excluded from the group, with its separate sync suspended until application/registry work is complete.

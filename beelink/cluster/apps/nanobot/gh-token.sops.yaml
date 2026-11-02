@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: nanobot-github
+    namespace: nanobot
+type: Opaque
+stringData:
+    GH_TOKEN: ENC[AES256_GCM,data:QRj18homnqMVBUx5TcNQ3KrLQziTiFXrdg9TclSnKCPgheROg0UYo7jNB31Wn/gFnijJBEjnIu+k1XIMr+GhMIInmO3BuH2eE4UunjlubP1DluHOnvu3+RfMA0+r,iv:sdcDjqIlkaGhSfUqLYSnTPWpvjCAnmXyFPh59LSqpis=,tag:KdLdo/xz9w0g+e3P8kmCAQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBCR3JvY0RBdWZ6ajBBRklJ
+            M1JxYmt4c0pJVmlDZWdjajc2bGhpK25yZHhvCndKMkY1enBxOE1MUUpEb0d2Y2ZR
+            eDBDdkpnSHBGekI3ckNjTTdKRVJBUkUKLS0tIGJUczNhV3ZOVjJBTjYxVHRYdHNM
+            aGxxTGt5MTNhbUx1VTBPczlNclp0U0UKkqEzBWFtMbNUyaOckoQakkHv6Ct8/lzH
+            qx+S3bMHCDhm4PDb83Y3JSM/3UOvmm11k/K5XiwZRLp10jkzSICFbg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age17vfeatyacqy9ya9symdcxna5auw78atyw424lfgws6zyf2js4dwqpdmc9w
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-02T18:04:03Z"
+    mac: ENC[AES256_GCM,data:rX0cAVntbDKn2xLux3NB9KbK252P29l2YMtHE0Mx8BfJkgiOwO2761mCeCYXVa/0lskcHZze+xGoWN5qSlwlZ9fQdp98OEXemXVitjnU7WZKgQvsPI2Tbmg+rf7uEDd2vFIhiXvh1WxiXvyBKLFMLL+30Zz2VcBpPQxcUvyXPjE=,iv:EOwYnS+k31h2XGlx4T37NX/NUO1vlO43btUWTvmh978=,tag:a8yVP821R5gURTKgEXDEYA==,type:str]
+    version: 3.13.3
