@@ -15,8 +15,6 @@ spec:
       labels:
         app: papra
     spec:
-      automountServiceAccountToken: false
-      terminationGracePeriodSeconds: 180
       # Match data ownership without recursive changes.
       securityContext:
         runAsUser: 1000

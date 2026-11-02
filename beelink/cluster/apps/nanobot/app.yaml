@@ -15,7 +15,6 @@ spec:
       labels:
         app: nanobot
     spec:
-      automountServiceAccountToken: false
       securityContext:
         # Matches the running process and SSD ownership. Skip root entrypoint chown.
         runAsUser: 1000

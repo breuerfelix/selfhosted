@@ -15,10 +15,8 @@ spec:
       labels:
         app: room-planner
     spec:
-      automountServiceAccountToken: false
       imagePullSecrets:
         - name: ghcr
-      terminationGracePeriodSeconds: 60
       containers:
         - name: room-planner
           # Pinned application build.

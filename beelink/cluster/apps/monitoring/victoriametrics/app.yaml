@@ -15,8 +15,6 @@ spec:
       labels:
         app: victoriametrics
     spec:
-      automountServiceAccountToken: false
-      terminationGracePeriodSeconds: 180
       # Match data ownership; do not recursively chown the volume.
       securityContext:
         runAsUser: 0
