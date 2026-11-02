@@ -12,7 +12,7 @@ flux get kustomizations -A
 kubectl get deploy,pvc -A
 ```
 
-To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All active apps share reconciliation, health checks, and suspension; monitoring no longer gates Screeps startup separately. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, node affinity, and numeric ownership stable. PV/PVC pruning is disabled for persistent applications; `Retain` preserves files but does not provide backups or automatic rebinding.
+To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All active apps share reconciliation, health checks, and suspension; monitoring no longer gates Screeps startup separately. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, node affinity, and numeric ownership stable. Flux prunes namespaces and PV/PVC objects removed from Git. Static local volumes use `Retain`, so their host directories survive PVC, PV, or namespace deletion; host data cleanup is manual. `Retain` does not provide backups or automatic rebinding.
 
 For data maintenance, set `suspend: true` on the shared `apps` sync in Git, push, and reconcile the root. Verify suspension, scale the affected Deployment to zero, and wait for its pods to terminate. Suspension pauses reconciliation for all active apps but does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
 
