@@ -13,15 +13,9 @@ spec:
   claimRef:
     namespace: monitoring
     name: loki-data
-  local:
+  hostPath:
     path: /data/loki
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: [beelink]
+    type: Directory
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

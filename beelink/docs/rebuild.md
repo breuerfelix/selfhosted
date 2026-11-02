@@ -4,7 +4,7 @@ Run local commands from the repository root. Tools: SSH, Python/uv, Ansible, kub
 
 ## 1. Prepare the host
 
-Use Ubuntu 24.04 with hostname `beelink` and root SSH access through alias `bee`. Keep the LAN address stable through a DHCP reservation. Retained PV node affinity targets `beelink`.
+Use Ubuntu 24.04 with hostname `beelink` and root SSH access through alias `bee`. Keep the LAN address stable through a DHCP reservation.
 
 Mount the data SSD at `/data` through `/etc/fstab`. Its UUID must match `data_uuid` in `ansible/k3s.yml`. Ansible verifies the filesystem; it does not format disks, create replacement app data, or recursively change ownership. When replacing the SSD, update the expected UUID after restoring and verifying its contents.
 

@@ -11,7 +11,7 @@ Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. Ansible configures t
 | VictoriaMetrics | `monitoring` | ClusterIP, TCP 8428 | `/data/victoriametrics` | `0:0` |
 | Screeps agents | `screeps-agent` | Outbound connections only | None | Image default |
 
-Persistent applications use one replica, `Recreate`, and retained static local PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. No scheduled application backup is configured.
+Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. No scheduled application backup is configured.
 
 ```text
 beelink/

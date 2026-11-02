@@ -13,15 +13,9 @@ spec:
   claimRef:
     namespace: papra
     name: papra-data
-  local:
+  hostPath:
     path: /data/papra
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: [beelink]
+    type: Directory
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

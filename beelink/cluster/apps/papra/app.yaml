@@ -16,8 +16,6 @@ spec:
         app: papra
     spec:
       automountServiceAccountToken: false
-      nodeSelector:
-        kubernetes.io/hostname: beelink
       terminationGracePeriodSeconds: 180
       # Match data ownership without recursive changes.
       securityContext:

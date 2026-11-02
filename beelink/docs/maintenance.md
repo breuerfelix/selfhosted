@@ -4,6 +4,8 @@ Run local commands from the repository root with `export KUBECONFIG="$PWD/temp/b
 
 ## Application changes
 
+Both clusters remain single-node. Keep scheduling unconstrained. Existing clusters need the [static PV migration](../../shared/README.md#static-pv-migration) before deploying the `hostPath` storage manifests.
+
 Edit manifests under `beelink/cluster/apps/`, validate, and push reviewed changes to `main`. Flux applies merged changes automatically. `cluster/apps-sync.yaml` reconciles all active applications through `cluster/apps/kustomization.yaml`, after Tailscale is ready:
 
 ```bash
@@ -12,7 +14,7 @@ flux get kustomizations -A
 kubectl get deploy,pvc -A
 ```
 
-To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All active apps share reconciliation, health checks, and suspension; monitoring no longer gates Screeps startup separately. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, node affinity, and numeric ownership stable. Flux prunes namespaces and PV/PVC objects removed from Git. Static local volumes use `Retain`, so their host directories survive PVC, PV, or namespace deletion; host data cleanup is manual. `Retain` does not provide backups or automatic rebinding.
+To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All active apps share reconciliation, health checks, and suspension; monitoring no longer gates Screeps startup separately. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, and numeric ownership stable. Flux prunes namespaces and PV/PVC objects removed from Git. Static `hostPath` volumes use `Retain`, so their host directories survive PVC, PV, or namespace deletion; host data cleanup is manual. `Retain` does not provide backups or automatic rebinding.
 
 For data maintenance, set `suspend: true` on the shared `apps` sync in Git, push, and reconcile the root. Verify suspension, scale the affected Deployment to zero, and wait for its pods to terminate. Suspension pauses reconciliation for all active apps but does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
 

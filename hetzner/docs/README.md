@@ -27,7 +27,7 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 - **Flux:** source, Kustomize, and Helm controllers. Uses the shared Git source to read this public GitHub repository over HTTPS without Git credentials. The root sync installs infrastructure and waits for cert-manager. The `apps` sync depends on root readiness. A shared parent creates separate syncs for Flux itself, the upgrade controller, and its Plan; the Plan waits for upgrade-controller readiness. Upgrade-controller rollout health does not block app reconciliation. Apps have their own rollout health checks.
 - **TLS:** cert-manager issues and renews Let's Encrypt certificates through HTTP-01. Traefik redirects HTTP to HTTPS globally, allows ACME challenges, and preserves the direct domain redirect.
 - **Secrets:** SOPS with age. Encrypted config stays in Git; the private key belongs in a password manager and `flux-system/sops-age`.
-- **Storage:** retained local PVs for data that must survive claim deletion; local-path PVCs for disposable data. Capacity declarations do not enforce disk quotas. All data shares the server disk.
+- **Storage:** retained `hostPath` PVs for data that must survive claim deletion; local-path PVCs for disposable data. Capacity declarations do not enforce disk quotas. All data shares the server disk.
 
 | App | Public host | Storage | Recovery policy |
 | --- | --- | --- | --- |

@@ -13,15 +13,9 @@ spec:
   claimRef:
     namespace: monitoring
     name: victoriametrics-data
-  local:
+  hostPath:
     path: /data/victoriametrics
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: [beelink]
+    type: Directory
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

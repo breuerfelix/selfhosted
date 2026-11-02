@@ -4,6 +4,8 @@ Run commands from the repository root with `export KUBECONFIG="$PWD/temp/hetzner
 
 ## Application changes
 
+Both clusters remain single-node. Keep scheduling unconstrained. Existing clusters need the [static PV migration](../../shared/README.md#static-pv-migration) before deploying the `hostPath` storage manifests.
+
 Edit the app directory under `cluster/apps/`, validate, and push reviewed changes to `main`. Flux reconciles automatically; force a refresh with:
 
 ```bash
@@ -14,7 +16,7 @@ kubectl -n apps get deploy,pvc,certificates
 
 To add an app, create its `app.yaml`, `ingress.yaml`, `kustomization.yaml`, and optional `storage.yaml`/encrypted config. Add the directory to `cluster/apps/kustomization.yaml`. Use one replica and `Recreate` for a single-writer data directory. Use ClusterIP Services and one HTTPS Ingress with the shared issuer. Traefik handles HTTP redirects globally. Keep image tags and digests together.
 
-Choose storage from data requirements: retained local PVs for important data at predictable paths, local-path PVCs for disposable data, and no PVC for stateless apps. Add retained host directories to `ansible/storage.yml`. Keep PV/PVC names, paths, and node affinity stable on an existing cluster; these are storage identities, not cosmetic settings.
+Choose storage from data requirements: retained `hostPath` PVs for important data at predictable paths, local-path PVCs for disposable data, and no PVC for stateless apps. Add retained host directories to `ansible/storage.yml`. Keep PV/PVC names and paths stable on an existing cluster; these are storage identities, not cosmetic settings.
 
 Removing a resource from Git lets Flux prune it. Deleting a local-path PVC can delete its data. Retained PVs keep local files but require deliberate rebinding before reuse. Decide what to preserve before removing a stateful app.
 
@@ -56,7 +58,7 @@ kubectl -n system-upgrade describe plan k3s-server
 ssh cool 'df -h /; systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager'
 ```
 
-For app failures, inspect the pod's events and logs. For certificate failures, inspect Certificate, CertificateRequest, Order, and Challenge objects, then check DNS and port 80. The global Traefik redirect exempts ACME challenges; its low priority lets the domain redirect take precedence. For retained storage, check the host directory, ownership, and node affinity. No declared PVC capacity enforces a filesystem quota here.
+For app failures, inspect the pod's events and logs. For certificate failures, inspect Certificate, CertificateRequest, Order, and Challenge objects, then check DNS and port 80. The global Traefik redirect exempts ACME challenges; its low priority lets the domain redirect take precedence. For retained storage, check the host directory, ownership, and PV/PVC binding. No declared PVC capacity enforces a filesystem quota here.
 
 No scheduled backup runs. Maintain current off-server backups of required data before relying on [rebuild.md](rebuild.md) for recovery. Use a consistent SQLite backup method and verify a restore; do not copy actively written database files as if they were a consistent snapshot.
 

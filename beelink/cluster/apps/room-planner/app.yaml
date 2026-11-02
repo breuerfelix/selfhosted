@@ -16,8 +16,6 @@ spec:
         app: room-planner
     spec:
       automountServiceAccountToken: false
-      nodeSelector:
-        kubernetes.io/hostname: beelink
       imagePullSecrets:
         - name: ghcr
       terminationGracePeriodSeconds: 60

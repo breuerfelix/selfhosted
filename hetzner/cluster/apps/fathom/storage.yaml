@@ -13,16 +13,9 @@ spec:
   claimRef:
     namespace: apps
     name: fathom-data
-  local:
+  hostPath:
     path: /srv/k3s-data/fathom
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - coolify
+    type: Directory
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

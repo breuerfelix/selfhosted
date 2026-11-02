@@ -8,7 +8,7 @@ Attach a Hetzner Cloud Firewall before starting K3s. Allow inbound TCP 80/443 pu
 
 Keep your existing SSH session open and verify a fresh `ssh cool` connection after changing firewall rules. Update source restrictions when your public IP changes. Verify actual rules in Hetzner Console; repository files do not configure the provider firewall.
 
-For retained local PVs, the node hostname must match `spec.nodeAffinity` in each app's `storage.yaml`. Set the host hostname accordingly before first starting K3s, or update those manifests for the new host before bootstrap. Preserve existing node identities on an already-running cluster.
+Retained `hostPath` PVs use the directories declared in each app's `storage.yaml`. Prepare those directories before starting applications; storage does not depend on the node hostname.
 
 ## 2. Configure Ubuntu, storage, and K3s
 
