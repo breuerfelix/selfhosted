@@ -12,7 +12,7 @@ spec:
       namespace: cert-manager
   timeout: 10m
   path: ./hetzner/cluster
-  prune: true
+  prune: false
   sourceRef:
     kind: GitRepository
     name: flux-system
