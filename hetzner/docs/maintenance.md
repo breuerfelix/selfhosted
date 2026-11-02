@@ -24,7 +24,7 @@ Removing a resource from Git lets Flux prune it. Deleting a local-path PVC can d
 
 Back up `temp/hetzner-sops-age.key` in a password manager. The same identity is installed in `flux-system/sops-age`; losing both copies makes committed secrets unreadable. The recipient in repository-root `.sops.yaml` is public and shared with Beelink.
 
-Screeps stores its application config directly as SOPS-encrypted YAML, consumed by Kustomize `secretGenerator`. Edit it with:
+Screeps stores its application config as YAML consumed by Kustomize `secretGenerator`. Only `steamKey` is encrypted. Edit ordinary settings directly in `cluster/apps/screeps/config.sops.yaml`, without SOPS. The file uses `mac_only_encrypted: true`, so plaintext edits do not break SOPS integrity checks; those checks cover encrypted values only. To change the Steam key, use:
 
 ```bash
 export SOPS_AGE_KEY_FILE="$PWD/temp/hetzner-sops-age.key"
@@ -33,7 +33,7 @@ sops hetzner/cluster/apps/screeps/config.sops.yaml
 
 Run SOPS commands from the repository root so new files and `sops updatekeys` use the shared root creation rules. Existing encrypted files also carry their recipients.
 
-The generated Secret name changes when config changes. Kustomize updates the Deployment reference, causing a restart and a fresh `subPath` mount. No manual version annotation or restart is needed. Every app can use the same `config.sops.yaml` naming convention: `.sops.yaml` encrypts these files completely. Other `*.sops.yaml` files use the fallback Kubernetes Secret rule, which encrypts only `data` and `stringData`. Keep the generator's default name hash enabled.
+The generated Secret name changes when config changes. Kustomize updates the Deployment reference, causing a restart and a fresh `subPath` mount. No manual version annotation or restart is needed. The Screeps-specific creation rule comes before the generic `config.sops.yaml` rule, which still encrypts other application config files completely. Other `*.sops.yaml` files use the fallback Kubernetes Secret rule, which encrypts only `data` and `stringData`. Keep the generator's default name hash enabled.
 
 Never commit private keys, kubeconfigs, or decrypted config. `kubectl kustomize` builds ciphertext locally; Flux decrypts generated Secret values before applying them.
 

@@ -1,34 +1,39 @@
-steamKey: ENC[AES256_GCM,data:WHY+099Orlv+bFn+OyBhvlZI3p6mV1X1EuQBN3eK2os=,iv:5L+ad9gz/sx/cMifl5SqJDEZMSOuHN6pz5U724PXI+Q=,tag:IQzdtegYjsXdMfYBXPk9iw==,type:str]
+steamKey: ENC[AES256_GCM,data:6oFwLQlXEFUHkbsZmzHWISGZC1nvlU4jt288gKVkqqk=,iv:J9nO5fSBRO8qcgYRQOxVru/b/8zRgmN+n3+cPlWHtEQ=,tag:oq6/BHxS9bZJeAU02qBIRg==,type:str]
 pinnedPackages:
-    ssri: ENC[AES256_GCM,data:RBdNDQI=,iv:vJ5sX6CpgvCY6jk5R6TBNGPSViQEnXEQXnmZ10428l4=,tag:3eJpm0ctih4tA4DAXKoyPg==,type:str]
-    cacache: ENC[AES256_GCM,data:emEnh1WJ,iv:6IwQw1UpvC7ZZHVqp7k7fWys1crFD3px/lWxBDMi6Wg=,tag:K2grjmrDvYFhjZqAYRKOEw==,type:str]
-    passport-steam: ENC[AES256_GCM,data:UlgJmDl8,iv:JvIIE3N4LkPC/QO+hi5WBDndzBcggGakX2CVOMvldUI=,tag:SvrKGHRcUPpBC3R0NPaFNg==,type:str]
-    minipass-fetch: ENC[AES256_GCM,data:qg9lO6k=,iv:8tbWtMp7D5g7KnPWQDgvv/Tc0ljjvfXjelOIxOhU8xY=,tag:2pcf9nGysnggkIPzHbNxyA==,type:str]
-    express-rate-limit: ENC[AES256_GCM,data:4ZfK6j0=,iv:UgpVQ3n+4HOcmOwpcfB27ukszRVh8SlhvPoHu4QXxX0=,tag:ufvLuFIduuCNzJ7hHXwcZg==,type:str]
-version: ENC[AES256_GCM,data:ct/tDNk=,iv:jL4YtVK320uPWBWvP6ZMhAiC+Tz9GJRZDKsuFaCkESg=,tag:jY3ZCIH0qNoOQRN6sMOKhw==,type:str]
+    ssri: 8.0.1
+    cacache: 15.3.0
+    passport-steam: 1.0.17
+    minipass-fetch: 2.1.2
+    express-rate-limit: 6.7.0
+version: 4.3.0
 mods:
-    - ENC[AES256_GCM,data:egKff3XH72qiGYA9zsr2,iv:KPzarSG1bWf7Q1NN3c1gy5Ofa+aSIzOP1y7xx+CQr5U=,tag:LZoITpSPN9/ztY3SO+GjyQ==,type:str]
-    - ENC[AES256_GCM,data:ycaUS+2YxipXNsvJ1pZpngBVX+Km3Q==,iv:QhZg7lBJfRLrxXR5Q7Q4nSByo7xknqBtnIfuy77QNmc=,tag:+2RERQxFlyFVL9hGpjxi/Q==,type:str]
+    - screepsmod-auth
+    - screepsmod-admin-utils
 bots:
-    simplebot: ENC[AES256_GCM,data:bZLHGuMBi9bmep2yS+QjMaNN,iv:5cdaaoKTHJ4wNiQxQCfcrdQRt4edPahUxidhqf0TYHI=,tag:4PfEAg84sTpLX92WBS/zAQ==,type:str]
+    simplebot: screepsbot-zeswarm
 serverConfig:
-    shardName: ENC[AES256_GCM,data:0cmi6C2NVw==,iv:OV6lxv0nRR7a9+l2rfSQmdip+Wk7Xl7L1B3zr/l0x/s=,tag:82cbEGskr6/Cml36iPwrxw==,type:str]
-    tickRate: ENC[AES256_GCM,data:PwvLMA==,iv:W2+dqCi4fqdOLYFsaq8K5BGQChYBNe/IYgAfM1PACbM=,tag:D5x++uxF7VjB2k4sKS0b6A==,type:int]
-    socketUpdateRate: ENC[AES256_GCM,data:F83TMQ==,iv:WEXWzDwOCqZ4ve43QVbIlqiJDoaz0L+4UeeJTNPatJs=,tag:5rwxzwka3gav/Ns1uct6jQ==,type:int]
-    maxCPU: ENC[AES256_GCM,data:sXt5,iv:6z32UPGu00LF0lo0djex/ETjaeWlp2Ik1njgAKzm2hQ=,tag:AyDE1+j95xSYURb+fZ4EvQ==,type:int]
-    welcomeText: ENC[AES256_GCM,data:fFT/4Wjy157Kk1Lg+jy7zjv4qWgn8DHRm8abv5sQ+o7jAbK+UDy5cpybs1FOGgoJ7EGtIx6fZcZo8NP6voESoQK4vSIqYE+XJAocYfFfdJJeLr7pnsGq/UwN6EK0CzthVEbaUSbfnMF8rbMVYg==,iv:BCX+Si52ndsuBdsnFe7qZ5cJ2KZMm5qr/XZbJCWxq/s=,tag:Zi2ZW95uTT8JDnVo4wq5iA==,type:str]
+    shardName: coolify
+    tickRate: 1000
+    socketUpdateRate: 1000
+    maxCPU: 500
+    welcomeText: |
+        <style>.scriptworld h1{  text-align: center; }</style>
+        <div class="scriptworld">
+        <h1>scriptworld</h1>
+        </div>
 sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBQOWozS202ejhRNndyS3lR
-            N0txQ1ZzNXlCb3p5Y1gxeTRWcHdGZEpBREZZCk9pQ2U4YUFOWFZDMnlxb29LaGFN
-            eDAzVVJBS3RYb3dGbjFFcEttK0orYVkKLS0tIHVwYzZ4bzVRNWxZN2lxRXhlS0tw
-            eXRQQ3E3SnRSQ3Y0ZTRwRmNoNTVUck0KX7vSIgGO1rf496oYFG24udAuTP6xhRbZ
-            7Vf4DoJU1tT/jNTYTQBudgpihq/J7JSP2Nx2gZ3gfNKm8SDgF7fYZw==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA5eU92b21OOGF0RVVheVdp
+            dVZjQjB1YXJFbkZ5YUh1YThSaEhTZkI3am1BCldrUzZQbU5Ob1k5SnB5WEp5QXdk
+            WWRxeXZzRDQzUmdoT1QyQzVaTHdhc3cKLS0tIEJCZ1p3MDMxb0d1UUFYSkN1NHl4
+            TWEvQS9oSU42MmdFMEpPYlFWMjgxOUUKb0G+7A2FbNDRuCpguVCqbv+HHvDWJv4N
+            dZhWZy4ikhzz3UnBn9TIUybi2EeUnb0MD4YiZRqUkq4UbD0u+4gcQg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age17vfeatyacqy9ya9symdcxna5auw78atyw424lfgws6zyf2js4dwqpdmc9w
-    lastmodified: "2026-10-29T13:40:27Z"
-    mac: ENC[AES256_GCM,data:3gBLGBRklUjvwioE3OezEGJJNt9nlngd5/cv3Zj0KmFJC3L6legDbFjd+mX4dydo/O7AIH6BumeMDWanrCnYWta+ppIN8UkNmXv1wk5bdNU02T8cKekOm5rr78xBpufeycpg1/6Iwp2CmAf5RdaGmZT8uXAdUz5aA/oQ4vuiDE0=,iv:I6vTMEB0MqieU8rZ+BhJPqUH9nXdLZdSJADs78LdMkM=,tag:HyUNd77J2rf9eMF3hdc/oQ==,type:str]
-    unencrypted_suffix: _unencrypted
+    encrypted_regex: ^steamKey$
+    lastmodified: "2026-11-02T20:11:45Z"
+    mac: ENC[AES256_GCM,data:8NfvQMhjOEgcc/YGtBSXyoUem96U6yq416MwbIFyTLRN1o60s2+lC5dmZhhh+hyXKYbCtqJTgw75nQvfKv+BqAptS07WRAlHJV48CvciDb06ECYgUJMHGOMJ9JqHYB+uNkLFKof/o0J8Gshs5LXqdJGbxuEcxiQFtF+ysaOa5cc=,iv:q2eWDOoTssD+MD9Khm+EzNTw/v8SnV/EzF5WlMN0PXQ=,tag:ec6+5FzbrXnxifSbxHLJ+g==,type:str]
+    mac_only_encrypted: true
     version: 3.13.3

@@ -62,7 +62,7 @@ Verify the old four syncs are gone, `apps` is Ready, and its tree contains all p
 
 ## Secrets
 
-Repository-root `.sops.yaml` supplies both hosts' encryption rules. `config.sops.yaml` files are fully encrypted for `secretGenerator`; Kubernetes Secret manifests encrypt `data` and `stringData`. Keep the age identity separately recoverable in secure storage.
+Repository-root `.sops.yaml` supplies both hosts' encryption rules. Kubernetes Secret manifests encrypt `data` and `stringData`. Generic `config.sops.yaml` files are fully encrypted for `secretGenerator`; Hetzner's Screeps config has a specific rule encrypting only `steamKey`. Keep the age identity separately recoverable in secure storage.
 
 ```bash
 export SOPS_AGE_KEY_FILE="$PWD/temp/hetzner-sops-age.key"
@@ -102,7 +102,7 @@ http://victoriametrics.monitoring.svc.cluster.local:8428
 http://loki.monitoring.svc.cluster.local:3100
 ```
 
-The agent appends `/api/v1/import` and `/loki/api/v1/push`; do not add those paths to its environment values. Public and private workers have separate Secrets and Deployments. The private worker's configured token is rejected with HTTP 401 and needs a valid private-server token:
+The agent appends `/api/v1/import` and `/loki/api/v1/push`; do not add those paths to its environment values. Public and private workers have separate Secrets containing only `SCREEPS_TOKEN`. Edit ordinary settings directly in `cluster/apps/screeps-agent/app.yaml`; Deployment environment changes trigger a rollout automatically. Token changes still need SOPS and a restart. The private worker's configured token is rejected with HTTP 401 and needs a valid private-server token:
 
 ```bash
 sops beelink/cluster/apps/screeps-agent/screeps-agent-private-env.sops.yaml

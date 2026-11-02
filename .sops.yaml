@@ -1,4 +1,9 @@
 creation_rules:
+  # Keep Screeps settings editable without SOPS; encrypt only its Steam key.
+  - path_regex: ^hetzner/cluster/apps/screeps/config\.sops\.yaml$
+    encrypted_regex: ^steamKey$
+    mac_only_encrypted: true
+    age: age17vfeatyacqy9ya9symdcxna5auw78atyw424lfgws6zyf2js4dwqpdmc9w
   # Encrypt complete config files consumed by secretGenerator.
   - path_regex: (^|/)config\.sops\.yaml$
     age: age17vfeatyacqy9ya9symdcxna5auw78atyw424lfgws6zyf2js4dwqpdmc9w
