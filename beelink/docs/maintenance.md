@@ -4,19 +4,59 @@ Run local commands from the repository root with `export KUBECONFIG="$PWD/temp/b
 
 ## Application changes
 
-Edit manifests under `beelink/cluster/apps/`, validate, and push reviewed changes to `main`. Flux applies merged changes automatically. `cluster/apps-sync.yaml` defines independently managed apps and their dependencies:
+Edit manifests under `beelink/cluster/apps/`, validate, and push reviewed changes to `main`. Flux applies merged changes automatically. `cluster/apps-sync.yaml` reconciles all active applications through `cluster/apps/kustomization.yaml`, after Tailscale is ready:
 
 ```bash
-flux reconcile kustomization nanobot --with-source --timeout=10m
+flux reconcile kustomization apps --with-source --timeout=15m
 flux get kustomizations -A
 kubectl get deploy,pvc -A
 ```
 
-Use `papra`, `monitoring`, or `screeps-agent` for another app. To add an app, create its directory and a sync entry. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, node affinity, and numeric ownership stable. PV/PVC pruning is disabled for persistent applications; `Retain` preserves files but does not provide backups or automatic rebinding.
+To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All active apps share reconciliation, health checks, and suspension; monitoring no longer gates Screeps startup separately. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, node affinity, and numeric ownership stable. PV/PVC pruning is disabled for persistent applications; `Retain` preserves files but does not provide backups or automatic rebinding.
 
-For data maintenance, set the app sync's `suspend: true` in Git, push, and reconcile the root. Verify suspension, scale its Deployment to zero, and wait for its pods to terminate. Suspension alone does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
+For data maintenance, set `suspend: true` on the shared `apps` sync in Git, push, and reconcile the root. Verify suspension, scale the affected Deployment to zero, and wait for its pods to terminate. Suspension pauses reconciliation for all active apps but does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
 
 Room Planner remains suspended. Its registry and application setup need separate work; see its [image notes](../images/room-planner/README.md).
+
+## Consolidate existing app syncs
+
+Run this handover once on an existing Beelink cluster **before publishing the consolidated layout to `main`**. Fresh clusters can use the new layout directly. Removing the old syncs with pruning enabled can delete their workloads, including namespaces and their PVCs. Follow the [Flux ownership-transfer procedure](https://fluxcd.io/flux/faq/#how-can-i-safely-rename-a-flux-kustomization).
+
+Suspend the root so it cannot restore the old settings from Git. Suspend the four old app syncs and disable their pruning before removing them:
+
+```bash
+(
+  set -eu
+  flux suspend kustomization flux-system
+  for app in nanobot papra monitoring screeps-agent; do
+    flux suspend kustomization "$app"
+    kubectl -n flux-system patch kustomization "$app" --type=merge \
+      -p '{"spec":{"prune":false}}'
+  done
+  kubectl -n flux-system get kustomizations nanobot papra monitoring screeps-agent \
+    -o custom-columns=NAME:.metadata.name,PRUNE:.spec.prune,SUSPENDED:.spec.suspend
+)
+```
+
+Continue only after every command succeeds and all four old syncs show `PRUNE=false` and `SUSPENDED=true`. Publish the consolidated layout to `main`, then fetch it while the root is still suspended:
+
+```bash
+flux reconcile source git flux-system
+flux get sources git flux-system
+```
+
+Confirm the fetched revision contains the consolidated layout before resuming the root, so it cannot reapply the old pruning settings. Resume and verify adoption:
+
+```bash
+flux resume kustomization flux-system
+flux reconcile kustomization flux-system --timeout=10m
+flux reconcile kustomization apps --timeout=15m
+flux tree kustomization apps
+flux get kustomizations -A
+kubectl get deploy,pvc -A
+```
+
+Verify the old four syncs are gone, `apps` is Ready, and its tree contains all previous application resources. The deleted old syncs leave workloads running because their pruning was disabled; the new `apps` sync adopts them with pruning enabled. Keep the root suspended if preparation fails; do not publish the consolidation until the old owners are safe to remove.
 
 ## Secrets
 
@@ -32,7 +72,7 @@ Existing files contain their recipients. New files use the root rules when comma
 Environment Secret changes require restarting the affected Deployment after reconciliation:
 
 ```bash
-flux reconcile kustomization papra --with-source --timeout=10m
+flux reconcile kustomization apps --with-source --timeout=15m
 kubectl -n papra rollout restart deployment/papra
 kubectl -n papra rollout status deployment/papra --timeout=300s
 ```
@@ -52,7 +92,7 @@ The agent appends `/api/v1/import` and `/loki/api/v1/push`; do not add those pat
 
 ```bash
 sops beelink/cluster/apps/screeps-agent/screeps-agent-private-env.sops.yaml
-flux reconcile kustomization screeps-agent --with-source --timeout=10m
+flux reconcile kustomization apps --with-source --timeout=15m
 kubectl -n screeps-agent rollout restart deployment/screeps-agent-private
 kubectl -n screeps-agent rollout status deployment/screeps-agent-private --timeout=300s
 ```
@@ -88,9 +128,8 @@ For failures, inspect pod events, storage binding, directory ownership, and appl
 
 ```bash
 kubectl kustomize beelink/cluster > /dev/null
-for app in nanobot papra monitoring screeps-agent room-planner; do
-  kubectl kustomize "beelink/cluster/apps/$app" > /dev/null || break
-done
+kubectl kustomize beelink/cluster/apps > /dev/null
+kubectl kustomize beelink/cluster/apps/room-planner > /dev/null
 kubectl kustomize beelink/cluster/infrastructure/tailscale > /dev/null
 kubectl kustomize shared/cluster > /dev/null
 kubectl kustomize shared/cluster/flux-system > /dev/null

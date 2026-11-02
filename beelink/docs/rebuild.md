@@ -88,12 +88,10 @@ for sync in shared flux-controllers system-upgrade-controller k3s-upgrade-plan; 
   flux reconcile kustomization "$sync" --timeout=5m || break
 done
 flux reconcile kustomization tailscale --timeout=10m
-for app in nanobot papra monitoring screeps-agent; do
-  flux reconcile kustomization "$app" --timeout=15m || break
-done
+flux reconcile kustomization apps --timeout=15m
 ```
 
-Tailscale readiness gates Nanobot, Papra, and monitoring. Monitoring readiness gates Screeps agents. Room Planner remains suspended. The shared upgrade Plan waits for the separate system-upgrade-controller sync to install its CRD and pass health checks.
+Tailscale readiness gates the single `apps` sync for Nanobot, Papra, monitoring, and Screeps agents. These applications reconcile together and can start concurrently; the sync waits for their combined health. Room Planner stays excluded from that group and its separate sync remains suspended. The shared upgrade Plan waits for the separate system-upgrade-controller sync to install its CRD and pass health checks.
 
 ## 6. Verify
 

@@ -19,7 +19,7 @@ beelink/
   cluster/
     flux-system/           # Cluster root sync
     shared-sync.yaml       # Entry point for shared component syncs
-    apps-sync.yaml         # App reconciliation and dependency order
+    apps-sync.yaml         # One sync for all active apps, after Tailscale
     tailscale-sync.yaml
     room-planner-sync.yaml # Suspended
     infrastructure/tailscale/
@@ -29,7 +29,9 @@ beelink/
   scripts/                 # Room Planner registry helper
 ```
 
-`apps-sync.yaml` keeps independent reconciliation for Nanobot, Papra, monitoring, and Screeps agents. The first three depend on Tailscale; Screeps agents depend on monitoring readiness. Room Planner remains suspended and needs separate application/registry work.
+`apps-sync.yaml` reconciles Nanobot, Papra, monitoring, and Screeps agents together through `apps/kustomization.yaml`, matching Hetzner's layout. Tailscale readiness gates the whole group; application health is checked together with a 15-minute timeout. Monitoring and Screeps agents can start concurrently, so initial collection attempts can fail while backends start. Room Planner stays excluded from the group, with its separate sync suspended until application/registry work is complete.
+
+Existing clusters need the [one-time ownership migration](docs/maintenance.md#consolidate-existing-app-syncs) before deploying this layout.
 
 Versions and image digests live in manifests. Renovate proposes standard app and Helm chart updates. Nanobot's [image workflow](images/nanobot/README.md) builds and tests custom images, then proposes the deployment digest. Custom Nanobot and Room Planner images are excluded from direct Renovate updates.
 
