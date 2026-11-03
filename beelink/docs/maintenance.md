@@ -4,9 +4,9 @@ Run local commands from the repository root with `export KUBECONFIG="$PWD/temp/b
 
 ## Application changes
 
-Both clusters remain single-node. Keep scheduling unconstrained. Existing clusters need the [static PV migration](../../shared/README.md#static-pv-migration) before deploying the `hostPath` storage manifests.
+Beelink is permanently single-node. Keep scheduling unconstrained and follow the [shared storage rules](../../shared/README.md#persistent-storage).
 
-Edit manifests under `beelink/cluster/apps/`, validate, and push reviewed changes to `main`. Flux applies merged changes automatically. `cluster/apps-sync.yaml` reconciles all active applications through `cluster/apps/kustomization.yaml`, after Tailscale is ready:
+Edit manifests under `beelink/cluster/apps/`, validate, and push reviewed changes to `main`. Flux applies merged changes automatically. `cluster/apps-sync.yaml` reconciles all Kubernetes applications through `cluster/apps/kustomization.yaml`, after Tailscale is ready:
 
 ```bash
 flux reconcile kustomization apps --with-source --timeout=15m
@@ -14,51 +14,11 @@ flux get kustomizations -A
 kubectl get deploy,pvc -A
 ```
 
-To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All active apps share reconciliation, health checks, and suspension; monitoring no longer gates Screeps startup separately. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, and numeric ownership stable. Flux prunes namespaces and PV/PVC objects removed from Git. Static `hostPath` volumes use `Retain`, so their host directories survive PVC, PV, or namespace deletion; host data cleanup is manual. `Retain` does not provide backups or automatic rebinding.
+To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All Kubernetes applications share reconciliation, health checks, and suspension. Monitoring and Screeps agents can start concurrently. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, and numeric ownership stable. Flux prunes namespaces and PV/PVC objects removed from Git. Static `hostPath` volumes use `Retain`, so their host directories survive PVC, PV, or namespace deletion; host data cleanup is manual. `Retain` does not provide backups or automatic rebinding.
 
 For data maintenance, set `suspend: true` on the shared `apps` sync in Git, push, and reconcile the root. Verify suspension, scale the affected Deployment to zero, and wait for its pods to terminate. Suspension pauses reconciliation for all active apps but does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
 
-Room Planner shares the `apps` sync and is exposed only through Tailscale. Its public image needs no pull secret; Renovate proposes updates to its pinned `latest` digest. See its [image notes](../images/room-planner/README.md).
-
-## Consolidate existing app syncs
-
-Run this handover once on an existing Beelink cluster **before publishing the consolidated layout to `main`**. Fresh clusters can use the new layout directly. Removing the old syncs with pruning enabled can delete their workloads, including namespaces and their PVCs. Follow the [Flux ownership-transfer procedure](https://fluxcd.io/flux/faq/#how-can-i-safely-rename-a-flux-kustomization).
-
-Suspend the root so it cannot restore the old settings from Git. Suspend the four old app syncs and disable their pruning before removing them:
-
-```bash
-(
-  set -eu
-  flux suspend kustomization flux-system
-  for app in nanobot papra monitoring screeps-agent; do
-    flux suspend kustomization "$app"
-    kubectl -n flux-system patch kustomization "$app" --type=merge \
-      -p '{"spec":{"prune":false}}'
-  done
-  kubectl -n flux-system get kustomizations nanobot papra monitoring screeps-agent \
-    -o custom-columns=NAME:.metadata.name,PRUNE:.spec.prune,SUSPENDED:.spec.suspend
-)
-```
-
-Continue only after every command succeeds and all four old syncs show `PRUNE=false` and `SUSPENDED=true`. Publish the consolidated layout to `main`, then fetch it while the root is still suspended:
-
-```bash
-flux reconcile source git flux-system
-flux get sources git flux-system
-```
-
-Confirm the fetched revision contains the consolidated layout before resuming the root, so it cannot reapply the old pruning settings. Resume and verify adoption:
-
-```bash
-flux resume kustomization flux-system
-flux reconcile kustomization flux-system --timeout=10m
-flux reconcile kustomization apps --timeout=15m
-flux tree kustomization apps
-flux get kustomizations -A
-kubectl get deploy,pvc -A
-```
-
-Verify the old four syncs are gone, `apps` is Ready, and its tree contains all previous application resources. The deleted old syncs leave workloads running because their pruning was disabled; the new `apps` sync adopts them with pruning enabled. Keep the root suspended if preparation fails; do not publish the consolidation until the old owners are safe to remove.
+Room Planner shares the `apps` sync and is exposed only through Tailscale. Its public image needs no pull secret; Renovate proposes updates to its pinned `latest` digest. See [Room Planner operations](room-planner.md).
 
 ## Secrets
 
@@ -89,20 +49,20 @@ Run from an interactive terminal with Python 3 and `sops` installed:
 python3 beelink/scripts/configure-nanobot-gh-token.py
 ```
 
-Paste the token at the hidden prompt. The script encrypts a dedicated `nanobot-github` Secret using the root SOPS rules, adds `gh-token.sops.yaml` to Nanobot's Kustomization, and wires its `GH_TOKEN` key into the container environment. Plaintext stays in memory; encryption needs only the configured public age recipient.
+Paste the token at the hidden prompt. The script encrypts the `nanobot-github` Secret using the root SOPS rules. Nanobot already references its `GH_TOKEN` key; the helper also checks that the manifest wiring is present. Plaintext stays in memory; encryption needs only the configured public age recipient.
 
-Review, commit, and push the three generated/updated manifests to `main`. Flux decrypts and applies them; the initial environment change triggers a rollout. Rerun the script to rotate the token, then restart Nanobot after Flux reconciles, using the environment Secret commands above with namespace and Deployment `nanobot`.
+Review, commit, and push changed files to `main`, reconcile `apps`, then restart Nanobot using the environment Secret commands above with namespace and Deployment `nanobot`. Updating an existing Secret does not trigger a rollout automatically.
 
 ## Monitoring and Screeps
 
-Grafana and the Screeps agents use these internal backends; neither has LAN or Tailscale ingress:
+Loki and VictoriaMetrics are internal ClusterIP Services with no LAN or Tailscale ingress. Grafana and the Screeps agents connect to them at:
 
 ```text
 http://victoriametrics.monitoring.svc.cluster.local:8428
 http://loki.monitoring.svc.cluster.local:3100
 ```
 
-The agent appends `/api/v1/import` and `/loki/api/v1/push`; do not add those paths to its environment values. Public and private workers have separate Secrets containing only `SCREEPS_TOKEN`. Edit ordinary settings directly in `cluster/apps/screeps-agent/app.yaml`; Deployment environment changes trigger a rollout automatically. Token changes still need SOPS and a restart. The private worker's configured token is rejected with HTTP 401 and needs a valid private-server token:
+The agent appends `/api/v1/import` and `/loki/api/v1/push`; do not add those paths to its environment values. Public and private workers have separate Secrets containing only `SCREEPS_TOKEN`. Edit ordinary settings directly in `cluster/apps/screeps-agent/app.yaml`; Deployment environment changes trigger a rollout automatically. Token changes need SOPS and a restart. To rotate the private-server token:
 
 ```bash
 sops beelink/cluster/apps/screeps-agent/screeps-agent-private-env.sops.yaml
@@ -136,7 +96,7 @@ kubectl -n system-upgrade describe plan k3s-server
 ssh bee 'findmnt /data; df -h / /data; systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager'
 ```
 
-For failures, inspect pod events, storage binding, directory ownership, and application health. No scheduled application backup is configured; keep consistent off-host copies and verify restores before relying on [rebuild.md](rebuild.md).
+For failures, inspect pod events, storage binding, directory ownership, and application health. Nightly AWS S3 backups are the accepted policy and remain tracked in [TODO.md](../../TODO.md); no scheduled application backup is configured yet. Recovery requirements are in [rebuild.md](rebuild.md).
 
 ## Local validation
 

@@ -1,6 +1,6 @@
 # Rebuild
 
-Run local commands from the repository root. Tools: SSH, Python/uv, Ansible, kubectl, Flux, SOPS, and age. This procedure assumes a fresh Kubernetes cluster. For recovery on an existing cluster, stop affected workloads using [maintenance.md](maintenance.md) first.
+Run local commands from the repository root. Tools: SSH, Python/uv, Ansible, kubectl, Flux, SOPS, and age. This procedure assumes a fresh Kubernetes cluster. For recovery on an existing cluster, stop affected workloads using [maintenance.md](maintenance.md) first. Recover Hermes and Hindsight separately using [Docker operations](docker.md).
 
 ## 1. Prepare the host
 
@@ -47,7 +47,7 @@ Nanobot needs its mutable `config.json`, workspace, sessions, databases, and aut
 
 On a fresh cluster, PV/PVC objects bind by their declared names. A retained PV in `Released` state on an existing cluster needs deliberate rebinding after verifying its path and intended claim. Do not delete data to repair a binding.
 
-No scheduled backup is configured. Rebuilding cannot recover missing application data without an independently retained copy.
+Nightly AWS S3 backups are tracked in [TODO.md](../../TODO.md) and are not configured yet. Rebuilding cannot recover missing application data without an independently retained copy.
 
 ## 4. Install Flux and its decryption key
 

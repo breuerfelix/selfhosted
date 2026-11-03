@@ -7,11 +7,6 @@
     "coolify/**",
     "deprecated/**"
   ],
-  "docker-compose": {
-    "managerFilePatterns": [
-      "/(^|\\/)portainer/[^/]+\\.ya?ml$/"
-    ]
-  },
   "kubernetes": {
     "managerFilePatterns": [
       "/^(beelink|hetzner)\\/cluster\\/apps\\/.*\\.ya?ml$/",

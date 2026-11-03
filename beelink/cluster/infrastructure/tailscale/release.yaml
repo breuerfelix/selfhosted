@@ -16,7 +16,7 @@ spec:
   interval: 30m
   install:
     remediation:
-      # Credentials are supplied after bootstrap. Recover without a manual reset.
+      # Retry installation when credentials become available.
       retries: -1
   chart:
     spec:

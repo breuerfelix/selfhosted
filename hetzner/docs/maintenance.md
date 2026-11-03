@@ -4,7 +4,7 @@ Run commands from the repository root with `export KUBECONFIG="$PWD/temp/hetzner
 
 ## Application changes
 
-Both clusters remain single-node. Keep scheduling unconstrained. Existing clusters need the [static PV migration](../../shared/README.md#static-pv-migration) before deploying the `hostPath` storage manifests.
+Both clusters remain single-node. Keep scheduling unconstrained and follow the [shared storage rules](../../shared/README.md#persistent-storage).
 
 Edit the app directory under `cluster/apps/`, validate, and push reviewed changes to `main`. Flux reconciles automatically; force a refresh with:
 

@@ -12,7 +12,9 @@ Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. Ansible configures t
 | Screeps agents | `screeps-agent` | Outbound connections only | None | Image default |
 | Room Planner | `room-planner` | [Tailscale HTTPS](https://room-planner.vulture-skink.ts.net/) | None | Image default |
 
-Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. No scheduled application backup is configured.
+Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. Nightly AWS S3 backups are planned in [TODO.md](../TODO.md); no scheduled application backup is configured yet.
+
+Hermes and Hindsight run separately in Docker. Their standalone deployment definition is `/opt/hermes/compose.json` on the host; it contains credentials and is readable only by root. See [Docker operations](docs/docker.md).
 
 ```text
 beelink/
@@ -24,14 +26,12 @@ beelink/
     tailscale-sync.yaml
     infrastructure/tailscale/
     apps/                  # Manifests, storage, encrypted secrets
-  docs/                    # Rebuild, maintenance, Tailscale, Google OAuth
-  images/                  # Custom image sources and builds
+  docs/                    # Rebuild, maintenance, authentication, app operations
+  images/nanobot/          # Custom Nanobot image source and build helpers
   scripts/                 # Nanobot token helper
 ```
 
 `apps-sync.yaml` reconciles Nanobot, Papra, monitoring, Screeps agents, and Room Planner together through `apps/kustomization.yaml`, matching Hetzner's layout. Tailscale readiness gates the whole group; application health is checked together with a 15-minute timeout. Monitoring and Screeps agents can start concurrently, so initial collection attempts can fail while backends start. Room Planner exposes only a Tailscale HTTPS ingress and uses no persistent storage.
-
-Existing clusters need the [one-time ownership migration](docs/maintenance.md#consolidate-existing-app-syncs) before deploying this layout.
 
 Versions and image digests live in manifests. Renovate proposes standard app and Helm chart updates, including digest updates for Room Planner's `latest` tag. Nanobot's [image workflow](images/nanobot/README.md) builds and tests custom images, then proposes the deployment digest. Only the custom Nanobot image is excluded from direct Renovate updates.
 
@@ -39,5 +39,7 @@ Both hosts share [host maintenance, Flux components, the Git source, and K3s upg
 
 - [Rebuild](docs/rebuild.md)
 - [Maintenance, secrets, LAN access, and Screeps](docs/maintenance.md)
-- [Tailscale authentication](docs/tailscale.md)
+- [Tailscale authentication and Pi-hole DNS](docs/tailscale.md)
 - [Nanobot Google Workspace OAuth](docs/google-workspace.md)
+- [Room Planner image and access](docs/room-planner.md)
+- [Docker operations](docs/docker.md)

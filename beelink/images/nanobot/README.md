@@ -10,7 +10,7 @@ Before publication, `smoke-test.sh` starts the final image as UID:GID `1000:1000
 
 Each successful run publishes a unique tag and records its registry digest. A second job opens/updates `codex/nanobot-image`, changing only the Deployment image. Merge that PR to deploy the tested digest through Flux.
 
-GitHub Actions uses its built-in `GITHUB_TOKEN`; no personal publishing token is required in repository secrets. Repository Actions settings must allow Actions to create pull requests. Set the new GHCR package to public for anonymous cluster pulls; a new package starts private. These are one-time GitHub settings.
+GitHub Actions uses its built-in `GITHUB_TOKEN`; no personal publishing token is required in repository secrets. Repository Actions settings must allow Actions to create pull requests. Keep the GHCR package public for anonymous cluster pulls.
 
 For upgrades, change both version and commit in `source.json`, review the pinned upstream changes, and merge. CI builds/tests/publishes and proposes the resulting digest. A source pin does not freeze upstream base-image tags or Python dependency resolution; the Deployment digest freezes the actual artifact. Existing builds remain available for rollback.
 

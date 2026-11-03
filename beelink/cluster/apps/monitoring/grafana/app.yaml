@@ -33,7 +33,7 @@ spec:
               value: "false"
             - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
               value: "false"
-            # Plugin already exists on retained volume; never upgrade on startup.
+            # Manage plugins on the data volume; disable startup installation.
             - name: GF_PLUGINS_PREINSTALL_DISABLED
               value: "true"
             - name: GF_SERVER_ROOT_URL
