@@ -5,4 +5,4 @@ resources:
   - ./papra
   - ./monitoring
   - ./screeps-agent
-# Room Planner stays excluded while its separate Flux sync is suspended.
+  - ./room-planner

@@ -28,8 +28,7 @@
     {
       "matchManagers": ["kubernetes"],
       "matchPackageNames": [
-        "ghcr.io/breuerfelix/nanobot",
-        "ghcr.io/breuerfelix/screeps-room-planner"
+        "ghcr.io/breuerfelix/nanobot"
       ],
       "enabled": false
     },

@@ -18,7 +18,7 @@ To add an app, create its directory and list it in `cluster/apps/kustomization.y
 
 For data maintenance, set `suspend: true` on the shared `apps` sync in Git, push, and reconcile the root. Verify suspension, scale the affected Deployment to zero, and wait for its pods to terminate. Suspension pauses reconciliation for all active apps but does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
 
-Room Planner remains suspended. Its registry and application setup need separate work; see its [image notes](../images/room-planner/README.md).
+Room Planner shares the `apps` sync and is exposed only through Tailscale. Its public image needs no pull secret; Renovate proposes updates to its pinned `latest` digest. See its [image notes](../images/room-planner/README.md).
 
 ## Consolidate existing app syncs
 

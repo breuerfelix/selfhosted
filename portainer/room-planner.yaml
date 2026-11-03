@@ -1,6 +1,4 @@
-# The GHCR package is private. Configure Portainer with a read-only
-# ghcr.io registry credential (for a GitHub PAT, grant read:packages) before
-# deploying this stack. Keep the credential in Portainer, not in Git.
+# The GHCR package is public; no registry credential is required.
 services:
   room-planner:
     container_name: room-planner

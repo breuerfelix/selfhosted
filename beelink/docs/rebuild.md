@@ -91,7 +91,7 @@ flux reconcile kustomization tailscale --timeout=10m
 flux reconcile kustomization apps --timeout=15m
 ```
 
-Tailscale readiness gates the single `apps` sync for Nanobot, Papra, monitoring, and Screeps agents. These applications reconcile together and can start concurrently; the sync waits for their combined health. Room Planner stays excluded from that group and its separate sync remains suspended. The shared upgrade Plan waits for the separate system-upgrade-controller sync to install its CRD and pass health checks.
+Tailscale readiness gates the single `apps` sync for Nanobot, Papra, monitoring, Screeps agents, and Room Planner. These applications reconcile together and can start concurrently; the sync waits for their combined health. Room Planner needs no storage or registry credentials. The shared upgrade Plan waits for the separate system-upgrade-controller sync to install its CRD and pass health checks.
 
 ## 6. Verify
 

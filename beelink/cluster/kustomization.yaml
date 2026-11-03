@@ -4,5 +4,4 @@ resources:
   - ./flux-system
   - ./tailscale-sync.yaml
   - ./apps-sync.yaml
-  - ./room-planner-sync.yaml
   - ./shared-sync.yaml

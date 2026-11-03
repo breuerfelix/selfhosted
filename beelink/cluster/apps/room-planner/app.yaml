@@ -15,23 +15,19 @@ spec:
       labels:
         app: room-planner
     spec:
-      imagePullSecrets:
-        - name: ghcr
       containers:
         - name: room-planner
-          # Pinned application build.
-          image: ghcr.io/breuerfelix/screeps-room-planner@sha256:eaf7c898d6dc7bfba9389062490673663e2887ac725e2209672d6d53f7d0b635
+          image: ghcr.io/breuerfelix/screeps-room-planner:latest@sha256:c009dd2f14e060983348972465fc7f7b5189adfb4f025da0291fafe01dd2c63f
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
               value: "3001"
             - name: ROOM_PLANNER_PROXY_URL
               value: http://127.0.0.1:3001
+            - name: __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+              value: room-planner.vulture-skink.ts.net
             - name: SCREEPS_LOCAL_SERVER_URL
               value: https://screeps.felixbreuer.me
-            # Also baked into frontend assets by the pinned Dockerfile.
-            - name: VITE_ROOM_PLANNER_API_BASE_URL
-              value: /plan
           ports:
             - name: http
               containerPort: 5173

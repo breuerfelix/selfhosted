@@ -1,32 +1,20 @@
 # Room Planner image
 
-`source.json` records the pinned source revision, original Node base,
-live generated lockfile hash, immutable build commit, image digest, and CI run.
-The source repository is private; the image remains private.
+The source repository `breuerfelix/screeps-room-planner` is private; its GHCR
+package is public and supports anonymous pulls. No registry Secret is required.
 
-Build recipe lives at the exact `buildCommit` in
-`breuerfelix/screeps-room-planner`, branch `codex/k3s-room-planner`.
-That branch starts at the running version, not upstream main. Its only changes
-are the captured lockfile, digest-pinned Dockerfile with frozen installation,
-and pinned Actions workflow with a no-network UI/proxy smoke test. Dispatch
-`room-planner-image.yml` on this branch to reproduce the build. Do not merge this
-old application branch over current upstream main.
+The upstream `room-planner-image.yml` workflow publishes `latest` on pushes to
+`main`. The Deployment in `cluster/apps/room-planner/app.yaml` uses
+`latest@sha256:…`; Renovate proposes digest updates through the normal Kubernetes
+manager. Merge those updates to deploy through the shared `apps` Flux sync.
 
-Build tags are `k3s-<full-build-commit>`; deployment always pins the tested digest.
-A future rebuild must pass smoke tests and receive an explicit digest update.
-Review dependency and frontend API URL changes before updating the build.
+The image builds the frontend with `VITE_ROOM_PLANNER_API_BASE_URL=/plan`.
+Runtime `ROOM_PLANNER_PROXY_URL` points the UI server at its local proxy on port
+3001. `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS` allows the exact Tailscale hostname
+through Vite's host check. Only the UI port 5173 is exposed through the ClusterIP
+Service and Tailscale HTTPS ingress. No LAN service, public ingress, or Funnel is
+configured.
 
-Configure private registry access using a token with `read:packages` and access
-to this package:
-
-```bash
-python3 beelink/scripts/configure-room-planner-registry.py
-```
-
-The helper verifies access to the exact pinned digest, keeps credentials in
-memory, writes only a SOPS-encrypted Secret using the existing Beelink recipient,
-and adds it to Kustomize. It does not change Flux suspension or the cluster.
-A token already stored in a protected local file can be passed through
-`--token-file /absolute/path`. Never pass the token itself as an argument.
-
-The Flux sync remains suspended. Application fixes and registry access are required before enabling it.
+`source.json` records the historical migration build on `codex/k3s-room-planner`.
+It is retained for provenance and does not select the running image. That branch
+starts at the old application version; do not merge it over upstream `main`.

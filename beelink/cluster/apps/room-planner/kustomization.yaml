@@ -4,4 +4,3 @@ resources:
   - namespace.yaml
   - app.yaml
   - ingress.yaml
-# Add ghcr.sops.yaml with scripts/configure-room-planner-registry.py before unsuspending.
