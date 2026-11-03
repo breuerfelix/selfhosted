@@ -33,7 +33,7 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 | --- | --- | --- | --- |
 | Ghost | `danielkueffler.de` | `/srv/k3s-data/ghost` | Restore content and SQLite database |
 | Fathom | `stats.felixbreuer.me` | `/srv/k3s-data/fathom` | Restore SQLite database |
-| Screeps | `screeps.felixbreuer.me` | `local-path` PVC | World data is disposable; config is in Git |
+| Screeps | `screeps.felixbreuer.me` | `/data/coolify/applications/screeps` | Preserve the original server's world and player data; config is in Git |
 | Noobgallery | `photos.felixbreuer.me` | None | Recreate from image |
 | Redirect | `felixbreuer.me` → `https://breuer.dev/` | None | Recreate from Git |
 

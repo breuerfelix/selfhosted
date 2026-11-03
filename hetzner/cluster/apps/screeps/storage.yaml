@@ -1,4 +1,23 @@
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: screeps-data
+spec:
+  capacity:
+    storage: 3Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: apps
+    name: screeps-data
+  hostPath:
+    path: /data/coolify/applications/screeps
+    type: Directory
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: screeps-data
@@ -6,7 +25,9 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: local-path
+  volumeMode: Filesystem
+  storageClassName: ""
+  volumeName: screeps-data
   resources:
     requests:
       storage: 3Gi

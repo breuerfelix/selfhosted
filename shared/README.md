@@ -68,7 +68,7 @@ The retained static PVs now use `hostPath` with `type: Directory`. Host director
 Affected storage manifests under each host's `cluster/apps/`:
 
 - Beelink: `nanobot/storage.yaml`, `papra/storage.yaml`, `monitoring/grafana/storage.yaml`, `monitoring/loki/storage.yaml`, and `monitoring/victoriametrics/storage.yaml`.
-- Hetzner: `ghost/storage.yaml` and `fathom/storage.yaml`. Screeps's dynamic PVC is unchanged.
+- Hetzner: `ghost/storage.yaml` and `fathom/storage.yaml`. Screeps's separate migration from dynamic storage to the original Docker data directory is described below.
 
 Perform this procedure separately for each cluster, using its kubeconfig:
 
@@ -77,6 +77,12 @@ Perform this procedure separately for each cluster, using its kubeconfig:
 3. Publish the change. Delete only the affected PVCs, then their PVs, using the exact names and namespaces from the storage manifests. Wait for deletion to complete; do not remove finalizers or delete namespaces or host directories. `Retain` preserves the host files.
 4. Apply each affected `storage.yaml` from this revision with `kubectl apply -f <path>`. Verify every claim is `Bound`, every PV uses the original path, and directory ownership is correct. Do not continue if storage is missing or binding fails.
 5. Fetch the new Git revision with `flux reconcile source git flux-system` and verify it contains these manifests. Resume the root and apps syncs, reconcile, and check application rollouts and retained data. Flux restores the declared replica counts, including the stopped agents.
+
+### Hetzner Screeps
+
+Screeps uses a retained `hostPath` PV at `/data/coolify/applications/screeps`, the original Docker server's data directory. Preserve that path and its ownership. Keep the old Docker container stopped to prevent concurrent writers.
+
+For an existing dynamic `screeps-data` claim, suspend root and apps reconciliation, stop the Kubernetes Deployment, and wait for its pods to terminate. Record the dynamic PV's exact name and path and set its reclaim policy to `Retain` before deleting the claim. Apply `hetzner/cluster/apps/screeps/storage.yaml` to create the static PV and replacement claim. Verify binding and the restored player/world data before deleting the old dynamic PV and its exact provisioned directory. Do not delete the `/data` directory. Publish the manifests and resume reconciliation against the new revision so Flux cannot restore the dynamic claim. Future claim deletion retains the original server data; host cleanup remains manual.
 
 ## Validation and routine checks
 
