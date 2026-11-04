@@ -5,7 +5,6 @@ One Ubuntu 24.04 VPS running K3s, Flux, and personal applications. Downtime is a
 - [Rebuild](rebuild.md): prerequisites, host setup, data restore, and Flux bootstrap.
 - [Maintenance](maintenance.md): app changes, secrets, updates, and troubleshooting.
 - [Shared maintenance](../../shared/README.md): common host policy, K3s upgrades, and Flux components.
-- [Coolify cleanup](../../cleanup.md): verified leftovers, active data exclusions, and remaining teardown work.
 
 ## Layout
 
@@ -26,7 +25,7 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 
 - **K3s:** single server with SQLite, bundled containerd, Traefik, ServiceLB, CoreDNS, and local-path storage. Ansible installs the initial version; the Flux-managed upgrade Plan handles later patches.
 - **Flux:** source, Kustomize, and Helm controllers. Uses the shared Git source to read this public GitHub repository over HTTPS without Git credentials. The root sync installs infrastructure and waits for cert-manager. The `apps` sync depends on root readiness. A shared parent creates separate syncs for Flux itself, the upgrade controller, and its Plan; the Plan waits for upgrade-controller readiness. Upgrade-controller rollout health does not block app reconciliation. Apps have their own rollout health checks.
-- **TLS:** cert-manager issues and renews Let's Encrypt certificates through HTTP-01. Traefik redirects HTTP to HTTPS globally, allows ACME challenges, and preserves the direct domain redirect.
+- **DNS and TLS:** wildcard DNS points to the VPS. Each app declares its Ingress and TLS configuration; cert-manager issues and renews Let's Encrypt certificates through HTTP-01. Traefik redirects HTTP to HTTPS globally, allows ACME challenges, and preserves the direct domain redirect.
 - **Secrets:** SOPS with age. Encrypted config stays in Git; the private key belongs in a password manager and `flux-system/sops-age`.
 - **Storage:** retained `hostPath` PVs for data that must survive claim deletion; local-path PVCs for disposable data. Capacity declarations do not enforce disk quotas. All data shares the server disk.
 
@@ -34,7 +33,7 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 | --- | --- | --- | --- |
 | Ghost | `danielkueffler.de` | `/data/ghost` | Restore content and SQLite database |
 | Fathom | `stats.felixbreuer.me` | `/data/fathom` | Restore SQLite database |
-| Screeps | `screeps.felixbreuer.me` | `/data/screeps` | Preserve the original server's world and player data; config is in Git |
+| Screeps | `screeps.felixbreuer.me` | `/data/screeps` | Restore world and player data; config is in Git |
 | Noobgallery | `photos.felixbreuer.me` | None | Recreate from image |
 | Redirect | `felixbreuer.me` → `https://breuer.dev/` | None | Recreate from Git |
 
@@ -44,4 +43,4 @@ These policies describe data requirements, not different deployment procedures. 
 
 Versions and image digests live in manifests, not documentation. Renovate proposes app images, Flux manifests, and cert-manager chart updates. Review before merging to `main`: Flux applies merged changes automatically.
 
-Host configuration lives in Ansible. Application data lives on the VPS and is not reconstructed from Git. **No scheduled backup is configured.** Keep current, consistent off-server backups of data you want to retain and keep the age identity separately recoverable. `Retain` preserves local files after claim deletion; it does not protect against disk loss.
+Host configuration lives in Ansible. Application data lives under `/data` on the VPS and is not reconstructed from Git. Nightly AWS S3 backups are planned in [TODO.md](../../TODO.md) and are not yet configured. No ad hoc volume backups are required before changes or rollouts. Keep the age identity separately recoverable. `Retain` preserves local files after claim deletion; it does not protect against disk loss.

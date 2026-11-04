@@ -3,10 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "ignorePaths": [
-    "coolify/**",
-    "deprecated/**"
-  ],
   "kubernetes": {
     "managerFilePatterns": [
       "/^(beelink|hetzner)\\/cluster\\/apps\\/.*\\.ya?ml$/",
