@@ -14,7 +14,7 @@ spec:
     namespace: apps
     name: ghost-content
   hostPath:
-    path: /srv/k3s-data/ghost
+    path: /data/ghost
     type: Directory
 ---
 apiVersion: v1

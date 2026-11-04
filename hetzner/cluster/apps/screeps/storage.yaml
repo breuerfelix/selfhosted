@@ -14,7 +14,7 @@ spec:
     namespace: apps
     name: screeps-data
   hostPath:
-    path: /data/coolify/applications/screeps
+    path: /data/screeps
     type: Directory
 ---
 apiVersion: v1

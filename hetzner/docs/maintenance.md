@@ -86,3 +86,17 @@ Moving files within the same Flux Kustomization does not change ownership. Movin
 4. Restore `prune: true` in Git and reconcile.
 
 See [Flux's resource-move procedure](https://fluxcd.io/flux/faq/#how-can-i-safely-move-resources-from-one-dir-to-another).
+
+## Moving application data directories
+
+Ghost, Fathom, and Screeps use `/data/ghost`, `/data/fathom`, and `/data/screeps`. Preserve numeric ownership and permissions when moving data. A PV's `hostPath` source is immutable, so changing its path requires replacing the PV/PVC objects while application writers are stopped.
+
+For an explicitly planned path migration:
+
+1. Select the Hetzner kubeconfig. Annotate the `flux-system` and `apps` Flux Kustomizations with `kustomize.toolkit.fluxcd.io/reconcile=disabled`, then set `spec.suspend: true` on both. The annotation prevents parent reconciliation of these objects; `spec.suspend` pauses their own reconciliation. Confirm neither sync is reconciling.
+2. Scale affected Deployments to zero and wait for their pods to disappear. Keep the retired Docker containers stopped.
+3. Verify target directories do not exist. Move the full directories on the host, preserving ownership and permissions, and verify data at the new paths. Same-filesystem directory renames preserve file identities.
+4. Update the application `storage.yaml` files, `ansible/storage.yml`, and operations docs. Validate and push the changes to `main`. Keep the committed Deployment replica counts at one.
+5. Confirm each affected PV uses `Retain`. Delete the stopped applications' PVCs, then their old PV objects. Apply the updated storage manifests and verify every replacement claim is Bound to the intended path. Do not delete host files or remove protection finalizers to force this step.
+6. Reconcile the Git source and verify its artifact contains the pushed commit before resuming either sync. Remove both reconcile-disable annotations, resume the root sync and reconcile it, then resume and reconcile `apps`. Flux restores the declared replicas.
+7. Check Flux readiness, PV paths/bindings, ownership, application data, and public HTTPS routes. Confirm no temporary pause annotation remains.

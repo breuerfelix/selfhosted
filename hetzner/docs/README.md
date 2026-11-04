@@ -5,6 +5,7 @@ One Ubuntu 24.04 VPS running K3s, Flux, and personal applications. Downtime is a
 - [Rebuild](rebuild.md): prerequisites, host setup, data restore, and Flux bootstrap.
 - [Maintenance](maintenance.md): app changes, secrets, updates, and troubleshooting.
 - [Shared maintenance](../../shared/README.md): common host policy, K3s upgrades, and Flux components.
+- [Coolify cleanup](../../cleanup.md): verified leftovers, active data exclusions, and remaining teardown work.
 
 ## Layout
 
@@ -31,9 +32,9 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 
 | App | Public host | Storage | Recovery policy |
 | --- | --- | --- | --- |
-| Ghost | `danielkueffler.de` | `/srv/k3s-data/ghost` | Restore content and SQLite database |
-| Fathom | `stats.felixbreuer.me` | `/srv/k3s-data/fathom` | Restore SQLite database |
-| Screeps | `screeps.felixbreuer.me` | `/data/coolify/applications/screeps` | Preserve the original server's world and player data; config is in Git |
+| Ghost | `danielkueffler.de` | `/data/ghost` | Restore content and SQLite database |
+| Fathom | `stats.felixbreuer.me` | `/data/fathom` | Restore SQLite database |
+| Screeps | `screeps.felixbreuer.me` | `/data/screeps` | Preserve the original server's world and player data; config is in Git |
 | Noobgallery | `photos.felixbreuer.me` | None | Recreate from image |
 | Redirect | `felixbreuer.me` → `https://breuer.dev/` | None | Recreate from Git |
 

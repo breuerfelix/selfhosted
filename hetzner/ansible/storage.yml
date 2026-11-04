@@ -12,18 +12,18 @@
         group: '0'
         mode: '0755'
       loop:
-        - { path: /srv/k3s-data, owner: '0' }
-        - { path: /srv/k3s-data/ghost, owner: '1000' }
-        - { path: /srv/k3s-data/fathom, owner: '0' }
+        - { path: /data, owner: '0' }
+        - { path: /data/ghost, owner: '1000' }
+        - { path: /data/fathom, owner: '0' }
 
-    - name: Check original Screeps data directory
+    - name: Check Screeps data directory
       ansible.builtin.stat:
-        path: /data/coolify/applications/screeps
+        path: /data/screeps
       register: screeps_data
 
     - name: Create Screeps data directory on a fresh host
       ansible.builtin.file:
-        path: /data/coolify/applications/screeps
+        path: /data/screeps
         state: directory
         owner: '1000'
         group: '1000'

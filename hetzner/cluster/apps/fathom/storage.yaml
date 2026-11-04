@@ -14,7 +14,7 @@ spec:
     namespace: apps
     name: fathom-data
   hostPath:
-    path: /srv/k3s-data/fathom
+    path: /data/fathom
     type: Directory
 ---
 apiVersion: v1
