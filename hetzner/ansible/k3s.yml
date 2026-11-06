@@ -6,7 +6,7 @@
     k3s_config_content: |
       # Managed by selfhosted/hetzner/ansible/k3s.yml
       tls-san:
-        - "{{ ansible_default_ipv4.address }}"
+        - "{{ ansible_facts['default_ipv4']['address'] }}"
       write-kubeconfig-mode: "0600"
   roles:
     - ../../shared/ansible/roles/k3s

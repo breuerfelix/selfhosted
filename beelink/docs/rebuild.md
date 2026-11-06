@@ -10,7 +10,7 @@ Mount the data SSD at `/data` through `/etc/fstab`. Its UUID must match `data_uu
 
 ```bash
 ssh bee 'hostname; findmnt --mountpoint /data --output TARGET,SOURCE,UUID'
-uv venv temp/ansible-venv
+uv venv --python 3.13 temp/ansible-venv
 uv pip install --python temp/ansible-venv/bin/python -r shared/ansible/requirements.txt
 temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml
 ssh bee 'k3s kubectl get nodes -o wide; systemctl show k3s -p RequiresMountsFor -p BindsTo'
