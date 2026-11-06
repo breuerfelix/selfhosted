@@ -6,13 +6,17 @@ on:
     paths:
       - .github/workflows/build-backups.yml
       - shared/images/backups/**
+  pull_request:
+    paths:
+      - .github/workflows/build-backups.yml
+      - shared/images/backups/**
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: backups-image
+  group: backups-image-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -28,10 +32,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Match the deployment image to the Dockerfile
+      - name: Set the Dockerfile hash tag
         run: |
           IMAGE="$IMAGE_NAME:build-$(sha256sum shared/images/backups/Dockerfile | cut -d ' ' -f 1)"
-          grep -Fx "              image: $IMAGE" shared/cluster/backups/cronjob.yaml
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Build the backup tools
@@ -56,13 +59,17 @@ jobs:
               kubectl version --client=true
             '
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish the tested image
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           docker push "$IMAGE"
+          docker tag "$IMAGE" "$IMAGE_NAME:latest"
+          docker push "$IMAGE_NAME:latest"
           reference=$(docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}')
-          printf '## Backup image\n\nTag: `%s`\n\nDigest: `%s`\n\nMake the GHCR package public so both clusters can pull it.\n' \
-            "$IMAGE" "$reference" >> "$GITHUB_STEP_SUMMARY"
+          printf '## Backup image\n\nTags: `%s`, `%s:latest`\n\nDigest: `%s`\n\nMake the GHCR package public so both clusters can pull it.\n' \
+            "$IMAGE" "$IMAGE_NAME" "$reference" >> "$GITHUB_STEP_SUMMARY"

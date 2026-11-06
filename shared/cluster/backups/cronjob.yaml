@@ -18,8 +18,8 @@ spec:
           terminationGracePeriodSeconds: 120
           containers:
             - name: backup
-              # GitHub Actions publishes this Dockerfile hash tag; update it when the Dockerfile changes.
-              image: ghcr.io/breuerfelix/selfhosted/restic-kubectl:build-23806715915728d013966d2ff149f23331f76246cda5b44c05528e764c869270
+              image: ghcr.io/breuerfelix/selfhosted/restic-kubectl:latest
+              imagePullPolicy: Always
               command: [/bin/sh, /scripts/backup.sh]
               envFrom:
                 - configMapRef:

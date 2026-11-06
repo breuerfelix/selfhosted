@@ -17,6 +17,13 @@
   },
   "packageRules": [
     {
+      "matchManagers": ["dockerfile"],
+      "matchFileNames": ["shared/images/backups/Dockerfile"],
+      "matchPackageNames": ["registry.k8s.io/kubectl", "restic/restic"],
+      "automerge": true,
+      "platformAutomerge": false
+    },
+    {
       "matchManagers": ["kubernetes"],
       "matchPackageNames": [
         "ghcr.io/breuerfelix/nanobot"
