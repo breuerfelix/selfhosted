@@ -1,5 +1,7 @@
 # Shared host and cluster maintenance
 
+Nightly application backup setup and restore instructions: [backups](cluster/backups/README.md).
+
 Hetzner and Beelink use the same Ubuntu update policy, K3s bootstrap tasks, Flux components, and K3s upgrade resources. Inventories, K3s configuration, storage checks, applications, and app sync definitions remain in each host directory. The Git source and shared component syncs are shared; repository-root `.sops.yaml` owns encryption rules for both hosts.
 
 ## Ubuntu updates
@@ -79,9 +81,9 @@ in `Released` state, verify its path and intended claim, then rebind it
 explicitly using the host's recovery instructions. Stop application writers
 before restoring data.
 
-Nightly AWS S3 backups are the accepted policy and are tracked in
-[TODO.md](../TODO.md); no ad hoc volume backups are required before changes or
-rollouts.
+Nightly AWS S3 backups are the accepted policy and use the shared restic base in
+[shared/cluster/backups](cluster/backups/README.md); no ad hoc volume backups are
+required before changes or rollouts.
 
 ## Validation and routine checks
 

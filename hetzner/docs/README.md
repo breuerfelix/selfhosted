@@ -13,7 +13,7 @@ hetzner/
   ansible/                 # Host setup; site.yml runs all playbooks
   cluster/
     flux-system/          # Cluster root sync
-    shared-sync.yaml      # Entry point for shared component syncs
+    shared-sync.yaml      # Shared components and backup patches
     infrastructure/       # cert-manager and Traefik config
     apps/                 # Shared namespace/issuer and app directories
   docs/
@@ -43,4 +43,4 @@ These policies describe data requirements, not different deployment procedures. 
 
 Versions and image digests live in manifests, not documentation. Renovate proposes app images, Flux manifests, and cert-manager chart updates. Review before merging to `main`: Flux applies merged changes automatically.
 
-Host configuration lives in Ansible. Application data lives under `/data` on the VPS and is not reconstructed from Git. Nightly AWS S3 backups are planned in [TODO.md](../../TODO.md) and are not yet configured. No ad hoc volume backups are required before changes or rollouts. Keep the age identity separately recoverable. `Retain` preserves local files after claim deletion; it does not protect against disk loss.
+Host configuration lives in Ansible. Application data lives under `/data` on the VPS and is not reconstructed from Git. The [nightly S3 backup](../../shared/cluster/backups/README.md) ships suspended until setup is complete. No ad hoc volume backups are required before changes or rollouts. Keep the age identity separately recoverable. `Retain` preserves local files after claim deletion; it does not protect against disk loss.

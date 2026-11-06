@@ -1,0 +1,28 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:GetBucketLocation",
+      "Resource": "arn:aws:s3:::breuerfelix-k3s-backup"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::breuerfelix-k3s-backup",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["beelink", "beelink/*", "hetzner", "hetzner/*"]
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::breuerfelix-k3s-backup/beelink/*",
+        "arn:aws:s3:::breuerfelix-k3s-backup/hetzner/*"
+      ]
+    }
+  ]
+}

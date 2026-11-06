@@ -16,7 +16,7 @@ kubectl get deploy,pvc -A
 
 To add an app, create its directory and list it in `cluster/apps/kustomization.yaml`. All Kubernetes applications share reconciliation, health checks, and suspension. Monitoring and Screeps agents can start concurrently. Use one replica and `Recreate` for single-writer storage. Keep PV/PVC names, paths, and numeric ownership stable. Flux prunes namespaces and PV/PVC objects removed from Git. Static `hostPath` volumes use `Retain`, so their host directories survive PVC, PV, or namespace deletion; host data cleanup is manual. `Retain` does not provide backups or automatic rebinding.
 
-For data maintenance, set `suspend: true` on the shared `apps` sync in Git, push, and reconcile the root. Verify suspension, scale the affected Deployment to zero, and wait for its pods to terminate. Suspension pauses reconciliation for all active apps but does not stop pods. For monitoring, stop dependent Screeps agents first and stop all three monitoring Deployments before restoring their data. Restore and verify while stopped, then remove suspension in Git and reconcile. Never delete a namespace to stop an app: namespace deletion also deletes PVCs.
+For data maintenance, follow the [backup runbook's restore procedure](../../shared/cluster/backups/README.md#restore-one-application). Suspend the CronJob in Git and wait for any active Job, then pause Flux reconciliation on the affected Deployment and scale it down. Restore and verify the data before restarting the workload and enabling the schedule.
 
 Room Planner shares the `apps` sync and is exposed only through Tailscale. Its public image needs no pull secret; Renovate proposes updates to its pinned `latest` digest. See [Room Planner operations](room-planner.md).
 
@@ -96,7 +96,7 @@ kubectl -n system-upgrade describe plan k3s-server
 ssh bee 'findmnt /data; df -h / /data; systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager'
 ```
 
-For failures, inspect pod events, storage binding, directory ownership, and application health. Nightly AWS S3 backups are the accepted policy and remain tracked in [TODO.md](../../TODO.md); no scheduled application backup is configured yet. Recovery requirements are in [rebuild.md](rebuild.md).
+For failures, inspect pod events, storage binding, directory ownership, and application health. The [nightly S3 backup runbook](../../shared/cluster/backups/README.md) covers setup, operation and recovery. Recovery requirements are in [rebuild.md](rebuild.md).
 
 ## Local validation
 

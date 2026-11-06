@@ -47,7 +47,7 @@ Nanobot needs its mutable `config.json`, workspace, sessions, databases, and aut
 
 On a fresh cluster, PV/PVC objects bind by their declared names. A retained PV in `Released` state on an existing cluster needs deliberate rebinding after verifying its path and intended claim. Do not delete data to repair a binding.
 
-Nightly AWS S3 backups are tracked in [TODO.md](../../TODO.md) and are not configured yet. Rebuilding cannot recover missing application data without an independently retained copy.
+See the [nightly S3 backup runbook](../../shared/cluster/backups/README.md) for restore commands. Rebuilding cannot recover missing application data without an independently retained copy.
 
 ## 4. Install Flux and its decryption key
 

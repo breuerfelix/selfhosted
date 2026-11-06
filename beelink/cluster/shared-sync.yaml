@@ -10,3 +10,24 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  # The shared tree now contains the SOPS-encrypted backup credentials.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  patches:
+    - target:
+        kind: ConfigMap
+        name: backup-config
+        namespace: backups
+      patch: |
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: backup-config
+          namespace: backups
+        data:
+          RESTIC_HOST: beelink
+          APPS: |
+            nanobot/nanobot
+            papra/papra

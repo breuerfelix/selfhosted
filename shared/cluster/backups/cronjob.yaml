@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backups
+spec:
+  suspend: false
+  schedule: "0 0 * * *"
+  timeZone: Europe/Berlin
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      # A failed run must restore its app, not start another backup attempt.
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: backups
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 120
+          containers:
+            - name: backup
+              # GitHub Actions publishes this Dockerfile hash tag; update it when the Dockerfile changes.
+              image: ghcr.io/breuerfelix/selfhosted/restic-kubectl:build-23806715915728d013966d2ff149f23331f76246cda5b44c05528e764c869270
+              command: [/bin/sh, /scripts/backup.sh]
+              envFrom:
+                - configMapRef:
+                    name: backup-config
+                - secretRef:
+                    name: backup-credentials
+              env:
+                - name: HOME
+                  value: /tmp
+                - name: RESTIC_CACHE_DIR
+                  value: /tmp/restic-cache
+              securityContext:
+                # Read all app owners' files without changing ownership.
+                runAsUser: 0
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+                  add: [DAC_READ_SEARCH]
+              volumeMounts:
+                # Single read-only mount; APPS selects the directories to back up.
+                - name: data
+                  mountPath: /data
+                  readOnly: true
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: data
+              hostPath:
+                path: /data
+                type: Directory
+            - name: script
+              configMap:
+                name: backup-script
+            - name: tmp
+              emptyDir: {}

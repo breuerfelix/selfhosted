@@ -47,7 +47,7 @@ After upgrades, check Flux, node readiness, PVCs, certificates, and public route
 
 ## Backups
 
-Nightly AWS S3 backups are planned in [TODO.md](../../TODO.md) and are not yet configured. No ad hoc volume backups are required before changes or rollouts. Recovery requirements are documented in [rebuild.md](rebuild.md).
+The [nightly S3 backup runbook](../../shared/cluster/backups/README.md) covers setup, operation and recovery. No ad hoc volume backups are required before changes or rollouts. Recovery requirements are documented in [rebuild.md](rebuild.md).
 
 ## Routine checks
 

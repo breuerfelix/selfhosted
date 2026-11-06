@@ -12,7 +12,7 @@ Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. Ansible configures t
 | Screeps agents | `screeps-agent` | Outbound connections only | None | Image default |
 | Room Planner | `room-planner` | [Tailscale HTTPS](https://room-planner.vulture-skink.ts.net/) | None | Image default |
 
-Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. Nightly AWS S3 backups are planned in [TODO.md](../TODO.md); no scheduled application backup is configured yet.
+Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. The [nightly S3 backup](../shared/cluster/backups/README.md) ships suspended until setup is complete.
 
 Hermes and Hindsight run separately in Docker. Their standalone deployment definition is `/opt/hermes/compose.json` on the host; it contains credentials and is readable only by root. See [Docker operations](docs/docker.md).
 
@@ -21,7 +21,7 @@ beelink/
   ansible/                 # Host configuration and SSD guard
   cluster/
     flux-system/           # Cluster root sync
-    shared-sync.yaml       # Entry point for shared component syncs
+    shared-sync.yaml       # Shared components and backup patches
     apps-sync.yaml         # One sync for all active apps, after Tailscale
     tailscale-sync.yaml
     infrastructure/tailscale/
