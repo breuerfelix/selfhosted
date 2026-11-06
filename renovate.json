@@ -3,6 +3,19 @@
   "extends": [
     "config:recommended"
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^beelink\\/images\\/nanobot\\/source\\.json$/"],
+      "matchStrings": [
+        "\"repository\":\\s*\"(?<depName>[^\"]+)\",\\s*\"commit\":\\s*\"(?<currentDigest>[a-f0-9]{40})\",\\s*\"version\":\\s*\"(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "currentValueTemplate": "v{{{version}}}",
+      "autoReplaceStringTemplate": "\"repository\": \"{{{depName}}}\",\n  \"commit\": \"{{{newDigest}}}\",\n  \"version\": \"{{{replace '^v' '' newValue}}}\""
+    }
+  ],
   "kubernetes": {
     "managerFilePatterns": [
       "/^(beelink|hetzner)\\/cluster\\/apps\\/.*\\.ya?ml$/",

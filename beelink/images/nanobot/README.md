@@ -12,7 +12,7 @@ Each successful run publishes a unique tag and records its registry digest. A se
 
 GitHub Actions uses its built-in `GITHUB_TOKEN`; no personal publishing token is required in repository secrets. Repository Actions settings must allow Actions to create pull requests. Keep the GHCR package public for anonymous cluster pulls.
 
-For upgrades, change both version and commit in `source.json`, review the pinned upstream changes, and merge. CI builds/tests/publishes and proposes the resulting digest. A source pin does not freeze upstream base-image tags or Python dependency resolution; the Deployment digest freezes the actual artifact. Existing builds remain available for rollback.
+Renovate tracks upstream GitHub releases and opens upgrade PRs updating both version and commit in `source.json`. Review the pinned upstream changes and merge. CI builds/tests/publishes and proposes the resulting digest in a separate deployment PR; merge that PR to deploy. Direct Renovate updates to the custom image remain disabled so deployment uses the tested artifact. Manual upgrades can also change both source pins. A source pin does not freeze upstream base-image tags or Python dependency resolution; the Deployment digest freezes the actual artifact. Existing builds remain available for rollback.
 
 For additional CLIs or stdio MCP servers, add their installation steps to the local `Dockerfile` before `USER nanobot`, and extend `smoke-test.sh` to check their commands. MCP server configuration and authentication remain runtime settings; do not bake credentials into the image. Standalone HTTP MCP services can be deployed separately and connected through Nanobot configuration. Changes in this directory already trigger the image workflow.
 
