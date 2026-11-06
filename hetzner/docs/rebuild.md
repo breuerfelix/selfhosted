@@ -13,7 +13,7 @@ Retained `hostPath` PVs use the directories declared in each app's `storage.yaml
 ## 2. Configure Ubuntu, storage, and K3s
 
 ```bash
-uv venv temp/ansible-venv
+uv venv --python 3.13 temp/ansible-venv
 uv pip install --python temp/ansible-venv/bin/python -r shared/ansible/requirements.txt
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml
 ```

@@ -19,10 +19,12 @@ The shared `ubuntu_updates` role owns the complete allowed-origins list: Ubuntu 
 
 APT timers have no randomized delay and do not catch up missed runs. The spring daylight-saving transition skips the 02:00 run. Updates can restart services, and a long package upgrade or reboot can extend beyond its intended window. These windows do not enforce mutual exclusion between APT and Kubernetes upgrades. Ubuntu release upgrades and Docker application image updates are not included.
 
+Ansible runs locally with Python 3.13. The managed Ubuntu hosts keep their system Python. To replace an older local environment, run `uv venv --clear --python 3.13 temp/ansible-venv` before installing the requirements.
+
 From the repository root:
 
 ```bash
-uv venv temp/ansible-venv
+uv venv --python 3.13 temp/ansible-venv
 uv pip install --python temp/ansible-venv/bin/python -r shared/ansible/requirements.txt
 temp/ansible-venv/bin/ansible-playbook -i hetzner/ansible/inventory.ini hetzner/ansible/site.yml --check --diff
 temp/ansible-venv/bin/ansible-playbook -i beelink/ansible/inventory.ini beelink/ansible/site.yml --check --diff

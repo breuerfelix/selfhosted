@@ -9,10 +9,10 @@
     k3s_config_content: |
       # Managed by selfhosted/beelink/ansible/k3s.yml
       node-name: beelink
-      node-ip: "{{ ansible_default_ipv4.address }}"
-      flannel-iface: "{{ ansible_default_ipv4.interface }}"
+      node-ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+      flannel-iface: "{{ ansible_facts['default_ipv4']['interface'] }}"
       tls-san:
-        - "{{ ansible_default_ipv4.address }}"
+        - "{{ ansible_facts['default_ipv4']['address'] }}"
       write-kubeconfig-mode: "0600"
       disable:
         - traefik
@@ -23,9 +23,9 @@
     - name: Require the inventoried host and OS
       ansible.builtin.assert:
         that:
-          - ansible_distribution == 'Ubuntu'
-          - ansible_distribution_version == '24.04'
-          - ansible_hostname == 'beelink'
+          - ansible_facts['distribution'] == 'Ubuntu'
+          - ansible_facts['distribution_version'] == '24.04'
+          - ansible_facts['hostname'] == 'beelink'
     - name: Verify the existing data filesystem
       ansible.builtin.command: findmnt --noheadings --raw --mountpoint /data --output UUID
       register: data_mount
