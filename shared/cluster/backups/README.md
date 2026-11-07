@@ -64,17 +64,16 @@ repositories. Both repositories must exist before deployment.
    The CronJob uses `ghcr.io/breuerfelix/selfhosted/restic-kubectl:latest` with
    `imagePullPolicy: Always`, so each new backup Pod uses the latest successfully
    published build without a manifest change. The workflow builds the pinned
-   upstream images and verifies both tools with the backup security settings on
-   PRs as well as `main`. Only builds from `main` publish `latest` and a
-   `build-<sha256>` tag, where the hash is the SHA-256 of
-   `shared/images/backups/Dockerfile`. Both tags and the registry digest appear
-   in the Actions job summary. To roll back, set the CronJob image to a previous
-   hash tag.
+   upstream images with plain Docker and publishes `latest` and a unique
+   `run-<run-id>-<attempt>` tag. It runs only on `main`, without PR checks,
+   caching or smoke tests. To roll back, set the CronJob image to a previous
+   run tag or digest.
 
    Renovate automerges kubectl and restic version and digest updates in this
-   Dockerfile after PR checks pass. Renovate performs the merge itself rather
-   than relying on GitHub's auto-merge setting. Keep kubectl compatible with the
-   clusters' Kubernetes minor version.
+   Dockerfile without waiting for checks. Renovate performs the merge itself
+   rather than relying on
+   GitHub's auto-merge setting. Keep kubectl compatible with the clusters'
+   Kubernetes minor version.
 
    Make the GHCR package public after its first publication so both clusters can
    pull without registry credentials. Flux and Actions both react to the initial
