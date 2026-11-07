@@ -30,6 +30,13 @@
   },
   "packageRules": [
     {
+      "matchManagers": ["github-actions"],
+      "pinDigests": false,
+      "automerge": true,
+      "ignoreTests": true,
+      "platformAutomerge": false
+    },
+    {
       "matchManagers": ["dockerfile"],
       "matchFileNames": ["shared/images/backups/Dockerfile"],
       "matchPackageNames": ["registry.k8s.io/kubectl", "restic/restic"],
