@@ -11,8 +11,8 @@ restic cat config >/dev/null
 stopped=
 
 resume() {
-    kubectl --request-timeout=30s -n "${1%/*}" annotate deployment "${1#*/}" kustomize.toolkit.fluxcd.io/reconcile-
-    kubectl --request-timeout=30s -n "${1%/*}" scale deployment "${1#*/}" --replicas=1
+    kubectl -n "${1%/*}" annotate deployment "${1#*/}" kustomize.toolkit.fluxcd.io/reconcile-
+    kubectl -n "${1%/*}" scale deployment "${1#*/}" --replicas=1
 }
 
 cleanup() {
@@ -37,10 +37,10 @@ for app in $APPS; do
         exit 1
     }
 
-    kubectl --request-timeout=30s -n "$namespace" annotate deployment "$deployment" \
+    kubectl -n "$namespace" annotate deployment "$deployment" \
         kustomize.toolkit.fluxcd.io/reconcile=disabled
     stopped=$app
-    kubectl --request-timeout=30s -n "$namespace" scale deployment "$deployment" --replicas=0
+    kubectl -n "$namespace" scale deployment "$deployment" --replicas=0
     kubectl -n "$namespace" rollout status deployment "$deployment" --timeout=300s
     kubectl -n "$namespace" wait --for=delete pod -l "app=$deployment" --timeout=300s
     restic backup --host "$RESTIC_HOST" --tag "$deployment" "/data/$deployment"
