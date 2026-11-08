@@ -23,7 +23,7 @@ spec:
       containers:
         - name: nanobot
           # Built from NANOBOT_REF in .github/workflows/build-nanobot.yml.
-          image: ghcr.io/breuerfelix/nanobot:latest@sha256:a031f14fcf2a416cb6bdc3641552dc1af2a787fbecf010819cebc0d1ea22501d
+          image: ghcr.io/breuerfelix/nanobot:latest@sha256:f900289d86bbab1c481af4d534aac72fe4d8d1a1b3bf132aeeaf5d5820b9cf4f
           imagePullPolicy: IfNotPresent
           args: [gateway]
           env:
