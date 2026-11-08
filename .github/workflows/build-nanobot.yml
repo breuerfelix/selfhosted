@@ -15,7 +15,7 @@ permissions:
 concurrency: nanobot-image
 
 env:
-  NANOBOT_REF: v0.4.0 # renovate: datasource=github-releases depName=HKUDS/nanobot
+  NANOBOT_REF: v0.4.1 # renovate: datasource=github-releases depName=HKUDS/nanobot
   IMAGE: ghcr.io/breuerfelix/nanobot
 
 jobs:
