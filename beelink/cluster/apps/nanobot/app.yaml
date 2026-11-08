@@ -22,7 +22,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: nanobot
-          # Built from the upstream commit in beelink/images/nanobot/source.json.
+          # Built from NANOBOT_REF in .github/workflows/build-nanobot.yml.
           image: ghcr.io/breuerfelix/nanobot:latest@sha256:55ae61a0739b23af3a1573a363d95a8e93db428ef5de4204e5ad972d4e75804f
           imagePullPolicy: IfNotPresent
           args: [gateway]

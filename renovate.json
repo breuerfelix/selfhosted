@@ -6,14 +6,10 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^beelink\\/images\\/nanobot\\/source\\.json$/"],
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/build-nanobot\\.yml$/"],
       "matchStrings": [
-        "\"repository\":\\s*\"(?<depName>[^\"]+)\",\\s*\"commit\":\\s*\"(?<currentDigest>[a-f0-9]{40})\",\\s*\"version\":\\s*\"(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)\""
-      ],
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver",
-      "currentValueTemplate": "v{{{version}}}",
-      "autoReplaceStringTemplate": "\"repository\": \"{{{depName}}}\",\n  \"commit\": \"{{{newDigest}}}\",\n  \"version\": \"{{{replace '^v' '' newValue}}}\""
+        "NANOBOT_REF: (?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+) # renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)"
+      ]
     }
   ],
   "kubernetes": {
