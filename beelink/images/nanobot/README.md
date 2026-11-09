@@ -1,6 +1,6 @@
 # Nanobot image build
 
-`.github/workflows/build-nanobot.yml` pins the upstream release tag, builds the upstream Dockerfile unchanged, then builds this directory's `Dockerfile` on top to add GitHub CLI (`gh`), Linux Homebrew, and `summarize` from Homebrew core. Homebrew stays in the runtime image and runs as `nanobot`.
+`.github/workflows/build-nanobot.yml` pins the upstream release tag, builds the upstream Dockerfile unchanged, then builds this directory's `Dockerfile` on top to add GitHub CLI (`gh`), Linux Homebrew, and `summarize` from Homebrew core. Homebrew stays in the runtime image and runs as `nanobot`. After root-level setup, the entire `/home/nanobot` tree is assigned to `nanobot:nanobot` so tools such as `uvx` can create their own cache directories.
 
 Changes to the workflow or this directory on `main` build and publish `latest` and a unique `run-<run-id>-<attempt>` tag to GHCR. The workflow can also be run manually on `main`. Both builds use plain Docker on an amd64 runner, without caching or smoke tests. Publishing uses the built-in `GITHUB_TOKEN`; keep the GHCR package public for cluster pulls.
 
