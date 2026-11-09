@@ -6,7 +6,8 @@ USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gh build-essential file procps \
     && rm -rf /var/lib/apt/lists/* \
-    && install -d -o nanobot -g nanobot /home/linuxbrew/.linuxbrew "$HOME/.cache/Homebrew"
+    && install -d -o nanobot -g nanobot /home/linuxbrew/.linuxbrew "$HOME/.cache/Homebrew" \
+    && chown -R nanobot:nanobot /home/nanobot
 
 USER nanobot
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH" \
