@@ -73,7 +73,9 @@ kubectl -n screeps-agent rollout status deployment/screeps-agent-private --timeo
 
 Set `SOPS_AGE_KEY_FILE` as above. Verify real ingestion after replacing the token; pod readiness does not validate it. Avoid dumping decrypted Secrets or raw errors containing credentials.
 
-No host/container metrics collector or general pod-log collector is deployed. Collector-dependent dashboards show retained history. Grafana state and plugins persist on its PVC; startup plugin installation is disabled. Review compatibility when changing Loki configuration or upgrading backends.
+Alloy sends Beelink pod stdout and stderr to Loki. In Grafana Explore, select Loki and query `{job="pod-logs", namespace="nanobot"}`. Loki retention is disabled, so monitor disk usage under `/data/loki`.
+
+No host/container metrics collector is deployed. Dashboards that depend on one show retained history. Grafana state and plugins persist on its PVC; startup plugin installation is disabled. Review compatibility when changing Loki configuration or upgrading backends.
 
 ## LAN access
 

@@ -1,0 +1,39 @@
+discovery.kubernetes "pods" {
+	role = "pod"
+
+	// Keep delivery errors from feeding back into the same pipeline.
+	selectors {
+		role  = "pod"
+		label = "app!=alloy"
+	}
+}
+
+discovery.relabel "pod_logs" {
+	targets = discovery.kubernetes.pods.targets
+
+	rule {
+		target_label = "job"
+		replacement  = "pod-logs"
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_namespace"]
+		target_label  = "namespace"
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_pod_container_name"]
+		target_label  = "container"
+	}
+}
+
+loki.source.kubernetes "pods" {
+	targets    = discovery.relabel.pod_logs.output
+	forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+	endpoint {
+		url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+	}
+}
