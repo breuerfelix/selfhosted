@@ -15,9 +15,9 @@ Both hosts use `Europe/Berlin` as their system timezone:
 | 03:00 | Reboot if `/var/run/reboot-required` indicates one is needed, including with logged-in users |
 | 04:00–05:00 | Allow K3s upgrade Jobs to start |
 
-The shared `ubuntu_updates` role owns the complete allowed-origins list: Ubuntu release, updates, security, backports, ESM application/infrastructure security, and Docker. Each origin applies only where its repository is configured. The role does not add package repositories. Other third-party origins require an explicit change to the shared defaults. It clears inherited allowed origins and origin patterns so both hosts have the same effective policy.
+The shared `ubuntu_updates` role owns the complete allowed-origins list: Ubuntu release, updates, security, backports, and ESM application/infrastructure security. Each origin applies only where its repository is configured. The role does not add package repositories. Third-party origins require an explicit change to the shared defaults. It clears inherited allowed origins and origin patterns so both hosts have the same effective policy.
 
-APT timers have no randomized delay and do not catch up missed runs. The spring daylight-saving transition skips the 02:00 run. Updates can restart services, and a long package upgrade or reboot can extend beyond its intended window. These windows do not enforce mutual exclusion between APT and Kubernetes upgrades. Ubuntu release upgrades and Docker application image updates are not included.
+APT timers have no randomized delay and do not catch up missed runs. The spring daylight-saving transition skips the 02:00 run. Updates can restart services, and a long package upgrade or reboot can extend beyond its intended window. These windows do not enforce mutual exclusion between APT and Kubernetes upgrades. Ubuntu release upgrades are not included.
 
 Ansible runs locally with Python 3.13. The managed Ubuntu hosts keep their system Python. To replace an older local environment, run `uv venv --clear --python 3.13 temp/ansible-venv` before installing the requirements.
 
@@ -125,4 +125,4 @@ For each SSH alias (`cool` and `bee`):
 ssh bee 'timedatectl show -p Timezone --value; systemctl list-timers apt-daily.timer apt-daily-upgrade.timer --no-pager; apt-config dump'
 ```
 
-A required reboot interrupts every workload on that host, including Beelink's remaining Docker apps. Verify node readiness, SSD mounting, app recovery, and other host services after the next required reboot. A healthy live check does not prove reboot recovery or a future upgrade Job.
+A required reboot interrupts every workload on that host. Verify node readiness, SSD mounting, app recovery, and other host services after the next required reboot. A healthy live check does not prove reboot recovery or a future upgrade Job.

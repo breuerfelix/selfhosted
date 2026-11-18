@@ -1,6 +1,6 @@
 # Beelink K3s
 
-Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. Ansible configures the host; Flux deploys this repository's `main` branch. Tailscale provides private HTTPS. ServiceLB provides opt-in LAN ports; Traefik and dynamic local storage are disabled.
+Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. All applications use K3s and its bundled containerd. Ansible configures the host; Flux deploys this repository's `main` branch. Tailscale provides private HTTPS. ServiceLB provides opt-in LAN ports; Traefik and dynamic local storage are disabled.
 
 | Application | Namespace | Access | Persistent host path | UID:GID |
 | --- | --- | --- | --- | --- |
@@ -13,8 +13,6 @@ Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. Ansible configures t
 | Room Planner | `room-planner` | [Tailscale HTTPS](https://room-planner.vulture-skink.ts.net/) | None | Image default |
 
 Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. The [nightly S3 backup](../shared/cluster/backups/README.md) ships suspended until setup is complete.
-
-Hermes and Hindsight run separately in Docker. Their standalone deployment definition is `/opt/hermes/compose.json` on the host; it contains credentials and is readable only by root. See [Docker operations](docs/docker.md).
 
 ```text
 beelink/
@@ -42,4 +40,3 @@ Both hosts share [host maintenance, Flux components, the Git source, and K3s upg
 - [Tailscale authentication and Pi-hole DNS](docs/tailscale.md)
 - [Nanobot Google Workspace OAuth](docs/google-workspace.md)
 - [Room Planner image and access](docs/room-planner.md)
-- [Docker operations](docs/docker.md)

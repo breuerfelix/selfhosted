@@ -10,4 +10,3 @@ ubuntu_updates_allowed_origins:
   - '${distro_id}:${distro_codename}-backports'
   - '${distro_id}ESMApps:${distro_codename}-apps-security'
   - '${distro_id}ESM:${distro_codename}-infra-security'
-  - 'Docker:${distro_codename}'

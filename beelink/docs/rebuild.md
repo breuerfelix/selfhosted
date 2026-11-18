@@ -1,6 +1,6 @@
 # Rebuild
 
-Run local commands from the repository root. Tools: SSH, Python/uv, Ansible, kubectl, Flux, SOPS, and age. This procedure assumes a fresh Kubernetes cluster. For recovery on an existing cluster, stop affected workloads using [maintenance.md](maintenance.md) first. Recover Hermes and Hindsight separately using [Docker operations](docker.md).
+Run local commands from the repository root. Tools: SSH, Python/uv, Ansible, kubectl, Flux, SOPS, and age. This procedure assumes a fresh Kubernetes cluster. For recovery on an existing cluster, stop affected workloads using [maintenance.md](maintenance.md) first.
 
 ## 1. Prepare the host
 
