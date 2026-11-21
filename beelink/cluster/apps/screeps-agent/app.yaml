@@ -21,7 +21,7 @@ spec:
       containers:
         - name: agent
           # Pinned application image.
-          image: ghcr.io/breuerfelix/screeps-agent:latest@sha256:a20f9bb5ebbab4ec05ed5dfb5462bb8f185e6aca370085bae1f659e9c85c8df5
+          image: ghcr.io/breuerfelix/screeps-agent:latest@sha256:892ce05ff58c1646696cc5fb85123499d4a68a81392b05550917cc87ad43d990
           imagePullPolicy: IfNotPresent
           command: [node, agent.js]
           envFrom:
@@ -65,7 +65,7 @@ spec:
       containers:
         - name: agent
           # Pinned application image.
-          image: ghcr.io/breuerfelix/screeps-agent:latest@sha256:a20f9bb5ebbab4ec05ed5dfb5462bb8f185e6aca370085bae1f659e9c85c8df5
+          image: ghcr.io/breuerfelix/screeps-agent:latest@sha256:892ce05ff58c1646696cc5fb85123499d4a68a81392b05550917cc87ad43d990
           imagePullPolicy: IfNotPresent
           command: [node, agent.js]
           envFrom:
