@@ -15,6 +15,8 @@ spec:
       labels:
         app: phoenix
     spec:
+      # Service links would inject a non-numeric PHOENIX_PORT.
+      enableServiceLinks: false
       containers:
         - name: phoenix
           image: arizephoenix/phoenix:version-22.0.1@sha256:cc8c5e545389a6aae9523beaf92eb067fdaeae59d2166093d60856f89bf7ee34
