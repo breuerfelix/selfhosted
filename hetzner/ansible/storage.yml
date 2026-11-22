@@ -29,3 +29,17 @@
         group: '1000'
         mode: '0755'
       when: not screeps_data.stat.exists
+
+    - name: Check Phoenix data directory
+      ansible.builtin.stat:
+        path: /data/phoenix
+      register: phoenix_data
+
+    - name: Create Phoenix data directory on a fresh host
+      ansible.builtin.file:
+        path: /data/phoenix
+        state: directory
+        owner: '0'
+        group: '0'
+        mode: '0755'
+      when: not phoenix_data.stat.exists

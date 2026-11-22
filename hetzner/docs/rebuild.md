@@ -42,6 +42,8 @@ Before enabling Flux apps, restore data required by each app's recovery policy i
 
 Retained PV paths are declared in each app's `storage.yaml`. Restore the full directory tree, preserving ownership, while workloads are stopped. Ghost content uses `/data/ghost` with UID:GID `1000:0`; Fathom uses `/data/fathom` with `0:0`. Screeps data lives at `/data/screeps`, with application files owned by `1000:1000`; Ansible preserves the existing directory's ownership and permissions. SQLite restores must use consistent snapshots or copies made while the application was stopped. Verify restored databases and required content before proceeding. Ansible sets directory ownership but does not recursively repair restored files.
 
+Phoenix uses `/data/phoenix` with `0:0` ownership for its SQLite database and authentication state. Ansible creates this directory only if absent, preserving existing ownership. Restore the directory before starting Phoenix if recovering an existing instance; retain the SOPS-encrypted signing secret as well.
+
 Disposable PVCs are created by K3s's local-path provisioner. Stateless apps need no restore. On a fresh cluster, new PV/PVC objects bind by their declared names. On an existing cluster, a retained PV in `Released` state may need its old claim reference cleared before reuse; first verify the path and intended claim. Do not remove data files to repair a binding.
 
 ## 4. Bootstrap Flux

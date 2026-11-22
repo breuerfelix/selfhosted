@@ -34,10 +34,13 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 | Ghost | `danielkueffler.de` | `/data/ghost` | Restore content and SQLite database |
 | Fathom | `stats.felixbreuer.me` | `/data/fathom` | Restore SQLite database |
 | Screeps | `screeps.felixbreuer.me` | `/data/screeps` | Restore world and player data; config is in Git |
+| Phoenix | `phoenix.felixbreuer.me`; ingestion: `otel.felixbreuer.me/v1/traces` | `/data/phoenix` | Preserve SQLite traces and authentication state |
 | Noobgallery | `photos.felixbreuer.me` | None | Recreate from image |
 | Redirect | `felixbreuer.me` → `https://breuer.dev/` | None | Recreate from Git |
 
 These policies describe data requirements, not different deployment procedures. All apps reconcile through the same Flux sync.
+
+[Phoenix setup](phoenix.md) covers secure login and OpenRouter Broadcast configuration.
 
 ## Source of truth
 

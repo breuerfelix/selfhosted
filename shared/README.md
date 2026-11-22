@@ -75,7 +75,7 @@ quotas.
 Storage manifests live under each host's `cluster/apps/`:
 
 - Beelink: Nanobot, Papra, Grafana, Loki, and VictoriaMetrics.
-- Hetzner: Ghost, Fathom, and Screeps at `/data/ghost`, `/data/fathom`, and `/data/screeps`.
+- Hetzner: Ghost, Fathom, Screeps, and Phoenix at `/data/ghost`, `/data/fathom`, `/data/screeps`, and `/data/phoenix`.
 
 Deleting a PVC, PV, or namespace retains these host files. Cleanup is manual.
 `Retain` does not provide backups or automatic rebinding. Before reusing a PV

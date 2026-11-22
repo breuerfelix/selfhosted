@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phoenix-collector
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: phoenix-collector
+  template:
+    metadata:
+      labels:
+        app: phoenix-collector
+    spec:
+      containers:
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.165.0@sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea
+          args:
+            - --config=/etc/otelcol/config.yaml
+          ports:
+            - name: otlp-http
+              containerPort: 4318
+          env:
+            - name: COLLECTOR_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: phoenix-auth
+                  key: COLLECTOR_TOKEN
+            - name: PHOENIX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: phoenix-auth
+                  key: PHOENIX_ADMIN_SECRET
+          readinessProbe:
+            tcpSocket:
+              port: otlp-http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otelcol
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: phoenix-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phoenix-collector
+  namespace: apps
+spec:
+  selector:
+    app: phoenix-collector
+  ports:
+    - name: http
+      port: 80
+      targetPort: otlp-http

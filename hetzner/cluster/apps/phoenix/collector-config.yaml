@@ -1,0 +1,36 @@
+extensions:
+  bearertokenauth:
+    token: ${env:COLLECTOR_TOKEN}
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        auth:
+          authenticator: bearertokenauth
+
+processors:
+  resource/phoenix_project:
+    attributes:
+      - key: openinference.project.name
+        value: openrouter
+        action: upsert
+  batch:
+
+exporters:
+  otlp_http/phoenix:
+    endpoint: http://phoenix
+    headers:
+      authorization: "Bearer ${env:PHOENIX_API_KEY}"
+
+service:
+  extensions: [bearertokenauth]
+  telemetry:
+    metrics:
+      level: none
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource/phoenix_project, batch]
+      exporters: [otlp_http/phoenix]
