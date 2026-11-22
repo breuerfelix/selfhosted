@@ -123,6 +123,36 @@ declaration is not a disk quota. Retain does not protect against disk loss.
 No ad hoc backups are created. This change does not extend the existing nightly
 backup application's deployment allowlist to Phoenix.
 
+## Deployment verification — 2026-11-22
+
+The deployment was delivered through `main` and Flux. All Flux Kustomizations
+became Ready. Phoenix and the collector each reached `1/1`; `phoenix-data` bound
+to its retained PV, and `phoenix-tls` became Ready for both public hosts.
+
+Verified against the running deployment:
+
+- Both HTTPS hosts passed certificate validation; HTTP redirected to HTTPS.
+- Missing and wrong ingestion tokens returned `401`. Unauthenticated Phoenix API
+  access returned `401`; extra collector routes returned `404`.
+- The generated login password worked; `admin` was rejected. Authentication
+  cookies had `Secure` and `HttpOnly` attributes.
+- Authenticated public OTLP/HTTP JSON ingestion produced trace
+  `fd3bdadf2b1914e36a72632dbd59e167` in project `openrouter`. A Phoenix pod
+  replacement preserved that trace. `/data/phoenix.db` existed with owner `0:0`
+  and SQLite `PRAGMA quick_check` returned `ok`.
+
+Kustomize builds, Ansible syntax, the released collector binary's configuration
+validation, strict Kubernetes server validation, and independent manifest review
+passed. Kubernetes service-link injection is disabled for Phoenix because a
+Service named `phoenix` otherwise overrides its numeric `PHOENIX_PORT` with a
+`tcp://...` value and prevents startup.
+
+Host SSH access was unavailable to the agent. The user prepared `/data/phoenix`
+with the create-if-absent command; mounted storage and ownership were then
+verified through the running pod. Ansible's live execution and whole-node reboot
+recovery were not tested. OpenRouter workspace configuration and a real
+OpenRouter request remain manual. Token/cost field presentation is not verified.
+
 ## Official references
 
 - [Phoenix architecture and SQLite](https://arize.com/docs/phoenix/self-hosting/architecture)
