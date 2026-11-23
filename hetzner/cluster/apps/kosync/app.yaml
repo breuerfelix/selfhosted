@@ -24,7 +24,7 @@ spec:
               containerPort: 17200
           env:
             - name: ENABLE_USER_REGISTRATION
-              value: "true"
+              value: "false"
           readinessProbe:
             httpGet:
               path: /healthcheck
