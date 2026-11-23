@@ -11,6 +11,7 @@ Single-node K3s on Ubuntu 24.04, reached through `ssh bee`. All applications use
 | VictoriaMetrics | `monitoring` | ClusterIP, TCP 8428 | `/data/victoriametrics` | `0:0` |
 | Screeps agents | `screeps-agent` | Outbound connections only | None | Image default |
 | Room Planner | `room-planner` | [Tailscale HTTPS](https://room-planner.vulture-skink.ts.net/) | None | Image default |
+| Radar | `radar` | [Tailscale HTTPS](https://radar.vulture-skink.ts.net/) | None | `65532:65532` |
 
 Persistent applications use one replica, `Recreate`, and retained static `hostPath` PVs on the `/data` SSD. The K3s service requires that filesystem and verifies its UUID before startup. K3s state and container images live under `/var/lib/rancher/k3s` on the system disk. Declared PV capacities do not enforce disk quotas. The [nightly S3 backup](../shared/cluster/backups/README.md) ships suspended until setup is complete.
 
@@ -29,7 +30,9 @@ beelink/
   scripts/                 # Nanobot token helper
 ```
 
-`apps-sync.yaml` reconciles Nanobot, Papra, monitoring, Screeps agents, and Room Planner together through `apps/kustomization.yaml`, matching Hetzner's layout. Tailscale readiness gates the whole group; application health is checked together with a 15-minute timeout. Monitoring and Screeps agents can start concurrently, so initial collection attempts can fail while backends start. Room Planner exposes only a Tailscale HTTPS ingress and uses no persistent storage.
+`apps-sync.yaml` reconciles Nanobot, Papra, monitoring, Screeps agents, Room Planner, and Radar together through `apps/kustomization.yaml`, matching Hetzner's layout. Tailscale readiness gates the whole group; application health is checked together with a 15-minute timeout. Monitoring and Screeps agents can start concurrently, so initial collection attempts can fail while backends start. Room Planner and Radar expose only Tailscale HTTPS ingresses and use no persistent storage.
+
+Radar is a read-only trial using the upstream Helm chart. Tailscale access controls are its access gate; there is no separate application login. Anyone allowed to reach it can browse cluster resources, ConfigMaps, and pod logs. Pod exec, cluster changes, general Secret access, Cloud, and usage reporting are disabled; the Helm view is limited without Secret access. MCP is available read-only at `/mcp-readonly`. Timeline history is in memory and resets on pod restart.
 
 Versions and image digests live in manifests. Renovate proposes standard app and Helm chart updates, including digest updates for Room Planner's `latest` tag. Nanobot's [image workflow](images/nanobot/README.md) builds and tests custom images, then proposes the deployment digest. Only the custom Nanobot image is excluded from direct Renovate updates.
 

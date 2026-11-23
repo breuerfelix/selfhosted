@@ -1,0 +1,31 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: skyhook
+  namespace: radar
+spec:
+  interval: 24h
+  url: https://skyhook-io.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: radar
+  namespace: radar
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: radar
+      version: 1.21.1
+      sourceRef:
+        kind: HelmRepository
+        name: skyhook
+  values:
+    allowedHosts:
+      - radar.vulture-skink.ts.net
+    disableExec: true
+    extraArgs:
+      - --mcp-read-only
+    usageReporting:
+      enabled: false

@@ -6,3 +6,4 @@ resources:
   - ./monitoring
   - ./screeps-agent
   - ./room-planner
+  - ./radar

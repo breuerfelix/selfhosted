@@ -21,7 +21,7 @@
   "flux": {
     "managerFilePatterns": [
       "/^shared\\/cluster\\/flux-system\\/gotk-components\\.ya?ml$/",
-      "/^(beelink|hetzner)\\/cluster\\/infrastructure\\/.*\\.ya?ml$/"
+      "/^(beelink|hetzner)\\/cluster\\/(apps|infrastructure)\\/.*\\.ya?ml$/"
     ]
   },
   "packageRules": [
