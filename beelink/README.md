@@ -34,6 +34,8 @@ beelink/
 
 Radar is a read-only trial using the upstream Helm chart. Tailscale access controls are its access gate; there is no separate application login. Anyone allowed to reach it can browse cluster resources, ConfigMaps, and pod logs. Pod exec, cluster changes, general Secret access, Cloud, and usage reporting are disabled; the Helm view is limited without Secret access. MCP is available read-only at `/mcp-readonly`. Timeline history is in memory and resets on pod restart.
 
+Pod and node CPU/memory metrics come from K3s metrics-server. Optional Prometheus-backed workload charts are not configured: the existing VictoriaMetrics backend receives Screeps metrics, has no `up` series, and is rejected by Radar's automatic scrape-target check. No additional metrics collector is installed for this trial.
+
 Versions and image digests live in manifests. Renovate proposes standard app and Helm chart updates, including digest updates for Room Planner's `latest` tag. Nanobot's [image workflow](images/nanobot/README.md) builds and tests custom images, then proposes the deployment digest. Only the custom Nanobot image is excluded from direct Renovate updates.
 
 Both hosts share [host maintenance, Flux components, the Git source, and K3s upgrades](../shared/README.md). Repository-root `.sops.yaml` defines encryption rules for both hosts. Public Git, Nanobot, and Room Planner image pulls need no registry credentials.

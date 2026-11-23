@@ -13,7 +13,7 @@
 ## Steps
 
 - [x] Add and validate the pinned Radar application and documentation.
-- [ ] Review, commit and push for Flux deployment, verify private HTTPS and read-only access, and notify the user.
+- [x] Review, commit and push for Flux deployment, verify private HTTPS and read-only access, and notify the user.
 
 ## Global Constraints
 
