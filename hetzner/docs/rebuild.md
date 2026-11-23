@@ -44,6 +44,8 @@ Retained PV paths are declared in each app's `storage.yaml`. Restore the full di
 
 Phoenix uses `/data/phoenix` with `0:0` ownership for its SQLite database and authentication state. Ansible creates this directory only if absent, preserving existing ownership. Restore the directory before starting Phoenix if recovering an existing instance; retain the SOPS-encrypted signing secret as well.
 
+KOReader sync uses `/data/kosync` with `0:0` ownership, mounted as the bundled Redis data directory. Restore the complete directory, including Redis append-only files, before starting the Deployment to recover accounts and reading progress. A new installation starts with an empty directory and registration enabled; disable registration after creating the reader account.
+
 Disposable PVCs are created by K3s's local-path provisioner. Stateless apps need no restore. On a fresh cluster, new PV/PVC objects bind by their declared names. On an existing cluster, a retained PV in `Released` state may need its old claim reference cleared before reuse; first verify the path and intended claim. Do not remove data files to repair a binding.
 
 ## 4. Bootstrap Flux

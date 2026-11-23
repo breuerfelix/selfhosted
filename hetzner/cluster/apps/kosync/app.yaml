@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kosync
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kosync
+  template:
+    metadata:
+      labels:
+        app: kosync
+    spec:
+      containers:
+        - name: kosync
+          image: koreader/kosync:latest@sha256:bb3f13615365703315a43b9059f65e71e876440f867e23a42bf27f2fa18264e1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 17200
+          env:
+            - name: ENABLE_USER_REGISTRATION
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+              httpHeaders:
+                - name: Accept
+                  value: application/vnd.koreader.v1+json
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/redis
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: kosync-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kosync
+  namespace: apps
+spec:
+  selector:
+    app: kosync
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

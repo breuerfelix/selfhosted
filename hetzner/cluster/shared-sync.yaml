@@ -31,3 +31,4 @@ spec:
           APPS: |
             apps/ghost
             apps/fathom
+            apps/kosync

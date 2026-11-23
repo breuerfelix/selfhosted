@@ -8,7 +8,7 @@ a restic password. Each writes to its own repository under its cluster name.
 | --- | --- | --- |
 | beelink | nanobot | nanobot |
 | beelink | papra | papra |
-| hetzner | apps | ghost, fathom |
+| hetzner | apps | ghost, fathom, kosync |
 
 Each cluster's `shared-sync.yaml` patches the backup ConfigMap with its stable
 `RESTIC_HOST` and an `APPS` list of one Deployment per line as `namespace/name`.

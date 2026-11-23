@@ -33,6 +33,7 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 | --- | --- | --- | --- |
 | Ghost | `danielkueffler.de` | `/data/ghost` | Restore content and SQLite database |
 | Fathom | `stats.felixbreuer.me` | `/data/fathom` | Restore SQLite database |
+| KOReader sync | `kosync.felixbreuer.me` | `/data/kosync` | Restore Redis account and reading progress data |
 | Screeps | `screeps.felixbreuer.me` | `/data/screeps` | Restore world and player data; config is in Git |
 | Phoenix | `phoenix.felixbreuer.me`; ingestion: `otel.felixbreuer.me/v1/traces` | `/data/phoenix` | Preserve SQLite traces and authentication state |
 | Noobgallery | `photos.felixbreuer.me` | None | Recreate from image |
@@ -41,6 +42,17 @@ Each app owns its workload, service, ingress, configuration, and storage definit
 These policies describe data requirements, not different deployment procedures. All apps reconcile through the same Flux sync.
 
 [Phoenix setup](phoenix.md) covers secure login and OpenRouter Broadcast configuration.
+
+## KOReader sync
+
+The official sync image includes Redis; its data directory is mounted at `/var/lib/redis`. Traefik terminates HTTPS and forwards to the container's HTTP port `17200`. Redis is not exposed outside the container.
+
+1. Open a book in KOReader and select **Progress sync → Custom sync server**. Enter `https://kosync.felixbreuer.me`.
+2. Register an account with a unique password, then log in with the same account on each reader.
+3. Set `ENABLE_USER_REGISTRATION` to `"false"` in `cluster/apps/kosync/app.yaml` and push through the normal Git/Flux flow. Existing accounts can still log in.
+4. Test a manual progress push and pull before enabling automatic sync. Use identical book files on every device with the default document matching setting.
+
+This service syncs reading position, not book files, highlights, or annotations. It has no browser dashboard. Its health endpoint is `/healthcheck` with `Accept: application/vnd.koreader.v1+json`.
 
 ## Source of truth
 

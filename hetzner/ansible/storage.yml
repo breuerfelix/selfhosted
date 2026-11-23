@@ -15,6 +15,7 @@
         - { path: /data, owner: '0' }
         - { path: /data/ghost, owner: '1000' }
         - { path: /data/fathom, owner: '0' }
+        - { path: /data/kosync, owner: '0' }
 
     - name: Check Screeps data directory
       ansible.builtin.stat:
